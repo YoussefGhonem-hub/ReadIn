@@ -125,6 +125,18 @@ public sealed class ModerationAction : AggregateRoot
         return Create(action, ReportTargetType.User, userId, userId, Label(removed, MaxLabelLength), moderatorId, note, reportsClosed, now);
     }
 
+    /// <summary>
+    /// Everything of the user hidden at once (<c>user.hide_content</c>, SPEC F23), or what that hid brought back
+    /// (<c>user.unhide_content</c>). Logged on the user; no notice (a spam account is told nothing).
+    /// </summary>
+    public static ModerationAction AccountContent(
+        string action, Guid userId, string username, Guid moderatorId, string? note, int reportsClosed, DateTime now)
+    {
+        if (action is not (ModerationActionTypes.UserHideContent or ModerationActionTypes.UserUnhideContent))
+            throw new ArgumentException($"'{action}' is not an account content action.", nameof(action));
+        return Create(action, ReportTargetType.User, userId, userId, UserLabel(username), moderatorId, note, reportsClosed, now);
+    }
+
     /// <summary>Open reports closed without touching the target.</summary>
     public static ModerationAction Dismissal(
         ReportTargetType targetType, Guid targetId, Guid? targetUserId, string? label, Guid moderatorId, string? note, int reportsClosed,
@@ -202,6 +214,10 @@ public static class ModerationActionTypes
     /// <summary>A user's social links or title cleared (SPEC F14).</summary>
     public const string UserClearLinks = "user.clear_links";
     public const string UserClearHeadline = "user.clear_headline";
+
+    /// <summary>All of a user's articles and comments hidden at once, and that undone (SPEC F23).</summary>
+    public const string UserHideContent = "user.hide_content";
+    public const string UserUnhideContent = "user.unhide_content";
     public const string ReportsDismiss = "reports.dismiss";
 }
 

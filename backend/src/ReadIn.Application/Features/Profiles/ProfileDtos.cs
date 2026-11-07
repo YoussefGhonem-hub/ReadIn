@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Users;
 using ReadIn.Domain.Users;
 
@@ -47,7 +48,18 @@ public sealed record ProfileDto(
     /// profile's "⋯" leaves Mute out.
     /// </summary>
     public bool IsSystemAccount { get; init; }
+
+    /// <summary>
+    /// The account's state for holders of <c>users.read</c> (SPEC F23), so the profile's "⋯" can offer "Suspend…" or
+    /// "Unsuspend" and "Warn…"; null for everyone else.
+    /// </summary>
+    public ProfileAdminDto? Admin { get; init; }
 }
+
+/// <param name="IsSuspended">Suspended right now.</param>
+/// <param name="SuspendedUntil">While suspended: when it ends, null = permanently; null when active.</param>
+/// <param name="IsStaff">A holder of <c>admin.access</c> or <c>moderation.manage</c>, or a system account: never suspended or warned.</param>
+public sealed record ProfileAdminDto(bool IsSuspended, DateTime? SuspendedUntil, bool IsStaff);
 
 public sealed record ExpertiseFieldDto(Guid Id, string Slug, string Name, string Icon, string Color);
 
@@ -74,13 +86,28 @@ internal static class ProfileUsers
 
     /// <summary>
     /// The profile at <paramref name="handle"/>: deleted accounts are filtered out by the query filter, suspended ones
-    /// here. System accounts (the official ReadIn account) are shown like everyone else.
+    /// here, unless <paramref name="includeSuspended"/> (holders of <c>users.read</c>, SPEC F23). System accounts (the
+    /// official ReadIn account) are shown like everyone else.
     /// </summary>
-    public static IQueryable<User> Shown(this IQueryable<User> users, string handle, DateTime now) =>
-        users.Where(u => u.Username == handle && !(u.IsSuspended && (u.SuspendedUntil == null || u.SuspendedUntil > now)));
+    public static IQueryable<User> Shown(this IQueryable<User> users, string handle, DateTime now, bool includeSuspended = false) =>
+        includeSuspended
+            ? users.Where(u => u.Username == handle)
+            : users.Where(u => u.Username == handle && !(u.IsSuspended && (u.SuspendedUntil == null || u.SuspendedUntil > now)));
 
-    public static async Task<ProfileOwner?> FindProfileAsync(this IAppDbContext db, string? username, DateTime now, CancellationToken ct) =>
+    public static async Task<ProfileOwner?> FindProfileAsync(
+        this IAppDbContext db, string? username, DateTime now, CancellationToken ct, bool includeSuspended = false) =>
         Handle(username) is { } handle
-            ? await db.Users.AsNoTracking().Shown(handle, now).Select(u => new ProfileOwner(u.Id, u.PublicReadingStats)).FirstOrDefaultAsync(ct)
+            ? await db.Users.AsNoTracking().Shown(handle, now, includeSuspended)
+                .Select(u => new ProfileOwner(u.Id, u.PublicReadingStats)).FirstOrDefaultAsync(ct)
             : null;
+
+    /// <summary>
+    /// The profile routes (SPEC F14) for <paramref name="viewer"/>: holders of <c>users.read</c> also get suspended accounts
+    /// (SPEC F23), so the admin's "⋯" can unsuspend them.
+    /// </summary>
+    public static Task<ProfileOwner?> FindProfileForAsync(
+        this IAppDbContext db, string? username, DateTime now, ICurrentUser viewer, CancellationToken ct) =>
+        db.FindProfileAsync(username, now, ct, SeesSuspended(viewer));
+
+    public static bool SeesSuspended(ICurrentUser viewer) => viewer.Permissions.Contains(Permissions.Users.Read);
 }

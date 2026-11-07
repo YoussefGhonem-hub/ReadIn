@@ -24,6 +24,8 @@ internal sealed class ReactionConfiguration : IEntityTypeConfiguration<Reaction>
         builder.HasIndex(r => new { r.ArticleId, r.Type, r.ReactedAt }).IsDescending(false, false, true);
         // "Who reacted" across all types, newest first.
         builder.HasIndex(r => new { r.ArticleId, r.ReactedAt }).IsDescending(false, true);
+        // F23 dashboard: reactions in a period.
+        builder.HasIndex(r => r.ReactedAt);
 
         builder.HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne<Article>().WithMany().HasForeignKey(r => r.ArticleId).OnDelete(DeleteBehavior.Cascade);
@@ -47,6 +49,8 @@ internal sealed class RepostConfiguration : IEntityTypeConfiguration<Repost>
         builder.HasIndex(r => new { r.UserId, r.CreatedAt }).IsDescending(false, true).IncludeProperties(r => r.ArticleId);
         // The repost count, and the per-article reads (the labels of a Following page's cards).
         builder.HasIndex(r => new { r.ArticleId, r.CreatedAt }).IsDescending(false, true);
+        // F23 dashboard: reposts in a period.
+        builder.HasIndex(r => r.CreatedAt);
 
         builder.HasOne(r => r.User).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne<Article>().WithMany().HasForeignKey(r => r.ArticleId).OnDelete(DeleteBehavior.Cascade);

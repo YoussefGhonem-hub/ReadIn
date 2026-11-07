@@ -34,7 +34,7 @@ public sealed class TopicSearch(IAppDbContext db, ICurrentUser currentUser)
             .Select(f => new { f.Id, f.Slug, f.NameAr, f.NameEn, f.Icon, f.Color })
             .ToListAsync(ct);
         var fieldIds = fields.Select(f => f.Id).ToList();
-        var topics = await db.Topics.AsNoTracking().Where(t => fieldIds.Contains(t.FieldId)).WithoutMutedFor(db, viewerId)
+        var topics = await db.Topics.AsNoTracking().Where(t => fieldIds.Contains(t.FieldId) && t.IsEnabled).WithoutMutedFor(db, viewerId)
             .Select(t => new { t.Id, t.FieldId, t.Slug, t.NameAr, t.NameEn })
             .ToListAsync(ct);
 

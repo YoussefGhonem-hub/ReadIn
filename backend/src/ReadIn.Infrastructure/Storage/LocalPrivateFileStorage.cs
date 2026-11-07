@@ -17,7 +17,7 @@ public sealed record PrivateFile(string RelativePath, DateTime LastWriteUtc);
 public sealed class LocalPrivateFileStorage : IPrivateFileStorage
 {
     /// <summary>The folders created at startup, one per kind of private file.</summary>
-    public static readonly IReadOnlyList<string> Folders = ["verification"];
+    public static readonly IReadOnlyList<string> Folders = ["verification", "support"];
 
     private static readonly StringComparison PathComparison =
         OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
@@ -82,18 +82,39 @@ public sealed class LocalPrivateFileStorage : IPrivateFileStorage
     {
         var target = Resolve(relativePath);
         if (File.Exists(target)) File.Delete(target);
+
+        // A file in a sub-folder of a kind (support/{messageId}/1.png, F35): the sub-folder goes once it is empty.
+        if (relativePath.Count(c => c == '/') >= 2)
+        {
+            var folder = Path.GetDirectoryName(target)!;
+            try
+            {
+                if (Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
+            }
+            catch (IOException)
+            {
+                // Another file arrived in the meantime: the folder stays.
+            }
+        }
         return Task.CompletedTask;
     }
 
-    /// <summary>Every file in <paramref name="folder"/> (one of <see cref="Folders"/>), for the cleanup job.</summary>
-    public IEnumerable<PrivateFile> EnumerateFiles(string folder)
+    /// <summary>
+    /// Every file in <paramref name="folder"/> (one of <see cref="Folders"/>), for the cleanup jobs; with
+    /// <paramref name="recursive"/>, those of its sub-folders too (<c>support/{messageId}/1.png</c>, F35).
+    /// </summary>
+    public IEnumerable<PrivateFile> EnumerateFiles(string folder, bool recursive = false)
     {
         if (!Folders.Contains(folder)) throw new ArgumentException("Not a private folder.", nameof(folder));
         var directory = Path.Combine(RootPath, folder);
         if (!Directory.Exists(directory)) yield break;
 
-        foreach (var file in Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly))
-            yield return new PrivateFile($"{folder}/{Path.GetFileName(file)}", File.GetLastWriteTimeUtc(file));
+        var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        foreach (var file in Directory.EnumerateFiles(directory, "*", option))
+        {
+            var relative = Path.GetRelativePath(RootPath, file).Replace(Path.DirectorySeparatorChar, '/');
+            yield return new PrivateFile(relative, File.GetLastWriteTimeUtc(file));
+        }
     }
 
     /// <summary>

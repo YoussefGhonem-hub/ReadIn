@@ -93,6 +93,24 @@ public static class DependencyInjection
             IQueryPersonalizer<Features.Explore.GetFieldWritersQuery, Domain.Common.Result<IReadOnlyList<Features.Follows.UserSummaryDto>>>,
             Features.Explore.FieldWritersPersonalizer>();
 
+        // Admin console (SPEC F23)
+        services.AddScoped<Features.Admin.AdminClock>();
+        services.AddScoped<Features.Admin.ProtectedAccounts>();
+        services.AddScoped<Features.Admin.Announcements.AnnouncementReader>();
+        services.AddScoped<Features.Admin.Taxonomy.AdminTaxonomyReader>();
+        services.AddScoped<Features.Admin.Taxonomy.TaxonomyCaches>();
+        services.AddScoped<Features.Admin.Tags.AdminTagReader>();
+        services.AddScoped<Features.Admin.Tags.TagCaches>();
+        services.AddScoped<Features.Admin.Dashboard.AdminDashboardReader>();
+        services.AddScoped<Features.Admin.Dashboard.AdminQueueCounts>();
+        // Open tickets count zero until F35 registers its own counter.
+        // F35: the open support tickets (Open = waiting for support) for the console badge and the dashboard.
+        services.AddScoped<Features.Admin.Dashboard.IOpenTicketCounter, Features.Admin.Support.SupportOpenTicketCounter>();
+        services.AddSingleton<Features.Search.SearchMissBuffer>();
+        services.AddScoped<Features.Search.SearchMissWriter>();
+        // Help & support (SPEC F35): the members' screenshots in the private store.
+        services.AddScoped<Features.Support.SupportScreenshots>();
+
         AddDomainEventHandlers(services);
         return services;
     }

@@ -20,7 +20,9 @@ namespace ReadIn.Infrastructure.Identity;
 /// and reports it resolved lose the moderator,
 /// audit stamps lose the account id, and audit entries of actions the account took on other accounts stay without its
 /// IP address. The deletion itself is recorded as <see cref="AuditActions.AccountDeleted"/>
-/// with the account id and time only. Right after the commit: uploaded files, private verification proofs (F19), the Realtime Database node, the cached
+/// with the account id and time only. Its support tickets (F35) go by cascade; replies and notes it wrote on other members'
+/// tickets stay without the link to it. Right after the commit: uploaded files, private verification proofs (F19), the
+/// screenshots of its tickets (F35), the Realtime Database node, the cached
 /// details of the articles that stay, the counters of the articles the account reacted to, saved or reposted, and the cached
 /// popular highlights (F30) of the articles it highlighted (its highlights go by cascade). A file that fails
 /// to delete is picked up by <see cref="Jobs.OrphanedUploadsCleanupJob"/>.
@@ -39,6 +41,7 @@ internal sealed partial class AccountEraser(
     {
         List<string> paths = [];
         List<string> proofs = [];
+        List<string> screenshots = [];
         List<string> keptSlugs = [];
         List<Guid> engaged = [];
         List<Guid> highlighted = [];
@@ -113,10 +116,29 @@ internal sealed partial class AccountEraser(
             await db.Tags
                 .Where(t => t.CreatedById == userId)
                 .ExecuteUpdateAsync(s => s.SetProperty(t => t.CreatedById, (Guid?)null), ct);
+            // F23: articles the account featured stay featured, and announcements it sent stay, without the link to it.
+            await db.Articles.IgnoreQueryFilters()
+                .Where(a => a.FeaturedById == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.FeaturedById, (Guid?)null), ct);
+            await db.Announcements
+                .Where(a => a.SentById == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.SentById, (Guid?)null), ct);
             proofs = await db.VerificationRequests
                 .Where(r => r.UserId == userId && r.ProofFilePath != null)
                 .Select(r => r.ProofFilePath!)
                 .ToListAsync(ct);
+            // F35: the account's tickets, messages and screenshots go with the row (cascade), the files right after the
+            // commit; on other members' tickets its replies and notes stay without the link to it (no FK; nulled here).
+            screenshots = await db.SupportAttachments
+                .Where(a => db.SupportMessages.Any(m => m.Id == a.MessageId && db.SupportTickets.Any(t => t.Id == m.TicketId && t.UserId == userId)))
+                .Select(a => a.FilePath)
+                .ToListAsync(ct);
+            await db.SupportMessages
+                .Where(m => m.AuthorId == userId && db.SupportTickets.Any(t => t.Id == m.TicketId && t.UserId != userId))
+                .ExecuteUpdateAsync(s => s.SetProperty(m => m.AuthorId, (Guid?)null), ct);
+            await db.SupportTickets
+                .Where(t => t.ClosedById == userId && t.UserId != userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(t => t.ClosedById, (Guid?)null), ct);
             await ClearAuditStampsAsync(userId, ct);
 
             // The account's deleted comments (by it or a moderator) stay only as the placeholder that keeps their replies
@@ -207,7 +229,7 @@ internal sealed partial class AccountEraser(
                 LogFileNotDeleted(logger, ex, path);
             }
         }
-        foreach (var proof in proofs)
+        foreach (var proof in proofs.Concat(screenshots))
         {
             try
             {

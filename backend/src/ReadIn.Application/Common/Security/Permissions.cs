@@ -60,6 +60,8 @@ public static class Permissions
 
     public static class Users
     {
+        /// <summary>List and open any account in the admin console (SPEC F23).</summary>
+        public const string Read = "users.read";
         public const string Suspend = "users.suspend";
         public const string ResetPassword = "users.reset_password";
         public const string ReadPii = "users.read.pii";
@@ -85,12 +87,37 @@ public static class Permissions
         public const string Settings = "system.settings";
     }
 
+    /// <summary>The admin console and its dashboard (SPEC F23).</summary>
+    public static class Admin
+    {
+        public const string Access = "admin.access";
+    }
+
+    /// <summary>Help and support tickets (SPEC F35): send and follow your own, or answer everyone's.</summary>
+    public static class Support
+    {
+        public const string Create = "support.create";
+        public const string Manage = "support.manage";
+    }
+
+    /// <summary>Announcements to every reader, or the readers of a field or a language (SPEC F23).</summary>
+    public static class Notifications
+    {
+        public const string Broadcast = "notifications.broadcast";
+    }
+
+    /// <summary>The audit log browser (SPEC F23).</summary>
+    public static class Audit
+    {
+        public const string Read = "audit.read";
+    }
+
     public static readonly IReadOnlyDictionary<string, string> All = new Dictionary<string, string>
     {
         [Articles.Read] = "Read published articles",
         [Articles.Create] = "Write and publish own articles",
         [Articles.ExportPdf] = "Download articles as PDF",
-        [Articles.Feature] = "Feature articles",
+        [Articles.Feature] = "Feature articles and choose the featured paths",
         [Comments.Create] = "Comment and reply",
         [Reactions.Create] = "React to articles",
         [Reposts.Create] = "Repost articles",
@@ -106,5 +133,11 @@ public static class Permissions
         [Taxonomy.Manage] = "Manage fields, topics and tags",
         [Paths.Manage] = "Manage learning paths",
         [System.Settings] = "Change system settings",
+        [Admin.Access] = "Open the admin console and its dashboard",
+        [Users.Read] = "List and open any account in the admin console",
+        [Support.Create] = "Send and follow your own support tickets",
+        [Support.Manage] = "Answer support tickets",
+        [Notifications.Broadcast] = "Send announcements",
+        [Audit.Read] = "Browse the audit log",
     };
 }

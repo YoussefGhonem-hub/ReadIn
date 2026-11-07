@@ -144,6 +144,17 @@ public sealed class AuditLog : Entity
     public string? Ip { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
+    /// <summary>What the action touched besides an account (SPEC F23): <c>field</c>, <c>topic</c>, <c>tag</c>, <c>path</c>…</summary>
+    public string? TargetType { get; private set; }
+
+    /// <summary>The target's id; no foreign key, the log outlives what it describes.</summary>
+    public Guid? TargetId { get; private set; }
+
+    /// <summary>A short note on what changed (≤ 500), e.g. <c>nameEn, isEnabled=false</c>; never personal data.</summary>
+    public string? Details { get; private set; }
+
+    public const int MaxDetailsLength = 500;
+
     public static AuditLog Record(string action, Guid? actorId, Guid? userId, string? ip, DateTime now) => new()
     {
         Action = action,
@@ -152,6 +163,34 @@ public sealed class AuditLog : Entity
         Ip = ip,
         CreatedAt = now,
     };
+
+    /// <summary>An admin action on something other than (or besides) an account (SPEC F23).</summary>
+    public static AuditLog Record(
+        string action, Guid? actorId, Guid? userId, string? ip, DateTime now, string? targetType, Guid? targetId, string? details) => new()
+    {
+        Action = action,
+        ActorId = actorId,
+        UserId = userId,
+        Ip = ip,
+        CreatedAt = now,
+        TargetType = targetType,
+        TargetId = targetId,
+        Details = details is null ? null : details.Length <= MaxDetailsLength ? details : details[..MaxDetailsLength],
+    };
+}
+
+/// <summary>The <see cref="AuditLog.TargetType"/> values (SPEC F23).</summary>
+public static class AuditTargets
+{
+    public const string User = "user";
+    public const string Article = "article";
+    public const string Comment = "comment";
+    public const string Field = "field";
+    public const string Topic = "topic";
+    public const string Tag = "tag";
+    public const string Path = "path";
+    public const string Announcement = "announcement";
+    public const string Ticket = "ticket";
 }
 
 public static class AuditActions
@@ -194,4 +233,38 @@ public static class AuditActions
     /// <summary>A moderator cleared the user's social links or title (SPEC F14).</summary>
     public const string LinksCleared = "moderation.links_cleared";
     public const string HeadlineCleared = "moderation.headline_cleared";
+
+    // Admin console (SPEC F23).
+    /// <summary>Hid every article and comment of the user (hide_content), or restored what that hid (unhide_content).</summary>
+    public const string ContentHidden = "moderation.content_hidden";
+    public const string ContentRestored = "moderation.content_restored";
+    public const string PiiViewed = "admin.pii_viewed";
+    public const string SessionsRevoked = "admin.sessions_revoked";
+    public const string ArticleFeatured = "admin.article_featured";
+    public const string ArticleUnfeatured = "admin.article_unfeatured";
+    public const string FeaturedPathsSet = "admin.featured_paths_set";
+    public const string FieldCreated = "admin.field_created";
+    public const string FieldUpdated = "admin.field_updated";
+    public const string FieldsReordered = "admin.fields_reordered";
+    public const string TopicCreated = "admin.topic_created";
+    public const string TopicUpdated = "admin.topic_updated";
+    public const string TopicsReordered = "admin.topics_reordered";
+    public const string TagRenamed = "admin.tag_renamed";
+    public const string TagMerged = "admin.tag_merged";
+    public const string TagHidden = "admin.tag_hidden";
+    public const string TagUnhidden = "admin.tag_unhidden";
+    public const string PathCreated = "admin.path_created";
+    public const string PathUpdated = "admin.path_updated";
+    public const string PathItemsSet = "admin.path_items_set";
+    public const string PathDeleted = "admin.path_deleted";
+    public const string AnnouncementSent = "admin.announcement_sent";
+    public const string AnnouncementTested = "admin.announcement_tested";
+    public const string CountersRebuilt = "admin.counters_rebuilt";
+
+    // Support tickets (SPEC F35).
+    public const string TicketReplied = "admin.ticket_replied";
+    public const string TicketNoteAdded = "admin.ticket_note_added";
+    public const string TicketClosed = "admin.ticket_closed";
+    public const string TicketReopened = "admin.ticket_reopened";
+    public const string TicketCategoryChanged = "admin.ticket_category_changed";
 }

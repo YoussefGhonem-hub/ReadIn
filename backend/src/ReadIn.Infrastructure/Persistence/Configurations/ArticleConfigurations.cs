@@ -43,6 +43,8 @@ internal sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.HasIndex(a => a.AuthorId);
         // The category pages (F31), newest first.
         builder.HasIndex(a => new { a.WriterCategoryId, a.PublishedAt }).IsDescending(false, true);
+        // F23: Explore's featured articles and the console's featured list, most recently featured first.
+        builder.HasIndex(a => a.FeaturedAt).IsDescending().HasFilter("[FeaturedAt] IS NOT NULL");
     }
 }
 

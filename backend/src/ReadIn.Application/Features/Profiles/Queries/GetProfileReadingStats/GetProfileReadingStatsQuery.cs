@@ -27,7 +27,7 @@ internal sealed class GetProfileReadingStatsQueryHandler(IAppDbContext db, ICurr
     public async ValueTask<Result<ReadingStatsDto>> Handle(GetProfileReadingStatsQuery query, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        if (await db.FindProfileAsync(query.Username, now, cancellationToken) is not { } owner) return UserErrors.NotFound;
+        if (await db.FindProfileForAsync(query.Username, now, currentUser, cancellationToken) is not { } owner) return UserErrors.NotFound;
         if (!owner.ReadingStatsVisibleTo(currentUser.UserId)) return ProfileErrors.StatsPrivate;
 
         return await GetMyReadingStatsQueryHandler.ComputeAsync(db, owner.Id, currentUser.UiLanguage, now, cancellationToken);
@@ -40,7 +40,7 @@ internal sealed class GetProfileReadingHeatmapQueryHandler(IAppDbContext db, ICu
     public async ValueTask<Result<ReadingHeatmapDto>> Handle(GetProfileReadingHeatmapQuery query, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        if (await db.FindProfileAsync(query.Username, now, cancellationToken) is not { } owner) return UserErrors.NotFound;
+        if (await db.FindProfileForAsync(query.Username, now, currentUser, cancellationToken) is not { } owner) return UserErrors.NotFound;
         if (!owner.ReadingStatsVisibleTo(currentUser.UserId)) return ProfileErrors.StatsPrivate;
 
         return await GetMyReadingHeatmapQueryHandler.ComputeAsync(db, owner.Id, query.Days, now, cancellationToken);

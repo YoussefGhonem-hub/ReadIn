@@ -23,7 +23,7 @@ internal sealed class GetTopicsByFieldQueryHandler(IAppDbContext db, TypeAdapter
         using var _ = LocalizedProjection.Begin(query.UiLanguage);
 
         var topics = await db.Topics.AsNoTracking()
-            .Where(t => t.FieldId == fieldId)
+            .Where(t => t.FieldId == fieldId && t.IsEnabled) // a disabled topic leaves every list (F23)
             .OrderBy(t => t.SortOrder)
             .ProjectToType<TopicDto>(mapping)
             .ToListAsync(cancellationToken);

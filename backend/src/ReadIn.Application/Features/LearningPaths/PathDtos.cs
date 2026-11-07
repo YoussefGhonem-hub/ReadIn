@@ -57,6 +57,8 @@ public sealed record PathDetailsDto : PathCardDto
 public sealed record ArticlePathDto(PathCardDto Path, int Position, int Total, PathArticleRefDto? Previous, ArticleCardDto? Next);
 
 /// <summary>GET /admin/paths (permission <c>paths.manage</c>).</summary>
+/// <param name="IsFeatured">In Explore's "Featured paths" (shown only while published; F23).</param>
+/// <param name="FeaturedOrder">The 1-based place among the featured paths; null when not featured.</param>
 public sealed record AdminPathDto(
     Guid Id,
     string Slug,
@@ -69,4 +71,6 @@ public sealed record AdminPathDto(
     bool IsPublished,
     bool IsEditorial,
     IReadOnlyList<Guid> ArticleIds,
-    int EnrollmentCount);
+    int EnrollmentCount,
+    bool IsFeatured = false,
+    int? FeaturedOrder = null);

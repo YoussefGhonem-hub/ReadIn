@@ -74,6 +74,41 @@ public sealed class ErrorMessagesTests
         ErrorMessages.Title(code, "en").Should().NotBeNullOrWhiteSpace().And.NotBe(ErrorMessages.Title(code, "ar"));
     }
 
+    /// <summary>The admin console's codes (SPEC F23), in Modern Standard Arabic.</summary>
+    [Theory]
+    [InlineData("announcement.limit", "أُرسل إعلان اليوم بالفعل. يمكن إرسال إعلان واحد في اليوم.", "An announcement was already sent today. You can send one a day.")]
+    [InlineData("announcement.no_recipients", "لا يوجد مستلمون لهذا الإعلان.", "This announcement has no recipients.")]
+    [InlineData("announcement.link_invalid", "يجب أن يشير الرابط إلى مقال منشور أو مسار منشور.", "The link must point to a published article or path.")]
+    [InlineData("field.slug_taken", "يوجد مجال آخر بهذا المعرّف.", "Another field uses this slug.")]
+    [InlineData("topic.slug_taken", "يوجد موضوع آخر في هذا المجال بهذا المعرّف.", "Another topic in this field uses this slug.")]
+    [InlineData("field.icon_invalid", "اختر أيقونة من القائمة.", "Choose an icon from the list.")]
+    [InlineData("field.color_invalid", "اختر لونًا من القائمة.", "Choose a color from the list.")]
+    [InlineData("admin.order_invalid", "يجب أن تضم القائمة كل العناصر مرة واحدة.", "The list must hold every item exactly once.")]
+    [InlineData("tag.name_taken", "يوجد وسم آخر بهذا الاسم. إن كانا الوسم نفسه فادمجهما.", "Another tag already has this name. If they're the same, merge them.")]
+    [InlineData("tag.merge_self", "لا يمكن دمج الوسم في نفسه.", "A tag can't be merged into itself.")]
+    [InlineData("path.featured_invalid", "اختر 20 مسارًا على الأكثر، موجودة ومن دون تكرار.", "Choose up to 20 different existing paths.")]
+    public void Admin_console_codes_have_titles_in_arabic_and_english(string code, string arabic, string english)
+    {
+        ErrorMessages.Title(code, "ar").Should().Be(arabic);
+        ErrorMessages.Title(code, "en").Should().Be(english);
+    }
+
+    /// <summary>Help & support (SPEC F35), in Modern Standard Arabic.</summary>
+    [Theory]
+    [InlineData("support.limit", "وصلت إلى حد التذاكر: 5 تذاكر جديدة في اليوم و10 تذاكر مفتوحة على الأكثر.", "You've reached the ticket limit: 5 new tickets a day and 10 open at once.")]
+    [InlineData("support.ticket_not_found", "التذكرة غير موجودة.", "Ticket not found.")]
+    [InlineData("support.attachment_not_found", "المرفق غير موجود.", "Attachment not found.")]
+    [InlineData("support.ticket_closed", "هذه التذكرة مغلقة. أعد فتحها أولًا.", "This ticket is closed. Reopen it first.")]
+    [InlineData("support.reopen_expired", "مضى أكثر من 30 يومًا على إغلاق التذكرة. أرسل تذكرة جديدة.", "This ticket was closed more than 30 days ago. Send a new one.")]
+    [InlineData("support.attachment_invalid", "يجب أن تكون الصورة بصيغة JPEG أو PNG أو WebP، وألا يزيد حجمها على 5 م.ب.", "Screenshots must be JPEG, PNG or WebP, up to 5 MB each.")]
+    [InlineData("support.too_many_attachments", "يمكن إرفاق 3 صور على الأكثر.", "You can attach up to 3 images.")]
+    [InlineData("support.category_invalid", "اختر تصنيفًا من القائمة.", "Choose a category from the list.")]
+    public void Support_codes_have_titles_in_arabic_and_english(string code, string arabic, string english)
+    {
+        ErrorMessages.Title(code, "ar").Should().Be(arabic);
+        ErrorMessages.Title(code, "en").Should().Be(english);
+    }
+
     [Fact]
     public void An_unknown_code_has_no_title() => ErrorMessages.Title("nope.unknown", "en").Should().BeNull();
 }

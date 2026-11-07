@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Domain.Admin;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Common;
@@ -12,6 +13,7 @@ using ReadIn.Domain.Media;
 using ReadIn.Domain.Moderation;
 using ReadIn.Domain.Notifications;
 using ReadIn.Domain.Reading;
+using ReadIn.Domain.Support;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
 using ReadIn.Domain.Verification;
@@ -40,6 +42,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Field> Fields => Set<Field>();
     public DbSet<Topic> Topics => Set<Topic>();
     public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<TagAlias> TagAliases => Set<TagAlias>();
     public DbSet<WriterCategory> WriterCategories => Set<WriterCategory>();
     public DbSet<GlossaryTerm> GlossaryTerms => Set<GlossaryTerm>();
     public DbSet<ArticleTerm> ArticleTerms => Set<ArticleTerm>();
@@ -80,6 +83,16 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationActor> NotificationActors => Set<NotificationActor>();
     public DbSet<UserNotificationSetting> UserNotificationSettings => Set<UserNotificationSetting>();
+
+    public DbSet<UserPresence> UserPresence => Set<UserPresence>();
+    public DbSet<SearchMiss> SearchMisses => Set<SearchMiss>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<JobRun> JobRuns => Set<JobRun>();
+    public DbSet<PushDeliveryStat> PushDeliveryStats => Set<PushDeliveryStat>();
+
+    public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
+    public DbSet<SupportMessage> SupportMessages => Set<SupportMessage>();
+    public DbSet<SupportAttachment> SupportAttachments => Set<SupportAttachment>();
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<SeedHistory> SeedHistory => Set<SeedHistory>();

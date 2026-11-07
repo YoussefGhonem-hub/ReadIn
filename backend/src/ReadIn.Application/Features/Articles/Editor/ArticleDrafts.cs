@@ -96,13 +96,17 @@ internal sealed class ArticleDrafts(
         .Include(a => a.Attachments).ThenInclude(a => a.MediaAsset)
         .FirstOrDefaultAsync(a => a.Id == articleId, cancellationToken);
 
-    /// <summary>A field that may be chosen, and the topic belongs to it (null topic is fine).</summary>
-    public async Task<Result> CheckTaxonomyAsync(ArticleDraftDocument document, CancellationToken cancellationToken)
+    /// <summary>
+    /// A field that may be chosen, and the topic belongs to it (null topic is fine). A topic disabled in the admin console
+    /// (F23) can't be picked, but an article keeps the one it has (<paramref name="currentTopicId"/>).
+    /// </summary>
+    public async Task<Result> CheckTaxonomyAsync(ArticleDraftDocument document, CancellationToken cancellationToken, Guid? currentTopicId = null)
     {
         if (document.FieldId is not { } fieldId)
             return document.TopicId is null ? Result.Success() : EditorErrors.TopicNotInField;
         if (!await db.Fields.AnyAsync(f => f.Id == fieldId && f.IsEnabled, cancellationToken)) return EditorErrors.FieldNotFound;
-        if (document.TopicId is { } topicId && !await db.Topics.AnyAsync(t => t.Id == topicId && t.FieldId == fieldId, cancellationToken))
+        if (document.TopicId is { } topicId &&
+            !await db.Topics.AnyAsync(t => t.Id == topicId && t.FieldId == fieldId && (t.IsEnabled || t.Id == currentTopicId), cancellationToken))
             return EditorErrors.TopicNotInField;
         return Result.Success();
     }

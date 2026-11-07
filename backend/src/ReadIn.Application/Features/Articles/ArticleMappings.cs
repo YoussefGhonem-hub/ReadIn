@@ -34,6 +34,8 @@ public sealed class ArticleMappings : IRegister
             .Map(d => d.Moderation, s => s.HiddenAt == null ? null : new ArticleModerationDto(s.HiddenAt.Value, null))
             // The writer's category (F31): the reader's "في قسم {name}".
             .Map(d => d.Category, s => s.WriterCategory == null ? null : new WriterCategoryRefDto(s.WriterCategory.Slug, s.WriterCategory.Name))
+            // F23: featured on Explore.
+            .Map(d => d.IsFeatured, s => s.FeaturedAt != null)
             .Ignore(d => d.Content)
             .Ignore(d => d.CollectionIds);
     }

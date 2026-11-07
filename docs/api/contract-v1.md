@@ -44,10 +44,12 @@ says "moderators" or "admins", it means whoever holds the permission named, toda
 | Permission | Member | SuperAdmin | What it opens |
 |---|:-:|:-:|---|
 | `articles.read` (Guest too), `articles.create`, `articles.export_pdf`, `comments.create`, `reactions.create`, `reposts.create` (F29, new), `highlights.create` (F30, new), `follows.manage`, `saved.manage`, `reports.create` | ✅ | ✅ | reading, writing, interacting, reporting |
-| `moderation.manage` | | ✅ | `/moderation/*` (the queue, the log, the nav badge), hide / unhide / delete in the article, comment and profile menus |
+| `moderation.manage` | | ✅ | `/moderation/*` (the queue, the log, the nav badge), hide / unhide / delete in the article, comment and profile menus, the console's Content and Reports |
 | `users.suspend` | | ✅ | `suspend` / `unsuspend` in `POST /moderation/actions` |
 | `verification.manage` | | ✅ | `/admin/verification-requests/*` and `DELETE /admin/users/{id}/verification` (the admin verification queue) |
 | `users.reset_password` | | ✅ | `POST /admin/users/{id}/reset-password` |
+| `support.create` (F35, new) | ✅ | ✅ | Help & support: send and follow your own tickets |
+| `admin.access`, `users.read`, `support.manage`, `notifications.broadcast`, `audit.read` (F23/F35, new) | | ✅ | the admin console and its sections ("Admin console (F23)" → "Permissions and sections") |
 | `users.read.pii`, `articles.feature`, `taxonomy.manage`, `paths.manage`, `system.settings` | | ✅ | the admin console (F23), `/admin/paths`, `/admin/realtime/*` |
 
 **Verified is a badge, not a role.** `isVerified` (on `MeDto`, authors, profiles, people and every user summary) is
@@ -202,6 +204,12 @@ in none of these and not in `tagCount`, but it stays on its articles, so un-hidi
   - `tag.limit`: the writer would create more than 20 new tags in 24 hours (rolling). The new names past what is left
     of the 20 get it, in document order.
 
+**Renamed and merged tags (F23).** An admin may rename a tag (its slug stays) or merge it into another; the old spelling
+and a merged tag's name become aliases. Typing an alias in the editor gives its tag (never `tag.limit`; that tag's hidden
+state applies). `GET /tags/{slug}` and `GET /tags/{slug}/articles` answer the target tag for a merged tag's slug, and
+`TagDto.slug` is then the target's: replace the URL (the web's server answers `301`). Suggestions and search don't match
+aliases. See "Admin console (F23)" → "Taxonomy and tags".
+
 Tag error codes: `tag.not_found` (404), `tag.invalid` and `article.too_many_tags` (validation codes in `errors`),
 `tag.hidden` and `tag.limit` (problem codes: in `checks.problems`, and `400` on publish).
 
@@ -338,7 +346,10 @@ first page.
 - `featuredPaths`: ≤ 6 published paths flagged featured (`LearningPaths.IsFeatured`), in featured order
   (`FeaturedOrder`, then the editorial order), as `PathCardDto` like `/paths` (a path with no article a reader can open
   is left out; `progress` / `enrollment` for a signed-in caller). Editorial paths start featured, in their sort order;
-  F23 will manage the flag. Opens `/paths/{slug}`.
+  F23 manages the flag and the order (`PUT /admin/paths/featured`). Opens `/paths/{slug}`.
+- `featuredArticles` (F23): ≤ 6 articles readers can open that an admin featured (`articles.feature`), the most recently
+  featured first, as `ArticleCardDto`s (the viewer's mutes apply). `[]` when none: clients hide the section. Clients show
+  them as the compact article row under the title «مقالات مختارة» / "Featured articles".
 
 **Trending this week** (`/explore/trending`)
 
@@ -877,7 +888,10 @@ dedupe by `commentId`, and skip events for your own just-made change. Events are
 Every `/moderation/*` route needs `moderation.manage` (the SuperAdmin; `403 auth.forbidden` otherwise, so for every
 Member).
 
-`ModerationActionRequest`: `{ action, targetType, targetId, note?, durationDays?, resolveReportsOf?: { targetType, targetId }, categoryId? }`
+`ModerationActionRequest`: `{ action, targetType, targetId, note?, durationDays?, resolveReportsOf?: { targetType, targetId }, categoryId?, hideContent? }`
+(`hideContent`: `suspend` only, F23; with `true` the user's articles and comments are hidden too, see "Admin console (F23)" →
+"Users". F23 also adds the user actions `hide_content` and `unhide_content`, and "staff" now also means holders of
+`admin.access`.)
 (`categoryId`: `clear_category` only).
 
 | Target | Actions |
@@ -1009,6 +1023,7 @@ accounts get nothing):
 | `moderation_notice` | a moderator warned you or hid your article (F22) | no | the hidden article `readin://a/{slug}`, a warning `readin://notifications` (the app shows the notice from `GET /me/moderation-notices`) |
 | `verification_result` | the SuperAdmin approved or rejected your verification request (F19; removing a badge later sends nothing): `data.approved` `true` / `false`, no actor, no article. Without `data.approved` (never written now) render a generic text | no | `readin://verification` |
 | `article_reposted` | someone reposted your article (F29; undoing and reposting again is not news) | per article | `readin://a/{slug}` |
+| `announcement` | an admin's announcement (F23): `data.announcementId`, `data.title`, `data.body` (in Accept-Language); no actor | no | the article `readin://a/{slug}`, the path `readin://paths/{slug}`, or `readin://notifications` |
 
 - One entry per recipient per comment: `mention` > `comment_reply` > `article_comment`. An edit only tells users it
   mentions for the first time.
@@ -1057,6 +1072,11 @@ accounts get nothing):
   any more (a moderation notice keeps its hidden article), and `new_follower` entries whose followers all deleted their
   accounts. A deleted actor is gone from `actor` / `actorCount`: an entry left with no actor shows "Deleted user"
   (`actor: null`).
+- `announcement` (F23, new): an admin's message to everyone or to the readers of a field or an article language, at
+  most one a day. No actor; the row shows `data.title`, then `data.body`. With an article link it carries `article`
+  and, like every entry with an article, leaves the list when that article can't be read any more. A configurable type:
+  `GET /me/notification-settings` now returns **10** types; Settings label «الإعلانات» / "Announcements", hint
+  «إعلانات من فريق ReadIn» / "News from the ReadIn team". Quiet hours apply.
 - Modes per type: `all` (in-app + push, the default), `inApp` (no push), `off` (no entry at all). `security_alert`,
   `moderation_notice` and `verification_result` always come. Quiet hours (default on, 23:00–07:00 in the user's time
   zone) hold pushes until they end; `security_alert` ignores them, and the daily article keeps F07's rule (a push due in
@@ -1067,7 +1087,9 @@ accounts get nothing):
 ### Profile (F14) 🌐 (Bearer optional)
 
 `{username}` is matched ignoring case and one leading `@` (`/users/@Mona` = `/users/mona`). Deleted and suspended
-accounts are `404 user.not_found` on all five; system accounts (the official `@readin`) are shown like everyone else.
+accounts are `404 user.not_found` on all five, except that holders of `users.read` (F23) also get suspended accounts;
+system accounts (the official `@readin`) are shown like everyone else. `ProfileDto.admin` is set only for holders of
+`users.read`, for the admin items of the profile's "⋯" ("Admin console (F23)" → "Admin actions inside the app").
 The phone number and e-mail are never in these responses (SPEC §9.5).
 
 | Method | Path | Response |
@@ -1639,7 +1661,9 @@ Today's article (F07) is the active path's next unread article, unless that woul
 
 ### Path admin (F09; Bearer, permission `paths.manage`, rate limit `writes`)
 
-Backend only for now; the screens come with the F23 Admin Console.
+The screens are in the F23 Admin Console (web). Every write is audited (`admin.path_created`, `admin.path_updated`,
+`admin.path_items_set`, `admin.path_deleted`) and drops Explore's cache. Featured paths: `PUT /admin/paths/featured`
+(`articles.feature`, "Admin console (F23)" → "Paths and featured").
 
 | Method | Path | Body → Response |
 |---|---|---|
@@ -1677,6 +1701,593 @@ interface SitemapDto {
 The web's SSR server builds the URLs (`web/src/server/sitemap.ts`): `/sitemap.xml` is an index of `/sitemap-ar.xml`,
 `/sitemap-en.xml` (the article versions, `/{ar|en}/a/{slug}`) and `/sitemap-pages.xml` (home, Explore, `/paths`,
 `/@{username}`, `/@{username}/c/{slug}`, `/f/{slug}`, `/tags/{slug}`, `/paths/{slug}`); it also serves `/robots.txt`.
+
+### Admin console (F23) — SPEC F23
+
+The SuperAdmin's console: web `/admin` (a lazy route group, `noindex`), mobile Settings → «لوحة التحكم». Every route
+here needs a Bearer token (`401 auth.unauthorized` without one) and the permission on its row (`403 auth.forbidden`
+without it, so for every Member); a suspended account gets `403 user.suspended` as everywhere. Reads are unthrottled;
+writes use the `writes` rate limit (30 a minute). Every write is in the audit log, under the codes in "Audit actions"
+below.
+
+**Decisions** (what SPEC F23 leaves open)
+
+1. **Permissions.** Six new codes (SPEC §10.2): `admin.access`, `users.read`, `support.create` (Member and
+   SuperAdmin), `support.manage`, `notifications.broadcast` and `audit.read`. `articles.feature` (it exists) also
+   covers featured paths. The roles seeder gives the SuperAdmin every permission and Members `support.create` on the
+   next start. Clients show the console entry when `MeDto.permissions` holds `admin.access`, and each section and action
+   when it holds that one's permission (tables below); they never test a role name.
+2. **Protected accounts.** Nobody suspends, warns, signs out or hides the content of (`hide_content`) themselves
+   (`400 moderation.self`), a holder of `admin.access` or `moderation.manage`, or a system account, the official
+   `@readin` (`403 moderation.staff_target`). F22's "staff" (holders of `moderation.manage`) now also covers holders of
+   `admin.access`. Hiding one article or comment of staff stays allowed (F22).
+3. **Pages.** Admin tables use offset pages (§17.1): `?page=&pageSize=` → `PagedList<T>`. A `page` below 1 counts as
+   1, and `pageSize` is clamped to 1–100 (default 50). A page past the end has `items: []` and the real `totalCount`.
+   The existing cursor queues (`/moderation/*`, `/admin/verification-requests`) stay as they are.
+4. **Days and periods** are calendar days in `Admin:TimeZone` (default `Africa/Cairo`). `period`: `today` = from
+   today's midnight to now; `yesterday` = all of yesterday; `7d` = the last 7 days including today (from midnight 6 days
+   ago to now); `30d` the same with 30. The **previous period** is the same window moved back by its length in days (1,
+   1, 7 or 30), so `today` compares with yesterday up to the same time of day. Date filters (`from`, `to`,
+   `joinedFrom`, …) are `YYYY-MM-DD` in that zone, both ends included.
+5. **Dashboard numbers.** A **read** is the F04 rule: `ReadingProgress.CompletedAt` in the window, once per reader and
+   article. **Active readers** are the distinct accounts with a read in the window. **New users** are the accounts
+   created in the window, split by how they signed up: a new column `Users.SignUpMethod` (`phone` | `google` |
+   `apple`), filled once for existing accounts from the audit log (an `auth.external_sign_up` entry → the provider of
+   their oldest link, else `phone`). **Articles published** = a first publish (`PublishedAt`) in the window, not deleted.
+   **Comments** = comments and replies written in the window and not deleted; **reactions** = reactions whose current
+   type was chosen in the window (`reactedAt`); **reposts** = reposts made in the window that still exist. System
+   accounts never count as users or readers. The four state cards (open reports, open tickets, pending verification
+   requests, accounts suspended now) are the numbers right now and have no previous value.
+6. **Streak retention** doesn't depend on `period`. The cohort is last week's active readers (a read in the 7 days
+   before today); `kept` is those of them whose reading streak (`UserStats.CurrentStreak`) is 3 or more and still alive
+   (they read yesterday or today). `rate` = kept ÷ cohort, `null` for an empty cohort.
+7. **Last seen** lives in its own table, `UserPresence` (`UserId` → `Users`, cascade; `LastSeenAt`), not on the
+   `Users` row, whose row version would make a parallel request's save fail. Any signed-in request sets it, at most once
+   an hour per account (an in-memory check, then a conditional upsert): accurate to the hour, one write an hour per
+   active account. It is `null` until the account's first request after F23 ships.
+8. **Searches with no results** (`SearchMisses`, §22). `GET /search` records a miss when a first page (no `cursor`) of
+   `type=articles` with no `field`, `minMinutes` or `maxMinutes` filter finds nothing. The query is the cleaned and
+   normalized `q` (≤ 100 characters); `language` is `ar` when it holds an Arabic letter, else `en`; the date is today in
+   `Admin:TimeZone`. Clients search as you type, so a miss waits 30 seconds per searcher (the user, or the IP for a
+   guest) and is dropped when that searcher's next search extends it (`dock` → `docker`); a restart loses at most those
+   30 seconds. No user id or IP is stored. Kept 90 days.
+9. **Suspend and hide everything.** `suspend` takes `hideContent: true` to also hide all of the user's articles and
+   comments in the same call. Two new user actions do it on their own: `hide_content`, and its undo `unhide_content`.
+   What `hide_content` hid is flagged (`Articles.HiddenWithAccount`, `Comments.HiddenWithAccount`), so the undo brings
+   back only that, never content hidden one by one before or after.
+10. **Featured articles** (`Articles.FeaturedAt`). Nothing showed featured articles before F23. They now fill a new
+    Explore section, `ExploreDto.featuredArticles` (≤ 6, the most recently featured first, only articles readers can
+    open; `[]` when none, so clients hide it), and `ArticleDetailsDto.isFeatured` drives the article's "⋯" item. Their
+    order is the time they were featured; only featured paths have a manual order.
+11. **Fields and topics** (§18). The first console change to a field or topic sets its `CustomizedAt`, and from then on
+    the taxonomy seeder leaves that row alone: it never renames, re-orders, disables or re-enables it. Rows nobody
+    edited keep following `content/taxonomy.yaml`. The console can add fields and topics (customized from the start),
+    but deletes nothing: disable instead. Slugs never change. Topics get `IsEnabled` (new): a disabled topic leaves the
+    topic lists and chips, the editor's picker, onboarding and search; its articles stay in their field and keep it.
+12. **Tags** (F32). Renaming keeps the slug, so links keep working. When the normalized name changes, the old spelling
+    becomes an **alias** of the tag (new table `TagAliases`): writers who type it, and seed content that names it, get
+    this tag, so a re-import never creates it again. Merging A into B moves A's articles to B, makes A's name and slug
+    aliases of B (`/tags/{a-slug}` answers B) and deletes A. A merge can't be undone.
+13. **Announcements.** "Everyone" = every active account (not suspended, not a system account) except the sender; "the
+    readers of a field" = accounts that follow the field or one of its topics (their interests, F02/F12); "the readers
+    of a language" = accounts whose article language is that one. Accounts that set `announcement` to `off` aren't
+    counted or told; `inApp` gets no push. "One a day" is one per calendar day in `Admin:TimeZone`, held by a unique key
+    so two sends at once can't both pass; tests don't count. A background job writes the entries in batches.
+14. **The audit browser** merges `AuditLogs` and `ModerationActions`. It leaves out the `moderation.*` audit entries,
+    because each repeats a moderation log entry, which has the label and the note. `AuditLogs` gains `TargetType`,
+    `TargetId` and `Details` (≤ 500, never personal data), so taxonomy, path, announcement and ticket actions say what
+    they touched.
+15. **System page data.** Every Hangfire run is a row in a new `JobRuns` table (written by a server filter, kept 7
+    days). Every push send adds its counts to `PushDeliveryStats`, one row per UTC hour, written by a wrapper around the
+    push sender, so the F17 pushes and the daily article both count (kept 7 days). Both survive a restart. Storage is
+    measured by walking the uploads folder and the private store, cached 10 minutes.
+16. **The content pipeline** is part of the dashboard (`AdminDashboardDto.contentPipeline`). There is no
+    `/admin/content-pipeline`.
+17. **Suspended profiles.** A suspended account's profile is `404` for everyone (F14), so its "⋯" could never offer
+    "Unsuspend". Holders of `users.read` now get suspended accounts on all five profile routes, and `ProfileDto.admin`
+    gives them the account's state.
+18. **Sign out of all devices** needs `users.suspend` (it ends access, like a suspension) and sends the user nothing.
+19. **Phone numbers.** Lists show masked numbers only (`+20***1234`: the country code, `***`, the last 4 digits). The
+    full number comes one at a time from `GET /admin/users/{id}/phone` (`users.read.pii`, audited, `writes` rate limit,
+    so it can't be scraped). Searching by phone number needs `users.read.pii` too.
+20. **A user's page** carries each section only for holders of its permission (`null` otherwise): moderation history and
+    reports (`moderation.manage`), verification requests (`verification.manage`), tickets (`support.manage`) and audit
+    entries (`audit.read`). Each list holds the newest 20, with a total.
+21. **The suspension reason** stays as F22 checks it on the server (required, ≤ 500); the console's form asks for 5–500
+    (SPEC F23), so existing callers keep working.
+22. **Cleanup.** A new daily job, `admin-cleanup` (03:50 UTC), deletes `SearchMisses` older than 90 days, and `JobRuns`
+    and `PushDeliveryStats` rows older than 7 days.
+
+#### Permissions and sections
+
+| Permission | Opens |
+|---|---|
+| `admin.access` (new) | the console entry and layout, `GET /admin/summary`, `GET /admin/dashboard` |
+| `users.read` (new) | Users: `GET /admin/users`, `GET /admin/users/{id}`; suspended accounts' profiles (decision 17) |
+| `users.read.pii` | `GET /admin/users/{id}/phone`, phone search, IP addresses in the audit log |
+| `users.suspend` | suspend / unsuspend (with `moderation.manage`), `POST /admin/users/{id}/logout-all` |
+| `users.reset_password` | `POST /admin/users/{id}/reset-password` |
+| `moderation.manage` | Reports (the F22 queue), Content (`/admin/articles`, `/admin/comments`), hide / unhide / delete, warn, `hide_content` / `unhide_content` |
+| `articles.feature` | `PUT` / `DELETE /admin/articles/{id}/featured`, `PUT /admin/paths/featured` |
+| `support.create` (new; Members too) | the member's routes in Support (F35) |
+| `support.manage` (new) | Tickets (`/admin/support/tickets/*`), the `support_ticket` notification |
+| `verification.manage` | Verification (the F19 queue), `DELETE /admin/users/{id}/verification` |
+| `taxonomy.manage` | Taxonomy & Tags: `/admin/fields`, `/admin/topics`, `/admin/tags` |
+| `paths.manage` | Paths: `/admin/paths` (F09) |
+| `notifications.broadcast` (new) | Announcements: `/admin/announcements/*` |
+| `audit.read` (new) | Audit log: `GET /admin/audit` |
+| `system.settings` | System: `GET /admin/system`, `POST /admin/realtime/rebuild-counters` |
+
+Mobile has Dashboard, Users, Content, Reports, Tickets and Verification; the other sections are web only (SPEC F23).
+Reports, Tickets and Verification are the existing F22 and F19 queues and the F35 queue below.
+
+#### Summary and dashboard (`admin.access`)
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/admin/summary` | `AdminSummaryDto`: the badge on the console entry (open reports + open tickets + pending verification requests). Not cached. Clients ask on open, on resume and every 60 seconds |
+| GET | `/admin/dashboard?period=` | `AdminDashboardDto`. `period` = `today` (default) \| `yesterday` \| `7d` \| `30d`; anything else is `400 validation.failed` (`errors.period: ["validation.invalid"]`). Cached 60 seconds per period and UI language (`generatedAt` says when); the state cards are read per caller, after the cache |
+
+- No personal data: articles and writers appear as on any public page (`AuthorDto`), and searches without who searched.
+- "Articles published" opens Content with `from` = `fromDate` and `to` = `toDate` (the period's local dates).
+- **Top articles:** the 10 articles readers can open with the most reads in the period (ties: the newer
+  `publishedAt`). **Top writers:** the 10 authors with an account and the most reads of their articles in the period,
+  with how many of their articles were read. **Missed searches:** the 20 queries with the most misses on the period's
+  dates (ties: A–Z).
+- **Charts:** the last 30 days up to today, one point a day, zeros included, oldest first, whatever the period.
+- **Content pipeline:** the article folders in `content/articles` (a `meta.json` each, read once per process), the
+  `@readin` articles in the database (any status, not deleted), how many of those readers can open, and the newest
+  `SeedHistory.AppliedAt`.
+
+#### Users (`users.read`)
+
+| Method | Path | Permission | Body → Response |
+|---|---|---|---|
+| GET | `/admin/users?q=&status=&verified=&method=&joinedFrom=&joinedTo=&hasReports=&sort=&dir=&page=&pageSize=` | `users.read` | → `PagedList<AdminUserRowDto>`. Rules below |
+| GET | `/admin/users/{id}` | `users.read` | → `AdminUserDto` (a user's page). `404 user.not_found` (unknown or deleted) |
+| GET | `/admin/users/{id}/phone` | `users.read` + `users.read.pii` | → `{ phoneNumber: string \| null }` (E.164; `null` for a Google/Apple-only account), `Cache-Control: no-store`. Rate limit `writes`. Audited `admin.pii_viewed` when there is a number. `404 user.not_found` |
+| POST | `/admin/users/{id}/logout-all` | `users.suspend` | → `204`. Ends every session of the account (a new security stamp, every refresh token revoked): its next call is `401`. Audited `admin.sessions_revoked`. `404 user.not_found`, `400 moderation.self`, `403 moderation.staff_target` |
+| POST | `/admin/users/{id}/reset-password` | `users.reset_password` | exists (see Me); audited `admin.password_reset` |
+| DELETE | `/admin/users/{id}/verification` | `verification.manage` | exists (see Writer verification) |
+| POST | `/moderation/actions` | `moderation.manage` (+ `users.suspend` for `suspend` / `unsuspend`) | exists (F22); F23 adds `hideContent`, `hide_content` and `unhide_content` (below) |
+
+**The list** (`/admin/users`)
+- `q` (trimmed, ≤ 100, else `validation.max_length`): `@handle` → usernames that start with it; a GUID → that
+  account; with `users.read.pii`, a phone number in any form the phone field accepts (normalized to E.164) → that
+  exact number; otherwise every word starts a word of the display name (§22 normalization, as people search), or the
+  username starts with `q`. Without `users.read.pii` a phone-shaped `q` only matches names. Exact matches (username,
+  id, phone) come first. Clients send `+` as `%2B`. Request logs keep the path only, never the query string.
+- Filters: `status` = `active` | `suspended` (suspended now); `verified` = `true` | `false`; `method` = `phone` |
+  `google` | `apple` (can sign in that way now); `joinedFrom` / `joinedTo` (dates, decision 4); `hasReports=true` (open
+  reports about the user, their articles or their comments).
+- `sort` = `joined` (default) | `lastSeen` | `followers` | `openReports`; `dir` = `desc` (default) | `asc`; ties by
+  id. Accounts never seen come last either way.
+- System accounts are listed (`isSystemAccount`); deleted accounts never are. An unknown filter or sort value is
+  `400 validation.failed` with `validation.invalid` on that parameter.
+
+**A user's page** (`AdminUserDto`). Its actions call existing endpoints, and `actions` says which ones this caller may
+use on this account (permissions + decision 2):
+
+| Action | Shown when | Call |
+|---|---|---|
+| Suspend for 1, 3, 7 or 30 days, 1–365 days, or permanently, with a reason and "Also hide all of their articles and comments" | `actions.canSuspend`, `status: "active"` | `POST /moderation/actions` `{ action: "suspend", targetType: "user", targetId, note, durationDays, hideContent }` |
+| Unsuspend | `actions.canSuspend`, `status: "suspended"` | `{ action: "unsuspend", targetType: "user", targetId }` |
+| Warn | `actions.canWarn` | `{ action: "warn", targetType: "user", targetId, note }` |
+| Restore the content hidden with the account | `actions.canRestoreContent` (`moderation.hiddenWithAccount > 0`) | `{ action: "unhide_content", targetType: "user", targetId }` |
+| Reset password (show the temporary password once) | `actions.canResetPassword` | `POST /admin/users/{id}/reset-password` |
+| Sign out of all devices | `actions.canLogoutAll` | `POST /admin/users/{id}/logout-all` |
+| Remove verified badge | `actions.canRemoveBadge` | `DELETE /admin/users/{id}/verification` |
+| Clear title / Clear links | `actions.canClearProfile` and a `headline` / `links` to clear | `{ action: "clear_headline" \| "clear_links", targetType: "user", targetId }` |
+| Show phone number | `actions.canRevealPhone` | `GET /admin/users/{id}/phone` |
+
+**`POST /moderation/actions` (F23 additions)**
+- `ModerationActionRequest` gains `hideContent?: boolean`, for `suspend` only (`true` on any other action is
+  `400 moderation.action_invalid`). `suspend` with `hideContent: true` is `suspend` and then `hide_content`, in one
+  transaction (two log entries).
+- `hide_content` (user target; `moderation.manage`; protected accounts as decision 2; `note` optional): hides every
+  article (published or archived) and comment of the user that isn't already hidden or deleted, flags each one as
+  hidden with the account, and resolves the open reports of what it hid. The user gets no notice or push. Logged once
+  as `user.hide_content` (label `@username`) and audited `moderation.content_hidden` (details: the counts). Nothing to
+  hide → `204`, nothing logged.
+- `unhide_content` (user target; `moderation.manage`; allowed on anyone): unhides what `hide_content` hid and is still
+  hidden (unhiding one item by hand clears its flag). Logged `user.unhide_content`, audited
+  `moderation.content_restored`. Nothing flagged → `204`, nothing logged. Closed reports stay closed.
+- Feeds, Explore, counters and the cached pages of the articles touched refresh as for a single hide.
+
+#### Content (`moderation.manage`; featuring: `articles.feature`)
+
+| Method | Path | Permission | Body → Response |
+|---|---|---|---|
+| GET | `/admin/articles?from=&to=&field=&topic=&writer=&status=&hidden=&featured=&reported=&q=&sort=&page=&pageSize=` | `moderation.manage` | → `PagedList<AdminArticleRowDto>` |
+| GET | `/admin/articles/{id}` | `moderation.manage` | → `AdminArticleRowDto` ("Open in console"). `404 article.not_found` (unknown, a draft, or deleted) |
+| GET | `/admin/comments?hidden=&page=&pageSize=` | `moderation.manage` | → `PagedList<AdminCommentRowDto>` ("Latest comments") |
+| PUT | `/admin/articles/{id}/featured` | `articles.feature` | → `204`. Rate limit `writes` |
+| DELETE | `/admin/articles/{id}/featured` | `articles.feature` | → `204` (idempotent). Rate limit `writes` |
+
+- **Articles:** published and archived ones (never drafts or deleted ones), hidden ones included. `from` / `to` apply
+  to the first publish date. `field`, `topic`, `writer` are ids. `status` = `published` | `archived`; `hidden`,
+  `featured` = `true` | `false`; `reported=true` = with open reports. `q` (≤ 100) = words in the title of any version
+  (§22 normalization). `sort` = `published` (default, newest first) | `featured` (most recently featured first: the
+  featured list is `featured=true&sort=featured`). Bad values: `400 validation.failed`. The title is the caller's
+  UI-language version (`ar` → `ar-EG`), else the source. Hide or unhide with `POST /moderation/actions`; the reports
+  are the F22 case `GET /moderation/reports/article/{id}` (when `reportCount > 0`).
+- **Comments:** newest first across all articles, replies included; deleted comments, and comments of deleted
+  articles, are left out; hidden ones are in (`hidden=true|false` filters). Hide, unhide and delete with
+  `POST /moderation/actions`; reports through `GET /moderation/reports/comment/{id}`.
+- **Featuring:** `PUT` features an article readers can open (`404 article.not_found` otherwise: unknown, not
+  published, hidden or deleted); one already featured keeps its time (`204`, nothing written). `DELETE` works on any
+  article, even one no longer readable. Audited `admin.article_featured` / `admin.article_unfeatured`. Drops Explore's
+  cache and the article's cached details. A featured article that stops being readable stays featured but leaves
+  Explore until it is readable again.
+
+#### Taxonomy and tags (`taxonomy.manage`, web only)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/admin/fields` | → `AdminTaxonomyDto`: every field, disabled ones too, in display order, each with all its topics, plus the `icons` and `colors` the clients can draw |
+| POST | `/admin/fields` | `CreateFieldRequest` → `201 AdminFieldDto`. `409 field.slug_taken` |
+| PUT | `/admin/fields/{id}` | `UpdateFieldRequest` → `200 AdminFieldDto`. `404 field.not_found` |
+| PUT | `/admin/fields/order` | `{ ids: string[] }` (every field once, in display order) → `204`. `400 admin.order_invalid` |
+| POST | `/admin/topics` | `CreateTopicRequest` → `201 AdminTopicDto`. `404 field.not_found`, `409 topic.slug_taken` |
+| PUT | `/admin/topics/{id}` | `UpdateTopicRequest` → `200 AdminTopicDto`. `404 topic.not_found` |
+| PUT | `/admin/fields/{id}/topics/order` | `{ ids: string[] }` (every topic of the field once) → `204`. `404 field.not_found`, `400 admin.order_invalid` |
+| GET | `/admin/tags?q=&status=&origin=&sort=&page=&pageSize=` | → `PagedList<AdminTagDto>` |
+| PUT | `/admin/tags/{id}` | `{ name: string }` (rename) → `200 AdminTagDto`. `404 tag.not_found`, `409 tag.name_taken` |
+| POST | `/admin/tags/{id}/merge` | `{ intoTagId: string }` → `200 AdminTagDto` (the tag merged into). `400 tag.merge_self`, `404 tag.not_found` |
+| PUT | `/admin/tags/{id}/hidden` | → `200 AdminTagDto` (hide; idempotent). `404 tag.not_found` |
+| DELETE | `/admin/tags/{id}/hidden` | → `200 AdminTagDto` (unhide; idempotent). `404 tag.not_found` |
+
+Every write here has the `writes` rate limit.
+
+**Fields and topics**
+- `slug`: kebab-case (`^[a-z0-9]+(-[a-z0-9]+)*$`), 2–64 characters (`validation.slug`); it never changes. `nameAr`,
+  `nameEn`: 1–100 after trimming (`validation.required`, `validation.max_length`). `icon` must be one of
+  `AdminTaxonomyDto.icons` (`field.icon_invalid`) and `color` one of `colors` (`field.color_invalid`), one server list
+  that both clients draw.
+- A new field goes last, a new topic last in its field. A field created disabled stays out of every list until it is
+  enabled.
+- Disabling a field does what `enabled: false` in `taxonomy.yaml` does today: the field and its articles leave feeds,
+  Explore, field pages, search, saved lists, paths, interests and the editor; the articles stay and come back when it is
+  enabled again (the UI confirms with `articleCount`). Disabling a topic: decision 11.
+- A change that changes nothing → `200`, nothing written (no audit entry, `customizedAt` stays). Otherwise the row's
+  `customizedAt` is set (decision 11).
+- Audited `admin.field_created`, `admin.field_updated`, `admin.fields_reordered`, `admin.topic_created`,
+  `admin.topic_updated`, `admin.topics_reordered` (target: the field or topic; details: the changed properties, e.g.
+  `nameEn, isEnabled=false`).
+- Every write drops the taxonomy caches, feeds and Explore, and the article pages (they carry field and topic names).
+
+**Tags**
+- The list: `q` (≤ 64) is cleaned and normalized like a tag name (F32 rules 1 and 3); a tag matches when its
+  normalized name, its slug or one of its aliases contains it. `status` = `all` (default) | `visible` | `hidden`;
+  `origin` = `all` (default) | `system` | `user`; `sort` = `articles` (default: `articleCount` desc, then name) |
+  `name` | `newest`.
+- **Rename:** the new name must pass F32 rules 1–2 (`400 validation.failed`, `errors.name: ["tag.invalid"]`). The same
+  normalized form → only the spelling changes. A normalized form that another tag or alias has → `409 tag.name_taken`,
+  with `tagId` and `tagSlug` of that tag in the problem (offer "Merge into #{name}"). Otherwise the old spelling becomes
+  an alias (and the new name stops being an alias, if it was one of this tag's). The slug never changes. No change →
+  `200`, nothing written. Audited `admin.tag_renamed` (details `old → new`).
+- **Merge** `{id}` (A) into `intoTagId` (B), in one transaction: each article of A gets B in A's place (an article that
+  has both keeps B once, at the first of the two places, and its other tags keep their order, so the 5-tag limit holds);
+  A's aliases move to B, and A's name and slug become aliases of B; if A was a system tag, B becomes one; B keeps its
+  own hidden state; A is deleted. Audited `admin.tag_merged` (target B, details `A → B (n articles)`). The UI confirms
+  with `taggedCount`: it can't be undone.
+- **Hide / unhide:** F32's effects (not suggested, not on cards or the reader, its page `404`, `tag.hidden` in the
+  editor for new uses; it stays on its articles, so unhiding brings it back). Audited `admin.tag_hidden` /
+  `admin.tag_unhidden`.
+- Every tag write drops the tag caches (suggestions, headers, guests' tag pages), feeds and Explore, and the article
+  pages (they carry tag names).
+- **Aliases elsewhere (changes to Tags, F32):** `GET /tags/{slug}` and `GET /tags/{slug}/articles` answer the target
+  tag for a merged tag's slug, and `TagDto.slug` is the target's: clients replace the URL (the web's server answers
+  `301`). The editor resolves an alias to its tag (so it never counts toward `tag.limit`, and the tag's hidden state
+  applies). Suggestions and search don't match aliases.
+
+#### Paths and featured (`paths.manage`, `articles.feature`, web only)
+
+| Method | Path | Permission | Body → Response |
+|---|---|---|---|
+| GET, POST, PUT, DELETE | `/admin/paths…` | `paths.manage` | exist (Path admin, F09). `AdminPathDto` gains `isFeatured` and `featuredOrder`. The writes are now audited (`admin.path_created`, `admin.path_updated`, `admin.path_items_set`, `admin.path_deleted`) and drop Explore's cache |
+| PUT | `/admin/paths/featured` | `articles.feature` | `{ pathIds: string[] }` → `204`. Rate limit `writes`. Rules below |
+
+- `PUT /admin/paths/featured` takes the whole featured list in Explore order: these paths get `IsFeatured` with
+  `FeaturedOrder` 1..N, every other path is unfeatured, and `[]` unfeatures all. 0–20 different existing paths,
+  editorial ones included (featuring isn't editing them); an unpublished path shows on Explore once it is published.
+  Anything else is `400 path.featured_invalid`. No change → `204`, nothing written; otherwise audited
+  `admin.featured_paths_set` (details: the slugs in order) and Explore's cache is dropped.
+- Featured articles: Content with `featured=true&sort=featured`. The article picker for a path's items is
+  `GET /search?type=articles&q=`.
+
+#### Announcements (`notifications.broadcast`, web only)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/admin/announcements` | → `AnnouncementsDto`: `canSend`, `nextAllowedAt` and the latest 50 announcements, newest first |
+| POST | `/admin/announcements/preview` | `AnnouncementRequest` → `200 AnnouncementPreviewDto`: who it would reach now. Nothing is sent or written |
+| POST | `/admin/announcements/test` | `AnnouncementRequest` → `204`. Rate limit `writes`. Sends it to you alone, at once (your `announcement` mode and quiet hours are ignored); it doesn't count as the day's announcement and isn't in the list. Audited `admin.announcement_tested` |
+| POST | `/admin/announcements` | `AnnouncementRequest` → `202 AnnouncementDto` (`status: "sending"`). Rate limit `writes`. `429 announcement.limit`, `400 announcement.no_recipients`. Audited `admin.announcement_sent` |
+
+- Validation (`400 validation.failed`): `titleAr` / `titleEn` 1–60 and `bodyAr` / `bodyEn` 1–180 after trimming,
+  all four required (`validation.required`, `validation.max_length`); `audience.type` = `all` | `field` | `language`,
+  `audience.language` = `ar-EG` | `en` (`validation.invalid`). `audience.fieldId` must be an enabled field
+  (`404 field.not_found`). `link` (optional) = `{ type: "article" | "path", id }` pointing at an article readers can
+  open or a published path, else `400 announcement.link_invalid`. `/preview` and `/test` check the same.
+- Clients preview it, send a test, then confirm a dialog that shows `recipientCount`.
+- Sending writes one `announcement` entry per recipient (decision 13) in a background job; when it is done the
+  announcement is `sent` with its final `recipientCount`. Pushes follow F17: only for the mode `all`, held during quiet
+  hours, dropped after 24 hours, in the recipient's UI language. The entry shows the announcement's title and body in
+  the reader's UI language (`NotificationDto.data.title` / `body`) and opens the article (`readin://a/{slug}`), the
+  path (`readin://paths/{slug}`) or, without a link, the notification center.
+
+#### Audit log (`audit.read`, web only)
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/admin/audit?actor=&target=&action=&source=&from=&to=&page=&pageSize=` | `PagedList<AuditEntryDto>`, newest first |
+
+- `actor` / `target`: account ids (who did it / whom it concerns). `action`: an exact code, or a prefix that ends in
+  `.` (`admin.`, `auth.`, `user.`), ≤ 64. `source` = `audit` | `moderation` (default: both). `from` / `to`: dates
+  (decision 4). Bad values: `400 validation.failed` (`validation.invalid` on the parameter).
+- Rows come from `AuditLogs` (without `moderation.*`, decision 14) and `ModerationActions`. `ip` only with
+  `users.read.pii`; moderation rows never have one. An account deleted since shows as `null`, and its own security
+  entries are gone (§9.6).
+
+#### System (`system.settings`, web only)
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/admin/system` | `AdminSystemDto`. Not cached, except storage (10 minutes) and the Firebase check (60 seconds) |
+| POST | `/admin/realtime/rebuild-counters` | exists; now audited `admin.counters_rebuilt` (details: the article count) |
+
+- `api`: the API's informational version (the build), when this process started, and the environment (`Production`,
+  `Staging`, `Development` or `Testing`). `updatePolicy`: what `GET /app/update-policy` answers (§8.3).
+- `database.reachable`: a `SELECT 1` within 3 seconds, with its time. `firebase`: whether FCM credentials are
+  configured, whether the Realtime Database is, and whether a read of it answered within 3 seconds (`null` when it
+  isn't configured).
+- `jobs`: every recurring job (`outbox`, `notification-push`, `daily-article`, `streak-reminder`, `article-quality`,
+  `article-excerpts-backfill`, `uploads-orphan-cleanup`, `verification-proofs-cleanup`, `identity-cleanup`,
+  `tags-cleanup`, `rtdb-events-cleanup`, `admin-cleanup`, and F35's `support-auto-close` and `support-retention`), with
+  its last run and its runs and failures in the last 24 hours. Without Hangfire (tests) every `lastRunAt` is `null`.
+- `push`: pushes sent and failed, and invalid tokens removed, in the last 24 hours (decision 15).
+- `storage`: bytes and files under the uploads folder and the private store.
+
+#### Admin actions inside the app
+
+| Menu | Item | Shown when | Call |
+|---|---|---|---|
+| A profile's "⋯" | "Suspend…" / "Unsuspend" | `moderation.manage` + `users.suspend`, not `isMe`, `ProfileDto.admin.isStaff` false; "Unsuspend" while `admin.isSuspended` | `POST /moderation/actions` `suspend` (the console's form) / `unsuspend` |
+| | "Warn…" | `moderation.manage`, not `isMe`, `admin.isStaff` false | `warn` |
+| | "Remove verified badge" | `verification.manage`, `isVerified`, not `isSystemAccount` | `DELETE /admin/users/{id}/verification` |
+| | "Open in console" | `users.read` | web `/admin/users/{id}`; mobile: the console's user page |
+| An article's "⋯" | "Hide" / "Unhide" | `moderation.manage` (hidden: `ArticleDetailsDto.moderation` is set) | `hide` / `unhide` |
+| | "Feature" / "Unfeature" | `articles.feature` (`ArticleDetailsDto.isFeatured`) | `PUT` / `DELETE /admin/articles/{id}/featured` |
+| | "Open in console" | `moderation.manage` | web `/admin/content/{id}` (`GET /admin/articles/{id}`) |
+| A comment's "⋯" | "Hide" / "Delete" | `moderation.manage` | `hide` / `delete` (F22) |
+
+Each item confirms first and is audited by its endpoint. "Remove verified badge" sends nothing to the user (F19).
+
+#### As built (implementation notes, 2026-11-07)
+- **Fields:** a field may keep an icon or color that isn't on the lists any more; only a changed value must come from
+  them. `admin.fields_reordered` has no target, `admin.topics_reordered` targets the field, both with details `{n} moved`;
+  each moved row becomes customized. Taxonomy writes also drop the tag caches.
+- **Disabled topics:** following one (`PUT /me/interests/topics/{id}`) is `404 topic.not_found`; `PUT /me/interests` keeps
+  accepting one already in the user's list (Settings never breaks); picking one in the editor is `400 topic.not_in_field`
+  (an article keeps the one it has).
+- **Featured articles:** `DELETE /admin/articles/{id}/featured` is `404 article.not_found` for an unknown or deleted id
+  (repeating it on a real article stays `204`). Their audit entries name the author as the user, so they go with that
+  account (§9.6). `AdminArticleRowDto.publishedAt` is `null` for an archived article that was never published.
+- **Audit details:** `hide_content` → `articles=N comments=M`; path items → `{slug}: N articles`; an empty featured list →
+  `-`.
+- **Announcements:** a test send has no `data.announcementId` (no row exists). `AdminSystemDto.push.since` is rounded down
+  to the hour. A job that ran but isn't registered any more still shows, with an empty `schedule`.
+- **Dashboard:** articles published, comments and active readers count hidden content too; open reports count distinct
+  targets (as `/moderation/summary`).
+- **A user's page:** `tickets` lists the member's newest 20 tickets (F35) for holders of `support.manage`.
+
+#### Changes elsewhere in this contract (made with the implementation)
+- **Roles and permissions:** the six new codes (decision 1).
+- **Profile (F14):** `ProfileDto.admin` (`null` for everyone without `users.read`), and suspended accounts on the five
+  profile routes for holders of `users.read` (decision 17).
+- **Articles:** `ArticleDetailsDto.isFeatured` (the same for everyone; cached with the details).
+- **Explore:** `ExploreDto.featuredArticles` (decision 10).
+- **Tags:** alias slugs (above). **Search:** misses are recorded (decision 8); responses don't change.
+- **Reports and moderation:** `hideContent`, `hide_content`, `unhide_content`; staff includes holders of
+  `admin.access` (decision 2). `ModerationActionDto.action` adds `user.hide_content` and `user.unhide_content`.
+- **Path admin:** `AdminPathDto.isFeatured` / `featuredOrder`, audited writes, Explore's cache dropped.
+- **Notifications:** new types `announcement` (configurable, quiet hours apply; F23), `support_reply` (always comes,
+  like `verification_result`) and `support_ticket` (configurable, only for holders of `support.manage`) (F35).
+  `GET /me/notification-settings` returns 10 types (11 with `support.manage`); a `PUT` with `support_ticket` from
+  anyone else is `400 notification.type_invalid`, and so is one with `support_reply`.
+
+#### Error codes (new)
+
+| Code | Where | Arabic | English |
+|---|---|---|---|
+| `429 announcement.limit` | `POST /admin/announcements` | «أُرسل إعلان اليوم بالفعل. يمكن إرسال إعلان واحد في اليوم.» | "An announcement was already sent today. You can send one a day." |
+| `400 announcement.no_recipients` | `POST /admin/announcements` | «لا يوجد مستلمون لهذا الإعلان.» | "This announcement has no recipients." |
+| `400 announcement.link_invalid` | announcements | «يجب أن يشير الرابط إلى مقال منشور أو مسار منشور.» | "The link must point to a published article or path." |
+| `409 field.slug_taken` | `POST /admin/fields` | «يوجد مجال آخر بهذا المعرّف.» | "Another field uses this slug." |
+| `409 topic.slug_taken` | `POST /admin/topics` | «يوجد موضوع آخر في هذا المجال بهذا المعرّف.» | "Another topic in this field uses this slug." |
+| `field.icon_invalid` (validation, `errors.icon`) | fields | «اختر أيقونة من القائمة.» | "Choose an icon from the list." |
+| `field.color_invalid` (validation, `errors.color`) | fields | «اختر لونًا من القائمة.» | "Choose a color from the list." |
+| `400 admin.order_invalid` | the two `…/order` routes | «يجب أن تضم القائمة كل العناصر مرة واحدة.» | "The list must hold every item exactly once." |
+| `409 tag.name_taken` (+ `tagId`, `tagSlug`) | tag rename | «يوجد وسم آخر بهذا الاسم. إن كانا الوسم نفسه فادمجهما.» | "Another tag already has this name. If they're the same, merge them." |
+| `400 tag.merge_self` | tag merge | «لا يمكن دمج الوسم في نفسه.» | "A tag can't be merged into itself." |
+| `400 path.featured_invalid` | `PUT /admin/paths/featured` | «اختر 20 مسارًا على الأكثر، موجودة ومن دون تكرار.» | "Choose up to 20 different existing paths." |
+
+Reused: `auth.forbidden`, `auth.unauthorized`, `user.suspended`, `user.not_found`, `article.not_found`,
+`field.not_found`, `topic.not_found`, `tag.not_found`, `tag.invalid`, `path.*`, `moderation.self`,
+`moderation.staff_target`, `moderation.action_invalid`, `verification.*`, `validation.failed` with
+`validation.required` / `validation.max_length` / `validation.slug` / `validation.invalid`, `rate_limited`.
+
+#### Audit actions (new)
+
+Clients label every code in the audit log; an unknown code shows as it is.
+
+| Code | Target | Arabic | English |
+|---|---|---|---|
+| `admin.pii_viewed` | user | «عرض رقم الهاتف» | "Viewed a phone number" |
+| `admin.sessions_revoked` | user | «إنهاء كل الجلسات» | "Signed out of all devices" |
+| `moderation.content_hidden` / `moderation.content_restored` | user | «إخفاء كل محتوى المستخدم» / «استعادة محتوى المستخدم» | "Hid all of the user's content" / "Restored the user's content" |
+| `admin.article_featured` / `admin.article_unfeatured` | article | «إبراز مقال» / «إلغاء إبراز مقال» | "Featured an article" / "Unfeatured an article" |
+| `admin.featured_paths_set` | — | «تعديل المسارات المبرزة» | "Changed the featured paths" |
+| `admin.field_created` / `admin.field_updated` / `admin.fields_reordered` | field | «إضافة مجال» / «تعديل مجال» / «إعادة ترتيب المجالات» | "Added a field" / "Edited a field" / "Reordered the fields" |
+| `admin.topic_created` / `admin.topic_updated` / `admin.topics_reordered` | topic (reorder: field) | «إضافة موضوع» / «تعديل موضوع» / «إعادة ترتيب المواضيع» | "Added a topic" / "Edited a topic" / "Reordered the topics" |
+| `admin.tag_renamed` / `admin.tag_merged` | tag | «إعادة تسمية وسم» / «دمج وسمين» | "Renamed a tag" / "Merged tags" |
+| `admin.tag_hidden` / `admin.tag_unhidden` | tag | «إخفاء وسم» / «إظهار وسم» | "Hid a tag" / "Unhid a tag" |
+| `admin.path_created` / `admin.path_updated` / `admin.path_items_set` / `admin.path_deleted` | path | «إنشاء مسار» / «تعديل مسار» / «تعديل مقالات مسار» / «حذف مسار» | "Created a path" / "Edited a path" / "Set a path's articles" / "Deleted a path" |
+| `admin.announcement_sent` / `admin.announcement_tested` | announcement | «إرسال إعلان» / «إرسال إعلان تجريبي» | "Sent an announcement" / "Sent a test announcement" |
+| `admin.counters_rebuilt` | — | «إعادة حساب العدادات» | "Rebuilt the counters" |
+
+#### Data (one migration, `AdminConsole`)
+
+| Change | Details |
+|---|---|
+| `UserPresence` | `UserId` (the key) → `Users` cascade, `LastSeenAt datetime2`; index `(LastSeenAt)`. Kept off the `Users` row (decision 7) |
+| `Users.SignUpMethod` | `varchar(8) NULL`: `phone` / `google` / `apple` (null for system accounts); filled once by hand-written SQL in the migration (decision 5), wrapped in `EXEC` so the idempotent script compiles |
+| index | `Users(CreatedAt)` |
+| `SearchMisses` | `Id`, `Date date`, `Language varchar(2)`, `Query nvarchar(100)` (`Latin1_General_100_BIN2`), `Count int`; unique `(Date, Language, Query)` |
+| `Fields.CustomizedAt`, `Topics.CustomizedAt` | `datetime2 NULL` |
+| `Topics.IsEnabled` | `bit NOT NULL DEFAULT 1` |
+| `TagAliases` | `Id`, `TagId` → `Tags` cascade, `Name nvarchar(64)`, `NormalizedName nvarchar(64)` (`Latin1_General_100_BIN2`, unique), `Slug nvarchar(100) NULL` (unique where not null: a merged tag's slug), `CreatedAt`; index `(TagId)` |
+| `AuditLogs.TargetType`, `TargetId`, `Details` | `varchar(16) NULL`, `uniqueidentifier NULL` (no FK), `nvarchar(500) NULL`; indexes `(ActorId, CreatedAt)` and `(TargetType, TargetId, CreatedAt)` next to the existing `(UserId, CreatedAt)` and `(CreatedAt)` |
+| `Articles.FeaturedAt`, `FeaturedById` | `datetime2 NULL`, `uniqueidentifier NULL` (no FK; account deletion nulls it); index `(FeaturedAt)` where not null |
+| `Articles.HiddenWithAccount`, `Comments.HiddenWithAccount` | `bit NOT NULL DEFAULT 0` |
+| `Announcements` | `Id`, `TitleAr`, `TitleEn nvarchar(60)`, `BodyAr`, `BodyEn nvarchar(180)`, `LinkType varchar(8) NULL`, `LinkId uniqueidentifier NULL`, `AudienceType varchar(8)`, `FieldId NULL` (no FK), `Language varchar(5) NULL`, `SentById NULL` (no FK; account deletion nulls it), `LocalDate date` (unique: one a day), `Status tinyint`, `RecipientCount int`, `CreatedAt`, `CompletedAt NULL` |
+| `JobRuns` | `Id`, `Job varchar(64)`, `StartedAt`, `DurationMs int`, `Succeeded bit`, `Error nvarchar(500) NULL` (the exception's type and message); indexes `(Job, StartedAt)`, `(StartedAt)` |
+| `PushDeliveryStats` | `Hour datetime2` (the UTC hour, the key), `Sent`, `Failed`, `InvalidTokens int` |
+| dashboard indexes | `ReadingProgress(CompletedAt)` including `(UserId, ArticleId)` where not null; `Comments(CreatedAt)`; `Reactions(ReactedAt)`; `Reposts(CreatedAt)` |
+
+Account deletion (§9.6): `Announcements.SentById` and `Articles.FeaturedById` are anonymized (nulled explicitly);
+`UserPresence` goes with the account (cascade) and `Users.SignUpMethod` with the row; `SearchMisses`, `TagAliases`, `JobRuns` and `PushDeliveryStats`
+hold no personal data. New configuration: `Admin:TimeZone` (default `Africa/Cairo`).
+
+### Support (F35) — SPEC F35
+
+Members send tickets from Settings → «المساعدة والدعم» (web `/support`, mobile `/settings/support`); the SuperAdmin
+answers them in the console's Tickets (web and mobile). Routes need a Bearer token unless marked 🌐; writes use the
+`writes` rate limit. A suspended account gets `403 user.suspended` here too: the suspension screen shows the support
+email instead.
+
+**Decisions** (what SPEC F35 leaves open)
+
+1. **Categories:** `app_problem` (a problem in the app), `account` (account and sign in), `content` (content or a
+   report), `verification`, `suggestion`, `other`.
+2. **Limits:** "5 a day" = 5 tickets created in the last 24 hours (rolling); "open at once" = not closed (Open or
+   Answered), at most 10. Both answer `429 support.limit`, with `limit: "daily" | "open"` in the problem so clients can
+   say which.
+3. **Ticket numbers:** each ticket has a `number` (a sequence from 1), shown as "#12" in both apps and usable in email.
+4. **Who answered:** the member sees support's replies as from «فريق الدعم» / "Support" (`fromSupport: true`, no admin
+   name), like moderators (F22). Admins see who wrote each message.
+5. **Messages:** a member's message has 1–2000 characters (the first one, with the ticket, 10–2000) and up to 3
+   screenshots. Support's replies and internal notes are text only, sent as JSON (§17.2).
+6. **Statuses:** a member's message moves Answered → Open; a support reply moves Open → Answered (and keeps Answered);
+   internal notes and category changes never change the status or tell the member. A closed ticket takes no messages
+   (`409 support.ticket_closed`): the member reopens it within 30 days of closing (later: `409 support.reopen_expired`),
+   support reopens it any time with `PATCH`. Reopening makes it Open.
+7. **Jobs:** `support-auto-close` (hourly) closes an Answered ticket whose last support reply is 14 days old with no
+   member message since (`closedBy: "auto"`, no notification). `support-retention` (daily, 04:15 UTC) deletes tickets
+   closed more than 365 days ago, with their messages and files, and files under `support/` that no row points at
+   (a failed delete) once they are a day old.
+8. **Notifications:** `support_reply` on a support reply and when support closes the ticket (not on auto-close, notes
+   or category changes); `support_ticket` to every holder of `support.manage` except whoever acted, on a new ticket and
+   on each member message. Both are grouped per ticket: new activity joins an unread entry of the same ticket from the
+   last 24 hours (F17 aggregation).
+9. **The support email** comes from `GET /support/config` (🌐), so the public `/support` page, the suspension screen
+   and the "forgot the PIN too" sheet can show it without signing in; `email` is `null` when `Support:Email` isn't set.
+10. **Device details** are optional text sent with the ticket. The app fills them; the web sends `platform: "web"`,
+    the browser and OS as `osVersion` and its build as `appVersion`. An unknown `platform` or `language` is stored as
+    `null` and over-long text is cut, never an error, so an odd device never blocks a ticket. No device identifier.
+11. **Screenshots** are stored as received (like F19 proofs), in the private store; only the owner and holders of
+    `support.manage` read them, as attachments.
+12. **Audit:** every admin write (`admin.ticket_*`), with the ticket's owner as the user and the ticket as the target,
+    never the text.
+
+#### Member routes
+
+| Method | Path | Permission | Body → Response |
+|---|---|---|---|
+| GET | `/support/config` | 🌐 | → `SupportConfigDto` (`Cache-Control: public, max-age=300`) |
+| POST | `/support/tickets` | `support.create` | `multipart/form-data`: `category`, `subject`, `message`, `platform?`, `osVersion?`, `appVersion?`, `language?`, `screen?`, `screenshots` (0–3 files) → `201 SupportTicketDto` (`Location: /api/v1/support/tickets/{id}`). Rules below |
+| GET | `/me/support/tickets?status=&cursor=&limit=` | `support.create` | → `CursorPage<SupportTicketSummaryDto>`, latest activity first. `status` = `active` (Open or Answered) \| `closed`; omitted = all; anything else `400 validation.failed`. `limit` 1–50, default 20 |
+| GET | `/support/tickets/{id}` | `support.create` | → `SupportTicketDto` (without internal notes). `404 support.ticket_not_found` (unknown, or someone else's) |
+| POST | `/support/tickets/{id}/messages` | `support.create` | `multipart/form-data`: `message` (1–2000), `screenshots` (0–3) → `201 SupportMessageDto`. `404 support.ticket_not_found`, `409 support.ticket_closed`, the screenshot errors below |
+| POST | `/support/tickets/{id}/close` | `support.create` | → `204` (idempotent). `404 support.ticket_not_found` |
+| POST | `/support/tickets/{id}/reopen` | `support.create` | → `204` (a ticket that isn't closed: `204`, nothing changes). `404 support.ticket_not_found`, `409 support.reopen_expired` |
+| GET | `/support/attachments/{id}` | the ticket's owner, or `support.manage` | → the file with its stored `Content-Type` (`image/jpeg` \| `image/png` \| `image/webp`), `Content-Disposition: attachment; filename="support-{number}-{n}{.ext}"`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`. `404 support.attachment_not_found` (unknown, or not yours) |
+
+`POST /support/tickets` and `POST /support/tickets/{id}/messages`, checked in this order:
+- A body that isn't `multipart/form-data` → `415 request.unsupported_media_type`.
+- Validation (`400 validation.failed`): `category` one of decision 1 (`support.category_invalid`); `subject` 5–120
+  characters after trimming (`validation.required`, `validation.length`); `message` 10–2000 for a new ticket, 1–2000
+  after it (`validation.required`, `validation.length`).
+- A new ticket: `429 support.limit` (decision 2).
+- Screenshots: more than 3 → `400 support.too_many_attachments`; one that is empty, over 5 MB, or not JPEG, PNG or
+  WebP **by its bytes** → `400 support.attachment_invalid` (the file name and the part's `Content-Type` are ignored; a
+  body far over the limit gets the same answer, since the server stops reading it).
+- Stored as `support/{messageId}/{n}{.ext}` (`n` = 1–3 in the order sent) in the private store
+  (`Storage:PrivatePath`), never under `/uploads`.
+- Device fields (decision 10): `platform` `ios` | `android` | `web`, `osVersion` ≤ 60, `appVersion` ≤ 40 (version and
+  build, e.g. `1.2.0+57`), `language` `ar` | `en` (the UI language), `screen` ≤ 100 (the route the ticket came from).
+- Then `support_ticket` goes to the holders of `support.manage`.
+
+#### Admin routes (`support.manage`; in the console on web and mobile)
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/admin/support/tickets?status=&category=&q=&page=&pageSize=` | → `PagedList<AdminTicketRowDto>`. `status` = `open` (default; waiting longest first) \| `answered` (latest reply first) \| `closed` (latest closed first); `category` one of decision 1; `q` (≤ 100) = words in the subject, the member's name or `@username` (as people search), or `#12` for a ticket number. Bad values `400 validation.failed` |
+| GET | `/admin/support/tickets/{id}` | → `AdminTicketDto`: the conversation with internal notes, the member's card, the device details, and their reports and moderation history. `404 support.ticket_not_found` |
+| POST | `/admin/support/tickets/{id}/messages` | `{ body: string, internal: boolean }` (body 1–2000 after trimming) → `201 AdminSupportMessageDto`. Rate limit `writes`. A reply (`internal: false`) makes the ticket Answered and sends `support_reply`; a closed ticket → `409 support.ticket_closed` (reopen it first). An internal note works in any status and tells nobody. Audited `admin.ticket_replied` / `admin.ticket_note_added` |
+| PATCH | `/admin/support/tickets/{id}` | `{ status?: "open" \| "closed", category?: SupportCategory }` (at least one; `validation.required`) → `200 AdminTicketDto`. Rate limit `writes`. `closed` closes it (`closedBy: "support"`) and sends `support_reply`; `open` reopens it (no time limit). The same value as now changes nothing and writes nothing. Audited `admin.ticket_closed`, `admin.ticket_reopened`, `admin.ticket_category_changed` |
+
+The console badge counts tickets in Open (`AdminSummaryDto.openTickets`). A member's page in the console lists their
+tickets (`AdminUserDto.tickets`: `{ items: AdminTicketRowDto[], total }`, newest 20).
+
+#### As built (implementation notes, 2026-11-07)
+- **Order of checks on a message:** `404 support.ticket_not_found` and `409 support.ticket_closed` come before the
+  screenshots. A non-multipart request with no body is `400 request.invalid`; one with a JSON body `415`.
+- **Screenshots:** a row whose file is missing on disk answers `404 support.attachment_not_found`. The private store gets a
+  `support/` folder at startup; a message's folder goes with its last file.
+- **Excerpts** (`lastMessage.excerpt`): whitespace collapsed to single spaces, cut at 140 characters with "…".
+- **Admin routes:** `PATCH` with neither field is `400 validation.failed` with `errors.status: ["validation.required"]`;
+  a reply's or note's `body` uses `validation.required` / `validation.max_length`.
+- **Notifications:** `GET /me/notification-settings` returns 10 types, 11 for holders of `support.manage` (with
+  `support_ticket`). An entry whose ticket was deleted stays in the center (opening it gives `404`); its push is skipped.
+- **Jobs:** `support-auto-close` runs hourly at :20, `support-retention` daily at 04:15 UTC.
+- New tickets and messages are saved inside the per-member lock's transaction; their outbox events (the notifications)
+  are dispatched right after that transaction commits.
+
+#### Error codes (new)
+
+| Code | Arabic | English |
+|---|---|---|
+| `429 support.limit` (+ `limit`) | «وصلت إلى حد التذاكر: 5 تذاكر جديدة في اليوم و10 تذاكر مفتوحة على الأكثر.» | "You've reached the ticket limit: 5 new tickets a day and 10 open at once." |
+| `404 support.ticket_not_found` | «التذكرة غير موجودة.» | "Ticket not found." |
+| `404 support.attachment_not_found` | «المرفق غير موجود.» | "Attachment not found." |
+| `409 support.ticket_closed` | «هذه التذكرة مغلقة. أعد فتحها أولًا.» | "This ticket is closed. Reopen it first." |
+| `409 support.reopen_expired` | «مضى أكثر من 30 يومًا على إغلاق التذكرة. أرسل تذكرة جديدة.» | "This ticket was closed more than 30 days ago. Send a new one." |
+| `400 support.attachment_invalid` | «يجب أن تكون الصورة بصيغة JPEG أو PNG أو WebP، وألا يزيد حجمها على 5 م.ب.» | "Screenshots must be JPEG, PNG or WebP, up to 5 MB each." |
+| `400 support.too_many_attachments` | «يمكن إرفاق 3 صور على الأكثر.» | "You can attach up to 3 images." |
+| `support.category_invalid` (validation, `errors.category`) | «اختر تصنيفًا من القائمة.» | "Choose a category from the list." |
+
+#### Audit actions (new)
+
+| Code | Arabic | English |
+|---|---|---|
+| `admin.ticket_replied` | «الرد على تذكرة» | "Replied to a ticket" |
+| `admin.ticket_note_added` | «إضافة ملاحظة داخلية» | "Added an internal note" |
+| `admin.ticket_closed` / `admin.ticket_reopened` | «إغلاق تذكرة» / «إعادة فتح تذكرة» | "Closed a ticket" / "Reopened a ticket" |
+| `admin.ticket_category_changed` | «تغيير تصنيف تذكرة» | "Changed a ticket's category" |
+
+#### Data (one migration, `SupportTickets`)
+
+| Table | Columns and indexes |
+|---|---|
+| `SupportTickets` | `Id`, `Number int` (identity, unique), `UserId` → `Users` cascade, `Category varchar(16)`, `Subject nvarchar(120)`, `Status tinyint` (Open / Answered / Closed), `Platform varchar(8) NULL`, `OsVersion nvarchar(60) NULL`, `AppVersion nvarchar(40) NULL`, `Language varchar(2) NULL`, `Screen nvarchar(100) NULL`, `CreatedAt`, `UpdatedAt` (the latest message), `LastUserMessageAt`, `LastAdminReplyAt NULL`, `ClosedAt NULL`, `ClosedById NULL` (no FK), `ClosedBy tinyint NULL` (Member / Support / Auto); indexes `(Status, LastUserMessageAt)` (the queue), `(UserId, CreatedAt)` (My tickets, the daily limit), `(Status, LastAdminReplyAt)` (auto-close), `(Status, ClosedAt)` (retention) |
+| `SupportMessages` | `Id`, `TicketId` → cascade, `AuthorId NULL` (no FK; null once that account is deleted), `FromSupport bit`, `IsInternalNote bit`, `Body nvarchar(2000)`, `CreatedAt`; index `(TicketId, CreatedAt)` |
+| `SupportAttachments` | `Id`, `MessageId` → cascade, `Position tinyint` (1–3), `FilePath varchar(200)`, `ContentType varchar(16)`, `SizeBytes int`, `CreatedAt`; index `(MessageId)` |
+
+Account deletion follows §9.6: the account's tickets, messages and attachments go by cascade and their files right
+after the commit; on other members' tickets its replies and notes stay with `AuthorId` and `ClosedById` nulled. New
+configuration: `Support:Email` (empty = none).
 
 ## DTOs (TypeScript notation)
 
@@ -1986,6 +2597,7 @@ interface ProfileDto {
   readingStatsVisible: boolean;  // isMe, or the user turned on publicReadingStats: then /stats and /stats/heatmap answer 200
   isMuted: boolean;              // F28: the caller muted this user: "انت كاتم الكاتب ده" + "إلغاء الكتم"; false for guests and on your own profile
   isSystemAccount: boolean;      // F28: the official @readin account; it can't be muted, so the profile's "⋯" has no Mute
+  admin: { isSuspended: boolean; suspendedUntil: string | null; isStaff: boolean } | null; // F23: users.read holders only; null for everyone else
 }
 
 interface ExpertiseFieldDto { id: string; slug: string; name: string; icon: string; color: string } // name localized by Accept-Language
@@ -2198,6 +2810,7 @@ interface ExploreDto {           // GET /explore; an empty section is [] (client
   mostSaved: ArticleCardDto[];   // ≤ 6, the first of /explore/most-saved
   newWriters: UserSummaryDto[];  // ≤ 10, latest first publish first
   featuredPaths: PathCardDto[];  // ≤ 6, featured order
+  featuredArticles: ArticleCardDto[]; // F23: ≤ 6, most recently featured first; [] hides the section
 }
 
 interface FieldSummaryDto {      // a field tile on Explore; opens /f/{slug}
@@ -2243,6 +2856,7 @@ interface ArticleDetailsDto extends ArticleCardDto {
   myProgress: MyProgressDto | null; // the caller's reading progress (F04 resume); null for guests and unopened articles
   moderation: { hiddenAt: string; note: string | null } | null; // hidden by a moderator (only its author and moderators see it)
   category: WriterCategoryRefDto | null; // F31: the writer's category of the article ("في قسم {name}"); null: none
+  isFeatured: boolean;           // F23: featured on Explore (articles.feature holders show Feature / Unfeature in "⋯")
 }
 
 // Reports and moderation (F22)
@@ -2295,6 +2909,7 @@ interface ModerationActionDto {
   id: string;
   action: 'comment.hide' | 'comment.unhide' | 'comment.delete' | 'article.hide' | 'article.unhide'
         | 'user.warn' | 'user.suspend' | 'user.unsuspend' | 'user.clear_category' | 'user.clear_links' | 'user.clear_headline'
+        | 'user.hide_content' | 'user.unhide_content' // F23
         | 'reports.dismiss'; // clear_category: F31; clear_links, clear_headline: F14
   targetType: ModerationTargetType;
   targetId: string;
@@ -2353,7 +2968,7 @@ interface AdminVerificationRequestDto {
 }
 
 // Notifications (F17)
-type NotificationType = 'new_follower' | 'article_comment' | 'comment_reply' | 'mention' | 'reactions_milestone'
+type NotificationType = 'new_follower' | 'article_comment' | 'comment_reply' | 'mention' | 'reactions_milestone' | 'announcement' // F23
   | 'followed_writer_article' | 'daily_article' | 'streak_reminder' | 'security_alert' | 'verification_result' | 'moderation_notice'
   | 'article_reposted'; // F29
 
@@ -2369,7 +2984,7 @@ interface NotificationDto {
   actorCount: number;            // distinct actors (≥ 1 when actor-based, 0 otherwise): "X and {actorCount - 1} others"
   article: { id: string; slug: string; title: string; language: ArticleLanguage } | null; // your article language, else the source
   comment: { id: string; parentId: string | null; excerpt: string } | null;              // excerpt ≤ 140 chars, plain text, one line; null for a mention in an article
-  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange; approved?: boolean; articleCount?: number }; // only the keys that apply; approved: verification_result; articleCount: the official @readin account's day entry (followed_writer_article, ≥ 1)
+  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange; approved?: boolean; articleCount?: number; announcementId?: string; title?: string; body?: string }; // only the keys that apply; approved: verification_result; articleCount: the official @readin account's day entry (followed_writer_article, ≥ 1); announcementId/title/body: announcement (F23; title and body in Accept-Language; a test send has no announcementId)
   link: string;                  // readin://… (the same as the push's data.link)
 }
 // actor: also set for followed_writer_article (the writer); null for reactions_milestone, daily_article, streak_reminder,
@@ -2384,7 +2999,7 @@ interface NotificationSettingsDto {
   quietHours: { enabled: boolean; start: string; end: string };   // "HH:mm", your time zone; end exclusive, may be before start
   types: Partial<Record<Exclude<NotificationType, 'security_alert' | 'verification_result' | 'moderation_notice'>, NotificationMode>>;
 }
-// GET returns all 9 configurable types (article_reposted is the 9th, F29); PUT may send any subset.
+// GET returns all 10 configurable types (article_reposted is the 9th, F29; announcement the 10th, F23); PUT may send any subset.
 
 interface MyProgressDto {
   language: ArticleLanguage;     // the version the progress was recorded on
@@ -2547,6 +3162,8 @@ interface AdminPathDto {
   sortOrder: number; isPublished: boolean; isEditorial: boolean;
   articleIds: string[];          // path order
   enrollmentCount: number;
+  isFeatured: boolean;           // F23: in Explore's featured paths (shown only while published)
+  featuredOrder: number | null;  // F23: 1-based place among the featured; null when not featured
 }
 ```
 
@@ -2562,6 +3179,406 @@ Validation codes (in `errors`) for this area: `reaction.invalid` (`type`), `vali
 //                someone else's hidden one (.moderation set, .author?.id not your id); guests get the sign-in prompt
 //   My articles: MyArticleDto.id, .status === 'published', .publishedLanguages (added in F33; two entries → ask which)
 //   file name:   Content-Disposition filename* (RFC 5987) → "{slug}-{lang}.pdf"; fallback filename "readin-article.pdf"
+```
+
+```ts
+// ── Admin console (F23) ─────────────────────────────────────────────
+interface PagedList<T> {         // offset pages of the admin tables (§17.1)
+  items: T[];
+  page: number;                  // 1-based, as used (below 1 → 1)
+  pageSize: number;              // as used (1–100, default 50)
+  totalCount: number;
+  totalPages: number;            // ceil(totalCount / pageSize); 0 when empty
+}
+
+interface AdminSummaryDto {      // GET /admin/summary: the badge on the console entry
+  openReports: number | null;    // targets with open reports (= /moderation/summary open.total); null without moderation.manage
+  openTickets: number | null;    // tickets in Open (waiting for support); null without support.manage
+  pendingVerifications: number | null; // null without verification.manage
+  total: number;                 // the badge: the sum of the three that aren't null
+}
+
+type AdminPeriod = 'today' | 'yesterday' | '7d' | '30d';
+
+interface AdminDashboardDto {
+  period: AdminPeriod;
+  timeZone: string;              // Admin:TimeZone, e.g. "Africa/Cairo"
+  from: string; to: string;      // the window, ISO UTC, end exclusive (now for today, 7d and 30d)
+  fromDate: string; toDate: string; // the same window as local dates "YYYY-MM-DD", both included: Content's from / to
+  generatedAt: string;           // when the numbers were computed (≤ 60 s ago)
+  cards: DashboardCardsDto;
+  charts: DashboardDayDto[];     // the last 30 local days up to today, oldest first, zeros included (any period)
+  topArticles: DashboardArticleDto[];         // ≤ 10, most reads in the period first
+  topWriters: DashboardWriterDto[];           // ≤ 10
+  missedSearches: DashboardMissedSearchDto[]; // ≤ 20, most misses first
+  streakRetention: { cohort: number; kept: number; rate: number | null }; // rate 0–1 (3 decimals), null when cohort is 0
+  contentPipeline: ContentPipelineDto;
+}
+
+interface DashboardValueDto {
+  value: number;                 // this period
+  previous: number;              // the previous period of the same length; change = value - previous
+}
+
+interface DashboardCardsDto {
+  articlesPublished: DashboardValueDto;
+  newUsers: DashboardValueDto & { phone: number; google: number; apple: number }; // value split by sign-up method
+  activeReaders: DashboardValueDto;
+  reads: DashboardValueDto;
+  comments: DashboardValueDto;
+  reactions: DashboardValueDto;
+  reposts: DashboardValueDto;
+  openReports: number | null;    // now (no previous); null without moderation.manage
+  openTickets: number | null;    // now; null without support.manage
+  pendingVerifications: number | null; // now; null without verification.manage
+  suspendedNow: number;          // accounts suspended right now
+}
+
+interface DashboardDayDto { date: string; newUsers: number; activeReaders: number; articlesPublished: number } // date "YYYY-MM-DD"
+
+interface DashboardArticleDto {
+  id: string; slug: string;
+  title: string; language: ArticleLanguage; // the caller's UI-language version (ar → ar-EG), else the source
+  author: AuthorDto | null;      // null = deleted account
+  field: FieldRefDto;
+  publishedAt: string;
+  reads: number;                 // reads in the period
+}
+
+interface DashboardWriterDto {
+  writer: AuthorDto;
+  reads: number;                 // reads of their articles in the period
+  articles: number;              // how many of their articles were read in it
+}
+
+interface DashboardMissedSearchDto { query: string; language: 'ar' | 'en'; count: number } // render query with dir="auto"
+
+interface ContentPipelineDto {
+  folders: number;               // article folders (meta.json) in content/articles
+  seeded: number;                // @readin articles in the database (any status, not deleted)
+  published: number;             // of those, articles readers can open now
+  lastSeedRunAt: string | null;  // the newest SeedHistory.AppliedAt
+}
+
+type SignInMethod = 'phone' | 'google' | 'apple'; // phone = phone number + password
+
+interface AdminUserRowDto {      // a row of GET /admin/users
+  id: string; displayName: string; username: string; avatarUrl: string | null;
+  isVerified: boolean;
+  isSystemAccount: boolean;      // the official @readin account
+  roles: string[];               // ["Member"] or ["SuperAdmin"]: display only
+  signInMethods: SignInMethod[]; // the ways the account can sign in now
+  phoneMasked: string | null;    // "+20***1234"; null without a phone number. The full one: GET /admin/users/{id}/phone
+  joinedAt: string;
+  lastSeenAt: string | null;     // UserPresence.LastSeenAt, to the hour; null = not seen since F23 shipped
+  publishedArticles: number;     // articles readers can open
+  followers: number;
+  status: 'active' | 'suspended';
+  suspendedUntil: string | null; // suspended: when it ends, null = permanently; null when active
+  openReports: number;           // open reports about the user, their articles and their comments
+}
+
+interface AdminUserDto extends AdminUserRowDto { // GET /admin/users/{id}: a user's page
+  headline: string | null; bio: string | null; links: ProfileLinkDto[];
+  uiLanguage: UiLanguage;
+  signUpMethod: SignInMethod | null; // null for system accounts
+  isStaff: boolean;              // yourself, an admin.access / moderation.manage holder or a system account: can't be suspended, warned or signed out
+  stats: {
+    drafts: number; comments: number; following: number; totalReads: number; // totalReads: reads of their articles
+    articlesRead: number; currentStreak: number; longestStreak: number;       // their own reading
+  };
+  access: {
+    activeSessions: number;      // signed-in devices: unexpired, unrevoked refresh-token families
+    hasRecoveryPin: boolean; recoveryDisabled: boolean;
+    mustChangePassword: boolean; mustSetRecoveryPin: boolean;
+    lockedOutUntil: string | null; // sign-in lockout (5 wrong passwords)
+  };
+  actions: {                     // what THIS caller may do to this account now (permissions + protected accounts)
+    canSuspend: boolean;         // moderation.manage + users.suspend, not isStaff
+    canWarn: boolean;            // moderation.manage, not isStaff
+    canLogoutAll: boolean;       // users.suspend, not isStaff
+    canResetPassword: boolean;   // users.reset_password, a phone + password account holding no permission the caller lacks
+    canRemoveBadge: boolean;     // verification.manage, isVerified, not a system account
+    canClearProfile: boolean;    // moderation.manage (clear_headline / clear_links)
+    canRestoreContent: boolean;  // moderation.manage and moderation.hiddenWithAccount > 0
+    canRevealPhone: boolean;     // users.read.pii and a phone number
+  };
+  moderation: {                  // null without moderation.manage
+    warnings: number; suspensions: number;
+    hiddenArticles: number; hiddenComments: number; // hidden now, any way
+    hiddenWithAccount: number;   // of those, hidden by hide_content (what unhide_content restores)
+    history: ModerationActionDto[]; historyTotal: number; // actions about the user and their content, newest 20
+  } | null;
+  reports: {                     // null without moderation.manage
+    against: AdminUserReportDto[]; againstTotal: number; // about the user, their articles and comments, newest 20
+    filed: AdminUserReportDto[]; filedTotal: number;     // reports they filed, newest 20
+  } | null;
+  verification: { items: AdminVerificationRequestDto[]; total: number } | null; // newest 20; null without verification.manage
+  tickets: { items: AdminTicketRowDto[]; total: number } | null;                // newest 20; null without support.manage
+  audit: { items: AuditEntryDto[]; total: number } | null;                      // entries about them, newest 20; null without audit.read
+}
+
+interface AdminUserReportDto {
+  id: string;
+  targetType: ModerationTargetType; targetId: string;
+  targetLabel: string | null;    // article title, first 80 characters of the comment, or @username; null once deleted
+  reason: ReportReason; details: string | null;
+  status: ReportStatus;
+  createdAt: string;
+  reporter: UserSummaryDto | null; // in `against`; null in `filed`, or once the reporter deleted their account
+}
+
+interface AdminArticleRowDto {   // GET /admin/articles, GET /admin/articles/{id}
+  id: string; slug: string;
+  status: 'published' | 'archived';
+  title: string; language: ArticleLanguage; // the caller's UI-language version, else the source
+  author: AuthorDto | null;
+  field: FieldRefDto; topic: FieldRefDto | null;
+  publishedAt: string | null;    // null: archived without ever being published
+  readCount: number; reactionCount: number; commentCount: number;
+  hiddenAt: string | null;       // hidden by a moderator
+  featuredAt: string | null;     // featured (F23)
+  openReports: number;
+  reportCount: number;           // any status: > 0 → the F22 case exists
+}
+
+interface AdminCommentRowDto {   // GET /admin/comments
+  id: string;
+  body: string;                  // in full; render dir="auto"
+  author: AuthorDto | null;
+  article: { id: string; slug: string; title: string; language: ArticleLanguage };
+  parentId: string | null;       // a reply: its top-level comment
+  createdAt: string; editedAt: string | null;
+  hiddenAt: string | null;
+  likeCount: number; replyCount: number;
+  openReports: number; reportCount: number;
+}
+
+interface AdminTaxonomyDto {     // GET /admin/fields
+  fields: AdminFieldDto[];       // display order
+  icons: string[];               // the icon names both clients draw (Lucide), A–Z
+  colors: string[];              // the color tokens both clients draw
+}
+
+interface AdminFieldDto {
+  id: string; slug: string;      // the slug never changes (/f/{slug}, the seeder's key)
+  nameAr: string; nameEn: string;
+  icon: string; color: string;
+  sortOrder: number;
+  isSensitive: boolean; requiresSources: boolean; isEnabled: boolean;
+  inTaxonomyFile: boolean;       // listed in content/taxonomy.yaml
+  customizedAt: string | null;   // set by the first console change: the seeder leaves the row alone from then on
+  articleCount: number;          // articles readers can see in it (what disabling would hide)
+  topics: AdminTopicDto[];       // display order
+}
+
+interface AdminTopicDto {
+  id: string; fieldId: string; slug: string;
+  nameAr: string; nameEn: string;
+  sortOrder: number;
+  isEnabled: boolean;
+  inTaxonomyFile: boolean;
+  customizedAt: string | null;   // console-created topics have it from the start
+  articleCount: number;
+}
+
+interface CreateFieldRequest {
+  slug: string;                  // kebab-case, 2–64 (validation.slug)
+  nameAr: string; nameEn: string; // 1–100
+  icon: string; color: string;   // from AdminTaxonomyDto.icons / colors
+  isSensitive: boolean; requiresSources: boolean; isEnabled: boolean;
+}
+interface UpdateFieldRequest {   // the whole row but the slug (the form sends every value back)
+  nameAr: string; nameEn: string; icon: string; color: string;
+  isSensitive: boolean; requiresSources: boolean; isEnabled: boolean;
+}
+interface CreateTopicRequest { fieldId: string; slug: string; nameAr: string; nameEn: string; isEnabled: boolean }
+interface UpdateTopicRequest { nameAr: string; nameEn: string; isEnabled: boolean }
+interface OrderRequest { ids: string[] } // PUT /admin/fields/order, PUT /admin/fields/{id}/topics/order
+
+interface AdminTagDto {
+  id: string; slug: string; name: string;
+  articleCount: number;          // published articles readers can see (as TagDto)
+  taggedCount: number;           // every article that carries it, hidden ones too: what a merge moves
+  isHidden: boolean;
+  isSystem: boolean;             // used by the seed content: never cleaned up
+  createdAt: string;
+  createdBy: { id: string; username: string } | null; // null: a system tag, or the creator deleted their account
+  emptySince: string | null;     // a user tag with no published article since then (the daily cleanup deletes it after 30 days)
+  aliases: string[];             // old spellings and merged names that lead here, oldest first
+}
+
+// AdminPathDto (Path admin, F09) gains:
+//   isFeatured: boolean;          // in Explore's "Featured paths" (shown only while published)
+//   featuredOrder: number | null; // 1-based place among the featured; null when not featured
+interface SetFeaturedPathsRequest { pathIds: string[] } // 0–20, Explore order
+
+type AnnouncementAudience =
+  | { type: 'all' }
+  | { type: 'field'; fieldId: string }             // accounts following the field or one of its topics
+  | { type: 'language'; language: ArticleLanguage }; // accounts with that article language
+
+interface AnnouncementRequest {  // POST /admin/announcements, /preview, /test
+  titleAr: string; titleEn: string; // 1–60 after trimming
+  bodyAr: string; bodyEn: string;   // 1–180
+  link: { type: 'article' | 'path'; id: string } | null;
+  audience: AnnouncementAudience;
+}
+
+interface AnnouncementPreviewDto {
+  recipientCount: number;        // accounts that get the entry (announcement not "off")
+  pushCount: number;             // of those, with push on ("all") and at least one device
+  canSend: boolean;              // no announcement sent today yet
+  nextAllowedAt: string | null;  // when canSend is false: the next local midnight (ISO UTC)
+}
+
+interface AnnouncementDto {
+  id: string;
+  titleAr: string; titleEn: string; bodyAr: string; bodyEn: string;
+  link: { type: 'article' | 'path'; id: string; slug: string; title: string } | null; // title in the caller's UI language
+  audience: { type: 'all' | 'field' | 'language'; field: { id: string; slug: string; name: string } | null; language: ArticleLanguage | null };
+  status: 'sending' | 'sent';
+  recipientCount: number;        // while sending: the preview's count; final once sent
+  sentBy: { id: string; username: string } | null; // null once that account is deleted
+  createdAt: string;
+  completedAt: string | null;
+}
+
+interface AnnouncementsDto {     // GET /admin/announcements
+  canSend: boolean;
+  nextAllowedAt: string | null;
+  items: AnnouncementDto[];      // the latest 50, newest first
+}
+
+interface AuditUserDto { id: string; displayName: string; username: string; avatarUrl: string | null }
+
+interface AuditEntryDto {        // GET /admin/audit
+  id: string;
+  source: 'audit' | 'moderation'; // AuditLogs or ModerationActions
+  action: string;                // audit: e.g. "admin.pii_viewed"; moderation: ModerationActionDto.action, e.g. "user.suspend"
+  actor: AuditUserDto | null;    // null: a job, an anonymous flow (recovery), or a deleted account
+  targetUser: AuditUserDto | null; // the account it concerns
+  target: { type: 'user' | 'article' | 'comment' | 'field' | 'topic' | 'tag' | 'path' | 'announcement' | 'ticket'; id: string; label: string | null } | null;
+  details: string | null;        // AuditLogs.Details or the moderation note; data, never personal data: dir="auto"
+  ip: string | null;             // users.read.pii only; null on moderation rows
+  createdAt: string;
+}
+
+interface AdminSystemDto {       // GET /admin/system
+  api: { version: string; startedAt: string; environment: string };
+  updatePolicy: UpdatePolicyDto; // as GET /app/update-policy
+  database: { reachable: boolean; latencyMs: number | null };
+  firebase: { messagingConfigured: boolean; realtimeConfigured: boolean; realtimeReachable: boolean | null };
+  jobs: AdminJobStatusDto[];     // every recurring job, A–Z
+  push: { sent: number; failed: number; invalidTokens: number; since: string }; // the last 24 hours (since = its start)
+  storage: { uploadsBytes: number; uploadsFiles: number; privateBytes: number; privateFiles: number; measuredAt: string };
+}
+
+interface AdminJobStatusDto {
+  id: string;                    // the Hangfire recurring job id, e.g. "notification-push"
+  schedule: string;              // its cron expression
+  lastRunAt: string | null;
+  lastSucceeded: boolean | null;
+  lastDurationMs: number | null;
+  lastError: string | null;      // the exception's type and message, ≤ 500
+  runs24h: number; failures24h: number;
+}
+
+// ProfileDto (F14) gains:
+//   admin: { isSuspended: boolean; suspendedUntil: string | null; isStaff: boolean } | null; // users.read holders only
+// ArticleDetailsDto gains:  isFeatured: boolean;
+// ExploreDto gains:         featuredArticles: ArticleCardDto[]; // ≤ 6, most recently featured first; [] hides the section
+// ModerationActionRequest gains: hideContent?: boolean;  // suspend only; actions hide_content / unhide_content on a user
+// ModerationActionDto.action adds: 'user.hide_content' | 'user.unhide_content'
+// NotificationType adds:    'announcement' | 'support_reply' | 'support_ticket'
+// NotificationDto.data adds (only the keys that apply):
+//   announcement:                  announcementId: string; title: string; body: string  // its text in Accept-Language
+//   support_reply, support_ticket: ticketId: string; ticketNumber: number; subject: string
+//   support_reply:                 closed?: boolean  // true: support closed the ticket
+// NotificationDto.actor: support_ticket → the member (latest); announcement, support_reply → null (support stays anonymous)
+
+// ── Support (F35) ───────────────────────────────────────────────────
+type SupportCategory = 'app_problem' | 'account' | 'content' | 'verification' | 'suggestion' | 'other';
+type SupportStatus = 'open' | 'answered' | 'closed';
+
+interface SupportConfigDto {     // GET /support/config 🌐
+  email: string | null;          // Support:Email; null when not set (hide it)
+  categories: SupportCategory[]; // in display order
+  maxAttachments: number;        // 3
+  maxAttachmentBytes: number;    // 5 MB
+  attachmentTypes: string[];     // ["image/jpeg", "image/png", "image/webp"]
+}
+
+interface SupportDeviceDto {
+  platform: 'ios' | 'android' | 'web' | null;
+  osVersion: string | null;      // e.g. "iOS 18.1", "Android 15", "Windows · Chrome 131"
+  appVersion: string | null;     // e.g. "1.2.0+57"
+  language: UiLanguage | null;   // the UI language when sent
+  screen: string | null;         // the route it came from
+}
+
+interface SupportAttachmentDto {
+  id: string;
+  contentType: 'image/jpeg' | 'image/png' | 'image/webp';
+  sizeBytes: number;
+  // GET /support/attachments/{id} with the session; never cache it
+}
+
+interface SupportMessageDto {
+  id: string;
+  fromSupport: boolean;          // true: «فريق الدعم» / "Support" (no admin name); false: you
+  body: string;                  // render dir="auto"
+  attachments: SupportAttachmentDto[]; // ≤ 3; support's replies have none
+  createdAt: string;
+}
+
+interface SupportTicketSummaryDto { // My tickets
+  id: string;
+  number: number;                // "#12"
+  category: SupportCategory;
+  subject: string;
+  status: SupportStatus;
+  createdAt: string;
+  updatedAt: string;             // the latest message: the list order
+  lastMessage: { fromSupport: boolean; excerpt: string; createdAt: string }; // excerpt ≤ 140 characters, one line
+  closedAt: string | null;
+  canReopen: boolean;            // closed less than 30 days ago
+}
+
+interface SupportTicketDto extends SupportTicketSummaryDto {
+  device: SupportDeviceDto;
+  messages: SupportMessageDto[]; // oldest first; never internal notes
+}
+
+interface AdminTicketRowDto {    // GET /admin/support/tickets
+  id: string; number: number;
+  category: SupportCategory; subject: string; status: SupportStatus;
+  user: AuthorDto;               // the member (a ticket goes with its account)
+  createdAt: string;
+  waitingSince: string | null;   // Open: the member's last message ("waiting 3 h"); null otherwise
+  lastMessage: { fromSupport: boolean; isInternalNote: boolean; excerpt: string; createdAt: string };
+  closedAt: string | null;
+}
+
+interface AdminSupportMessageDto extends SupportMessageDto {
+  isInternalNote: boolean;       // only admins see notes
+  author: { id: string; displayName: string; username: string } | null; // the member or the admin; null once that account is deleted
+}
+
+interface AdminTicketDto extends AdminTicketRowDto { // GET /admin/support/tickets/{id}
+  device: SupportDeviceDto;
+  messages: AdminSupportMessageDto[]; // oldest first, internal notes included
+  closedBy: 'member' | 'support' | 'auto' | null;
+  member: {                      // the user card; links to /admin/users/{id}
+    status: 'active' | 'suspended'; suspendedUntil: string | null;
+    joinedAt: string;
+    signInMethods: SignInMethod[];
+    ticketCount: number;         // all their tickets
+  };
+  reportsFiled: { items: AdminUserReportDto[]; total: number } | null; // their reports, newest 10; null without moderation.manage
+  reportsAgainst: number | null;                                        // open reports about them, their articles and comments
+  moderation: ModerationActionDto[] | null; // warnings and suspensions about them, newest 10; null without moderation.manage
+}
 ```
 
 ## Push payloads (FCM)
@@ -2676,6 +3693,52 @@ acknowledged before its push went out isn't pushed.
 
 A warning links to the center; the app shows the notice itself from `GET /me/moderation-notices`. Collapse key and tag
 `moderation_notice`; quiet hours apply; dropped after 24 hours like every F17 push.
+
+### Announcements, support replies and new tickets (`announcement` SPEC F23; `support_reply`, `support_ticket` SPEC F35)
+
+Pushed by the notification push job like every F17 type (checked when sending, dropped after 24 hours, invalid tokens
+removed), in the recipient's UI language (Modern Standard Arabic, SPEC §14.4).
+
+```jsonc
+// announcement: title and body are the announcement's own, in the recipient's UI language
+{
+  "notification": { "title": "<titleAr | titleEn>", "body": "<bodyAr | bodyEn>" },
+  "data": {
+    "type": "announcement",
+    "notificationId": "0a1b2c3d-…",
+    "announcementId": "0a1b2c3d-…",
+    "link": "readin://a/rag-vs-fine-tuning", // or "readin://paths/{slug}", or "readin://notifications" without a link
+    "lang": "en"                             // article links only: the version to open, "ar" (ar-EG) | "en"
+  }
+}
+// support_reply
+{
+  "notification": { "title": "ردّ فريق الدعم على تذكرتك", "body": "#12 · <subject>" },
+  // en: "Support replied to your ticket"; closed by support: «أُغلقت تذكرتك» / "Your ticket was closed"
+  "data": { "type": "support_reply", "notificationId": "…", "ticketId": "…", "link": "readin://support/0a1b2c3d-…" }
+}
+// support_ticket (holders of support.manage)
+{
+  "notification": { "title": "رسالة دعم جديدة من ⁨Ahmed⁩", "body": "#12 · <subject>" },
+  // en: "New support message from Ahmed"
+  "data": { "type": "support_ticket", "notificationId": "…", "ticketId": "…", "link": "readin://admin/support/0a1b2c3d-…" }
+}
+```
+
+| `type` | Quiet hours | Settings | Collapse key | Row text in the center (clients) |
+|---|---|---|---|---|
+| `announcement` | apply | configurable ("الإعلانات" / "Announcements", hint "إعلانات من فريق ReadIn" / "News from the ReadIn team") | `announcement:{announcementId}` | `data.title`, then `data.body` |
+| `support_reply` | apply | always comes (like `verification_result`) | `support_reply:{ticketId}` | «ردّ فريق الدعم على تذكرتك» / "Support replied to your ticket" (`data.closed`: «أُغلقت تذكرتك» / "Your ticket was closed"), then `#{ticketNumber} · {subject}` |
+| `support_ticket` | apply | configurable, holders of `support.manage` only ("تذاكر الدعم" / "Support tickets") | `support_ticket:{ticketId}` | «رسالة دعم جديدة من {name}» / "New support message from {name}", then `#{ticketNumber} · {subject}` |
+
+Names are wrapped in Unicode isolates (U+2068 … U+2069), as in every F17 push. Checked when sending: an announcement's
+recipient still has the type on `all`; a support entry's ticket still exists; the account isn't suspended.
+
+New deep links: `readin://paths/{slug}` (a learning path: web `/paths/{slug}`, mobile `/paths/{slug}`),
+`readin://support/{ticketId}` (the member's ticket: web `/support/tickets/{id}`, mobile
+`/settings/support/tickets/{id}`) and `readin://admin/support/{ticketId}` (the console's ticket: web
+`/admin/tickets/{id}`, mobile the console's ticket page; a client without `support.manage` opens the notification
+center instead).
 
 ## Local development
 

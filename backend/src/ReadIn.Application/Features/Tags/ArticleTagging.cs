@@ -27,6 +27,16 @@ public sealed class ArticleTagging(IAppDbContext db, TimeProvider clock)
             .Where(t => keys.Contains(t.NormalizedName))
             .Select(t => new { t.Id, t.NormalizedName, t.IsHidden })
             .ToDictionaryAsync(t => t.NormalizedName, StringComparer.Ordinal, cancellationToken);
+        // An alias (a renamed tag's old spelling, a merged tag's name, F23) is an existing name: its tag, and its hidden state.
+        var unknown = keys.Where(k => !existing.ContainsKey(k)).ToList();
+        if (unknown.Count > 0)
+        {
+            var aliased = await db.TagAliases.AsNoTracking()
+                .Where(a => unknown.Contains(a.NormalizedName))
+                .Join(db.Tags.AsNoTracking(), a => a.TagId, t => t.Id, (a, t) => new { a.NormalizedName, t.Id, t.IsHidden })
+                .ToListAsync(cancellationToken);
+            foreach (var alias in aliased) existing[alias.NormalizedName] = new { alias.Id, alias.NormalizedName, alias.IsHidden };
+        }
 
         var problems = new List<DraftProblemDto>();
         if (existing.Values.Any(t => t.IsHidden))
@@ -62,7 +72,8 @@ public sealed class ArticleTagging(IAppDbContext db, TimeProvider clock)
         foreach (var (name, key) in Keyed(names))
         {
             var tag = db.Tags.Local.FirstOrDefault(t => t.NormalizedName == key)
-                ?? await db.Tags.FirstOrDefaultAsync(t => t.NormalizedName == key, cancellationToken);
+                ?? await db.Tags.FirstOrDefaultAsync(t => t.NormalizedName == key, cancellationToken)
+                ?? await AliasedAsync(key, cancellationToken);
             if (tag is null)
             {
                 tag = new Tag(name, key, await UniqueSlugAsync(name, cancellationToken), createdById, now);
@@ -77,7 +88,21 @@ public sealed class ArticleTagging(IAppDbContext db, TimeProvider clock)
         return ids;
     }
 
-    /// <summary>A free slug for a new tag named <paramref name="name"/>, counting tags added but not saved yet.</summary>
+    /// <summary>The tag an alias leads to (SPEC F23: a renamed tag's old spelling, a merged tag's name); null when none.</summary>
+    private async Task<Tag?> AliasedAsync(string key, CancellationToken cancellationToken)
+    {
+        var tagId = await db.TagAliases.AsNoTracking()
+            .Where(a => a.NormalizedName == key)
+            .Select(a => (Guid?)a.TagId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (tagId is not { } id) return null;
+        return db.Tags.Local.FirstOrDefault(t => t.Id == id) ?? await db.Tags.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+    }
+
+    /// <summary>
+    /// A free slug for a new tag named <paramref name="name"/>, counting tags added but not saved yet and the slugs merged
+    /// tags left behind (they still open the tag they went into, F23).
+    /// </summary>
     private async Task<string> UniqueSlugAsync(string name, CancellationToken cancellationToken)
     {
         var slugBase = TagNames.SlugBase(name);
@@ -86,6 +111,10 @@ public sealed class ArticleTagging(IAppDbContext db, TimeProvider clock)
             .Where(t => t.Slug == slugBase || t.Slug.StartsWith(prefix))
             .Select(t => t.Slug)
             .ToListAsync(cancellationToken);
+        taken.AddRange(await db.TagAliases.AsNoTracking()
+            .Where(a => a.Slug != null && (a.Slug == slugBase || a.Slug.StartsWith(prefix)))
+            .Select(a => a.Slug!)
+            .ToListAsync(cancellationToken));
         return TagNames.UniqueSlug(slugBase, taken.Concat(db.Tags.Local.Select(t => t.Slug)).ToHashSet(StringComparer.OrdinalIgnoreCase));
     }
 

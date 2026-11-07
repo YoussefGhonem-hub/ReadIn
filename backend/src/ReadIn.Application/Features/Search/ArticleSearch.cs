@@ -216,7 +216,8 @@ public sealed class ArticleSearch(
     }
 }
 
-internal sealed class ArticleSearchQueryHandler(ArticleSearch search)
+internal sealed class ArticleSearchQueryHandler(
+    ArticleSearch search, SearchMissBuffer misses, ICurrentUser currentUser, IClientInfo client, Admin.AdminClock adminClock)
     : IQueryHandler<ArticleSearchQuery, Result<CursorPage<SearchArticleDto>>>
 {
     public async ValueTask<Result<CursorPage<SearchArticleDto>>> Handle(ArticleSearchQuery query, CancellationToken ct)
@@ -227,8 +228,25 @@ internal sealed class ArticleSearchQueryHandler(ArticleSearch search)
         if (filters.IsFailure) return filters.Error!;
 
         var ranked = await search.RankAsync(terms.Value, filters.Value, query.UiLanguage, ct);
+        Observe(query, terms.Value, filters.Value, found: ranked.Count > 0);
         var (page, next) = SearchPaging.Page(ranked, query.Cursor, query.Limit);
         return new CursorPage<SearchArticleDto>(await search.CardsAsync(page, query.UiLanguage, ct), next);
+    }
+
+    /// <summary>
+    /// Searches with no results (SPEC §22, F23): a first page with no field or reading-time filter is a search for the
+    /// words alone; one that found nothing is held for the dashboard (<see cref="SearchMissBuffer"/>). Only the query is kept.
+    /// </summary>
+    private void Observe(ArticleSearchQuery query, SearchTerms terms, ArticleSearchFilters filters, bool found)
+    {
+        if (!string.IsNullOrEmpty(query.Cursor) || filters.FieldSlug is not null || filters.MinMinutes is not null || filters.MaxMinutes is not null)
+            return;
+
+        var searcher = currentUser.UserId is { } userId ? $"u:{userId:N}" : $"ip:{client.IpAddress ?? "-"}";
+        var phrase = terms.Phrase.ToLowerInvariant();
+        if (phrase.Length > Domain.Admin.SearchMiss.MaxQueryLength) phrase = phrase[..Domain.Admin.SearchMiss.MaxQueryLength];
+        var now = adminClock.UtcNow;
+        misses.Observe(searcher, phrase, adminClock.LocalDate(now), now, missed: !found);
     }
 }
 

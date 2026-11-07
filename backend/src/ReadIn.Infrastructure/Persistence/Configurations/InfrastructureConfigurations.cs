@@ -17,6 +17,8 @@ internal sealed class ReadingProgressConfiguration : IEntityTypeConfiguration<Re
         builder.HasIndex(r => new { r.UserId, r.ArticleId }).IsUnique();
         // The For you ranking counts an article's completed reads in a time window (FeedRanking); also serves the FK.
         builder.HasIndex(r => new { r.ArticleId, r.CompletedAt });
+        // F23 dashboard: reads and active readers in a period.
+        builder.HasIndex(r => r.CompletedAt).IncludeProperties(r => new { r.UserId, r.ArticleId }).HasFilter("[CompletedAt] IS NOT NULL");
         builder.Property(r => r.Language).HasMaxLength(5).IsRequired();
         builder.Property(r => r.LastPosition).HasMaxLength(100);
         builder.Ignore(r => r.IsCompleted);

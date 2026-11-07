@@ -51,6 +51,13 @@ public sealed class Tag : Entity
 
     public void Show() => IsHidden = false;
 
+    /// <summary>An admin's rename (SPEC F23): the spelling and its normalized form; the slug never changes.</summary>
+    public void Rename(string name, string normalizedName)
+    {
+        Name = name;
+        NormalizedName = normalizedName;
+    }
+
     /// <summary>Brings a tag from before F32 to the F32 rules (a one-time upgrade at startup).</summary>
     public void Upgrade(string name, string normalizedName, string slug, bool isSystem, Guid? createdById)
     {

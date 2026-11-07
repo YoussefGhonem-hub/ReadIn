@@ -131,9 +131,15 @@ public sealed class NotificationTests
     public void Only_configurable_types_have_settings_and_security_alerts_ignore_quiet_hours()
     {
         NotificationTypes.Configurable.Should().NotContain([NotificationTypes.SecurityAlert, NotificationTypes.ModerationNotice,
-            NotificationTypes.VerificationResult]);
-        NotificationTypes.All.Should().HaveCount(12, "article_reposted (F29) is the 12th").And.OnlyHaveUniqueItems();
-        NotificationTypes.Configurable.Should().Contain(NotificationTypes.ArticleReposted).And.HaveCount(9);
+            NotificationTypes.VerificationResult, NotificationTypes.SupportReply]);
+        NotificationTypes.All.Should().HaveCount(15, "announcement (F23) is the 13th, support_reply and support_ticket (F35) the 14th and 15th")
+            .And.OnlyHaveUniqueItems();
+        NotificationTypes.Configurable.Should().Contain([NotificationTypes.ArticleReposted, NotificationTypes.Announcement, NotificationTypes.SupportTicket])
+            .And.HaveCount(11);
+        // support_ticket is a setting only for holders of support.manage (F35).
+        NotificationTypes.ConfigurableFor(managesSupport: false).Should().HaveCount(10).And.NotContain(NotificationTypes.SupportTicket);
+        NotificationTypes.ConfigurableFor(managesSupport: true).Should().Equal(NotificationTypes.Configurable);
+        NotificationTypes.IgnoresQuietHours(NotificationTypes.Announcement).Should().BeFalse();
         NotificationTypes.IgnoresQuietHours(NotificationTypes.SecurityAlert).Should().BeTrue();
         NotificationTypes.IgnoresQuietHours(NotificationTypes.ModerationNotice).Should().BeFalse();
 

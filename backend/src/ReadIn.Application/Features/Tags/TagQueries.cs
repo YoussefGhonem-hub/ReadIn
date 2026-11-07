@@ -54,6 +54,23 @@ internal static class TagSlugs
     /// <summary>Slugs are lower case; a route value is trimmed and lower-cased before the lookup.</summary>
     public static string FromRoute(string? slug) => (slug ?? string.Empty).Trim().ToLowerInvariant();
 
+    /// <summary>
+    /// The visible tag a route slug opens: the tag with that slug, or the one a merged tag went into (its slug is an alias,
+    /// SPEC F23), so old links keep working. Null for an unknown or hidden tag.
+    /// </summary>
+    public static async Task<(Guid Id, string Slug, string Name)?> FindVisibleAsync(IAppDbContext db, string slug, CancellationToken ct)
+    {
+        var tag = await db.Tags.AsNoTracking()
+            .Where(t => t.Slug == slug && !t.IsHidden)
+            .Select(t => new { t.Id, t.Slug, t.Name })
+            .FirstOrDefaultAsync(ct);
+        tag ??= await db.TagAliases.AsNoTracking()
+            .Where(a => a.Slug == slug)
+            .Join(db.Tags.AsNoTracking().Where(t => !t.IsHidden), a => a.TagId, t => t.Id, (a, t) => new { t.Id, t.Slug, t.Name })
+            .FirstOrDefaultAsync(ct);
+        return tag is null ? null : (tag.Id, tag.Slug, tag.Name);
+    }
+
     /// <summary>Published articles readers can see (SPEC F22) that carry <paramref name="tagId"/>.</summary>
     public static IQueryable<Domain.Articles.Article> ArticlesWith(IAppDbContext db, Guid tagId) =>
         db.Articles.AsNoTracking().Visible().Where(a => a.PublishedAt != null && a.Tags.Any(t => t.TagId == tagId));
@@ -95,12 +112,9 @@ internal sealed class GetTagQueryHandler(IAppDbContext db) : IQueryHandler<GetTa
 {
     public async ValueTask<Result<TagDto>> Handle(GetTagQuery query, CancellationToken cancellationToken)
     {
-        var slug = TagSlugs.FromRoute(query.Slug);
-        var tag = await db.Tags.AsNoTracking()
-            .Where(t => t.Slug == slug && !t.IsHidden)
-            .Select(t => new { t.Id, t.Slug, t.Name })
-            .FirstOrDefaultAsync(cancellationToken);
-        if (tag is null) return TaxonomyErrors.TagNotFound;
+        // A merged tag's slug answers the tag it went into, with that tag's slug (F23): clients replace the URL.
+        if (await TagSlugs.FindVisibleAsync(db, TagSlugs.FromRoute(query.Slug), cancellationToken) is not { } tag)
+            return TaxonomyErrors.TagNotFound;
 
         var count = await TagSlugs.ArticlesWith(db, tag.Id).CountAsync(cancellationToken);
         return new TagDto(tag.Slug, tag.Name, count);
@@ -119,12 +133,7 @@ internal sealed class GetTagArticlesQueryHandler(
 
     public async ValueTask<Result<CursorPage<ArticleCardDto>>> Handle(GetTagArticlesQuery query, CancellationToken ct)
     {
-        var slug = TagSlugs.FromRoute(query.Slug);
-        var tagId = await db.Tags.AsNoTracking()
-            .Where(t => t.Slug == slug && !t.IsHidden)
-            .Select(t => (Guid?)t.Id)
-            .FirstOrDefaultAsync(ct);
-        if (tagId is not { } id) return TaxonomyErrors.TagNotFound;
+        if (await TagSlugs.FindVisibleAsync(db, TagSlugs.FromRoute(query.Slug), ct) is not { Id: var id }) return TaxonomyErrors.TagNotFound;
 
         var limit = Math.Clamp(query.Limit, 1, GetTagArticlesQuery.MaxLimit);
         var cursor = TimeCursor.Decode(query.Cursor);

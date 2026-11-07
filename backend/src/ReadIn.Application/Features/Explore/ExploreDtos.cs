@@ -13,12 +13,17 @@ namespace ReadIn.Application.Features.Explore;
 /// <param name="MostSaved">The first <see cref="ExploreLimits.SectionArticles"/> of <c>/explore/most-saved</c>.</param>
 /// <param name="NewWriters">People whose first article was published in the last 30 days, latest first publish first.</param>
 /// <param name="FeaturedPaths">Published paths flagged featured, in featured order.</param>
+/// <param name="FeaturedArticles">
+/// Articles featured in the admin console (SPEC F23) that readers can open, the most recently featured first; empty when
+/// none, so clients hide the section.
+/// </param>
 public sealed record ExploreDto(
     IReadOnlyList<FieldSummaryDto> Fields,
     IReadOnlyList<ArticleCardDto> Trending,
     IReadOnlyList<ArticleCardDto> MostSaved,
     IReadOnlyList<UserSummaryDto> NewWriters,
-    IReadOnlyList<PathCardDto> FeaturedPaths);
+    IReadOnlyList<PathCardDto> FeaturedPaths,
+    IReadOnlyList<ArticleCardDto> FeaturedArticles);
 
 /// <summary>
 /// A field tile on Explore; it opens the field page (<c>/f/{Slug}</c>). <see cref="Name"/> follows <c>Accept-Language</c>;

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ReadIn.Domain.Admin;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Engagement;
@@ -9,6 +10,7 @@ using ReadIn.Domain.Media;
 using ReadIn.Domain.Moderation;
 using ReadIn.Domain.Notifications;
 using ReadIn.Domain.Reading;
+using ReadIn.Domain.Support;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
 using ReadIn.Domain.Verification;
@@ -29,6 +31,7 @@ public interface IAppDbContext
     DbSet<Field> Fields { get; }
     DbSet<Topic> Topics { get; }
     DbSet<Tag> Tags { get; }
+    DbSet<TagAlias> TagAliases { get; }
     DbSet<WriterCategory> WriterCategories { get; }
     DbSet<GlossaryTerm> GlossaryTerms { get; }
     DbSet<ArticleTerm> ArticleTerms { get; }
@@ -69,6 +72,18 @@ public interface IAppDbContext
     DbSet<Notification> Notifications { get; }
     DbSet<NotificationActor> NotificationActors { get; }
     DbSet<UserNotificationSetting> UserNotificationSettings { get; }
+
+    // Admin console (SPEC F23)
+    DbSet<UserPresence> UserPresence { get; }
+    DbSet<SearchMiss> SearchMisses { get; }
+    DbSet<Announcement> Announcements { get; }
+    DbSet<JobRun> JobRuns { get; }
+    DbSet<PushDeliveryStat> PushDeliveryStats { get; }
+
+    // Help & support tickets (SPEC F35)
+    DbSet<SupportTicket> SupportTickets { get; }
+    DbSet<SupportMessage> SupportMessages { get; }
+    DbSet<SupportAttachment> SupportAttachments { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

@@ -575,3 +575,22 @@ a full-screen "Update ReadIn" page with a button to the store, and nothing else 
 
 To lift the block, empty the value. Versions released before this feature (`0.1.0` builds without the check) can't
 be blocked: they never ask.
+
+## 14. Admin console (SPEC F23)
+
+| Key | Default | Notes |
+|---|---|---|
+| `Admin:TimeZone` | `Africa/Cairo` | The time zone of the console's calendar days: the dashboard's periods (today, yesterday, 7 and 30 days), date filters and "one announcement a day". An IANA or Windows id; an unknown one falls back to UTC. On a server: `Admin__TimeZone`. |
+
+Nothing else needs setting: the permissions reach the SuperAdmin on the next start (roles seeder), and the new
+`admin-cleanup` job (03:50 UTC) keeps the searches with no results for 90 days and the job-run and push records for 7.
+
+## 15. Help & support (SPEC F35)
+
+| Key | Default | Notes |
+|---|---|---|
+| `Support:Email` | empty | The support email the apps and the public `/support` page show (also on the suspension screen and "forgot the PIN too"), served by `GET /api/v1/support/config`. Empty: they hide it. On a server: `Support__Email`. |
+
+Screenshots of tickets live in the private store (`Storage:PrivatePath`, §8) under `support/`, so its backups cover them.
+Two jobs keep tickets tidy: `support-auto-close` (hourly) closes Answered tickets after 14 days without a reply, and
+`support-retention` (daily, 04:15 UTC) deletes tickets closed more than a year ago with their files.

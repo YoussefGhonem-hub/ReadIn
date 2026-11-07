@@ -28,6 +28,8 @@ internal sealed class CommentConfiguration : IEntityTypeConfiguration<Comment>
         // Per-user limits: comments on one article in the last hour, and the same text in the last 10 minutes.
         builder.HasIndex(c => new { c.AuthorId, c.CreatedAt });
         builder.HasIndex(c => c.ParentId);
+        // F23: the console's "Latest comments" and the dashboard's comments in a period.
+        builder.HasIndex(c => c.CreatedAt);
         // One pinned comment per article (SPEC F11).
         builder.HasIndex(c => c.ArticleId, "IX_Comments_ArticleId_Pinned").IsUnique().HasFilter("[IsPinned] = 1");
 

@@ -144,8 +144,30 @@ public sealed class LocalPrivateFileStorageTests : IDisposable
 
         storage.EnsureWritable();
 
-        Directory.GetDirectories(storage.RootPath).Select(Path.GetFileName).Should().Equal("verification");
+        // Verification proofs (F19) and support screenshots (F35).
+        Directory.GetDirectories(storage.RootPath).Select(Path.GetFileName).Should().BeEquivalentTo("verification", "support");
         Directory.GetFiles(storage.RootPath).Should().BeEmpty();
         Directory.Exists(Path.Combine(_contentRoot, "wwwroot")).Should().BeFalse("nothing is created in the web root");
+    }
+
+    [Fact]
+    public async Task Support_screenshots_live_in_one_folder_per_message_that_goes_with_its_last_file()
+    {
+        var storage = Storage();
+        var first = "support/0195f3a0-0000-7000-8000-000000000001/1.png";
+        var second = "support/0195f3a0-0000-7000-8000-000000000001/2.webp";
+        var other = "support/0195f3a0-0000-7000-8000-000000000002/1.jpg";
+        foreach (var path in new[] { first, second, other }) await storage.SaveAsync(path, Bytes(1), Ct);
+
+        storage.EnumerateFiles("support").Should().BeEmpty("the files are one level down");
+        storage.EnumerateFiles("support", recursive: true).Select(f => f.RelativePath).Should().BeEquivalentTo(first, second, other);
+
+        var folder = Path.GetDirectoryName(storage.Resolve(first))!;
+        await storage.DeleteAsync(first, Ct);
+        Directory.Exists(folder).Should().BeTrue("its other screenshot is still there");
+        await storage.DeleteAsync(second, Ct);
+        Directory.Exists(folder).Should().BeFalse("an empty message folder goes");
+        Directory.Exists(Path.Combine(storage.RootPath, "support")).Should().BeTrue("the kind's folder stays");
+        storage.EnumerateFiles("support", recursive: true).Select(f => f.RelativePath).Should().Equal(other);
     }
 }

@@ -31,16 +31,24 @@ internal sealed class TaxonomySeeder(AppDbContext db, ContentRepository content)
                 field = new Field(entry.Slug, entry.NameAr, entry.NameEn, entry.Icon, entry.Color, order);
                 db.Fields.Add(field);
             }
-            field.Update(entry.NameAr, entry.NameEn, entry.Icon, entry.Color, order, entry.Sensitive, entry.RequiresSources, entry.Enabled);
+            // A field or topic changed in the admin console is the admin's (SPEC F23, §18): the file never renames, re-orders,
+            // disables or re-enables it again. Missing topics are still added to it.
+            if (field.CustomizedAt is null)
+                field.Update(entry.NameAr, entry.NameEn, entry.Icon, entry.Color, order, entry.Sensitive, entry.RequiresSources, entry.Enabled);
 
             var topicOrder = 0;
             foreach (var topic in entry.Topics)
-                field.UpsertTopic(topic.Slug, topic.NameAr, topic.NameEn, ++topicOrder);
+            {
+                ++topicOrder;
+                if (field.Topics.FirstOrDefault(t => t.Slug == topic.Slug) is { CustomizedAt: not null }) continue;
+                field.UpsertTopic(topic.Slug, topic.NameAr, topic.NameEn, topicOrder);
+            }
         }
 
-        // Fields removed from the file are disabled, never deleted (articles may reference them).
+        // Fields removed from the file are disabled, never deleted (articles may reference them); fields added or changed in
+        // the admin console stay as the admin left them.
         var listed = taxonomy.Fields.Select(f => f.Slug).ToHashSet();
-        foreach (var stale in fields.Values.Where(f => !listed.Contains(f.Slug)))
+        foreach (var stale in fields.Values.Where(f => !listed.Contains(f.Slug) && f.CustomizedAt is null))
             stale.Update(stale.NameAr, stale.NameEn, stale.Icon, stale.Color, stale.SortOrder, stale.IsSensitive, stale.RequiresSources, isEnabled: false);
 
         await db.SaveChangesAsync(cancellationToken);

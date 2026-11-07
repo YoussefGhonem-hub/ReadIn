@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Notifications;
@@ -36,6 +37,36 @@ public sealed record NotificationData
     /// </summary>
     public IReadOnlyList<Guid>? ArticleIds { get; init; }
 
+    /// <summary><c>announcement</c> (F23): which one, and its text in both languages (clients get it in theirs).</summary>
+    public Guid? AnnouncementId { get; init; }
+    public string? TitleAr { get; init; }
+    public string? TitleEn { get; init; }
+    public string? BodyAr { get; init; }
+    public string? BodyEn { get; init; }
+
+    /// <summary><c>announcement</c> linking to a learning path: its slug (an article link uses the entry's article).</summary>
+    public string? PathSlug { get; init; }
+
+    /// <summary>
+    /// An announcement sent as a test to its author (F23): it comes at once, whatever their <c>announcement</c> mode and
+    /// quiet hours.
+    /// </summary>
+    public bool? IsTest { get; init; }
+
+    /// <summary><c>support_reply</c> and <c>support_ticket</c> (F35): the ticket, its number and subject.</summary>
+    public Guid? TicketId { get; init; }
+    public int? TicketNumber { get; init; }
+    public string? Subject { get; init; }
+
+    /// <summary><c>support_reply</c>: support closed the ticket (rather than replied).</summary>
+    public bool? Closed { get; init; }
+
+    /// <summary>
+    /// What the entry last told about (<c>m:{messageId}</c> or <c>c:{ticks}</c>; server only), so a redelivered event changes
+    /// nothing in an entry grouped without actors.
+    /// </summary>
+    public string? SourceKey { get; init; }
+
     public string? Serialize() => this == Empty ? null : JsonSerializer.Serialize(this, Json);
 
     /// <summary>Unreadable or missing data is empty rather than an error: the entry still shows.</summary>
@@ -52,7 +83,16 @@ public sealed record NotificationData
         }
     }
 
-    public NotificationDataDto ToDto() => new(Threshold, StreakDays, SecurityChange, Approved, ArticleIds?.Count);
+    /// <param name="uiLanguage">The reader's UI language: an announcement's text comes in it (Arabic unless <c>en</c>).</param>
+    public NotificationDataDto ToDto(string? uiLanguage = null)
+    {
+        var english = uiLanguage == UiLanguages.English;
+        // A test announcement (IsTest) has the text but no announcement behind it.
+        return new(Threshold, StreakDays, SecurityChange, Approved, ArticleIds?.Count, AnnouncementId,
+            english ? TitleEn : TitleAr,
+            english ? BodyEn : BodyAr,
+            TicketId, TicketNumber, Subject, Closed);
+    }
 
     /// <summary>The camelCase name clients get (<c>passwordChanged</c>), also used in dedupe keys.</summary>
     public static string Name(SecurityChange change) => JsonNamingPolicy.CamelCase.ConvertName(change.ToString());

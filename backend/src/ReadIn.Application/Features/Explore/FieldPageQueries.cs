@@ -91,7 +91,7 @@ internal sealed class GetFieldPageQueryHandler(IAppDbContext db, ExploreRankings
         if (field is null) return TaxonomyErrors.FieldNotFound;
 
         var topics = await db.Topics.AsNoTracking()
-            .Where(t => t.FieldId == field.Id)
+            .Where(t => t.FieldId == field.Id && t.IsEnabled) // a disabled topic has no chip (F23)
             .OrderBy(t => t.SortOrder).ThenBy(t => t.Slug)
             .Select(t => new FieldPageTopicDto(
                 t.Id, t.Slug, english ? t.NameEn : t.NameAr, t.NameAr, t.NameEn, visible.Count(a => a.TopicId == t.Id), false))
@@ -147,7 +147,7 @@ internal sealed class GetFieldArticlesQueryHandler(
         {
             var topicSlug = FieldSlugs.FromRoute(query.Topic);
             topicId = await db.Topics.AsNoTracking()
-                .Where(t => t.FieldId == fieldId && t.Slug == topicSlug)
+                .Where(t => t.FieldId == fieldId && t.Slug == topicSlug && t.IsEnabled)
                 .Select(t => (Guid?)t.Id)
                 .FirstOrDefaultAsync(ct);
             if (topicId is null) return TaxonomyErrors.TopicNotFound;

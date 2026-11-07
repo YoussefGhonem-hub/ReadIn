@@ -35,7 +35,7 @@ internal sealed class GetProfileRepostsQueryHandler(
 {
     public async ValueTask<Result<CursorPage<ArticleCardDto>>> Handle(GetProfileRepostsQuery query, CancellationToken ct)
     {
-        if (await db.FindProfileAsync(query.Username, clock.GetUtcNow().UtcDateTime, ct) is not { } owner) return UserErrors.NotFound;
+        if (await db.FindProfileForAsync(query.Username, clock.GetUtcNow().UtcDateTime, currentUser, ct) is not { } owner) return UserErrors.NotFound;
 
         var limit = Math.Clamp(query.Limit, 1, 50);
         var visible = db.Articles.Visible().Where(a => a.PublishedAt != null);

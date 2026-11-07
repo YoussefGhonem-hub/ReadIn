@@ -110,6 +110,12 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     /// <summary>When the badge was first given; null without it.</summary>
     public DateTime? VerifiedAt { get; private set; }
 
+    /// <summary>
+    /// How the account was created (SPEC F23 dashboard): <c>phone</c>, <c>google</c> or <c>apple</c>
+    /// (<see cref="SignUpMethods"/>); null for system accounts. Linking another way later doesn't change it.
+    /// </summary>
+    public string? SignUpMethod { get; private set; }
+
     public IReadOnlyCollection<UserRole> Roles => _roles.AsReadOnly();
     public IReadOnlyCollection<UserInterest> Interests => _interests.AsReadOnly();
     public IReadOnlyCollection<UserDevice> Devices => _devices.AsReadOnly();
@@ -158,6 +164,7 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
             UiLanguage = UiLanguages.Normalize(uiLanguage),
             TimeZone = string.IsNullOrWhiteSpace(timeZone) ? DefaultTimeZone : timeZone,
             MustSetRecoveryPin = true,
+            SignUpMethod = SignUpMethods.Phone,
         };
         user._roles.Add(new UserRole(user.Id, memberRoleId));
         user.Raise(() => new UserRegisteredDomainEvent(user.Id));
@@ -190,6 +197,7 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
             Username = placeholderUsername,
             UiLanguage = UiLanguages.Normalize(uiLanguage),
             TimeZone = string.IsNullOrWhiteSpace(timeZone) ? DefaultTimeZone : timeZone,
+            SignUpMethod = provider,
         };
         user._roles.Add(new UserRole(user.Id, memberRoleId));
         user._externalLogins.Add(new ExternalLogin(user.Id, provider, subject, verifiedEmail, now));
@@ -209,6 +217,7 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
             Username = username,
             IsProfileComplete = true,
             IsSystemAccount = systemAccount,
+            SignUpMethod = systemAccount ? null : SignUpMethods.Phone,
         };
 
     public Result CompleteProfile(string displayName, string username, string? avatarUrl)

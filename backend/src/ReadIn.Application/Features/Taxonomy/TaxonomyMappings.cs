@@ -10,7 +10,7 @@ public sealed class TaxonomyMappings : IRegister
     {
         config.NewConfig<Field, FieldDto>()
             .Map(d => d.Name, s => LocalizedProjection.Ui == "en" ? s.NameEn : s.NameAr)
-            .Map(d => d.TopicCount, s => s.Topics.Count);
+            .Map(d => d.TopicCount, s => s.Topics.Count(t => t.IsEnabled));
 
         config.NewConfig<Topic, TopicDto>()
             .Map(d => d.Name, s => LocalizedProjection.Ui == "en" ? s.NameEn : s.NameAr);

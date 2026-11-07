@@ -49,7 +49,8 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
         Dictionary<Guid, (int Count, string? Name, string? Username)> Actors,
         Dictionary<Guid, ArticleInfo> Articles,
         Dictionary<Guid, string> Comments,
-        Dictionary<Guid, NoticeInfo> Notices);
+        Dictionary<Guid, NoticeInfo> Notices,
+        HashSet<Guid> Tickets);
 
     public static TimeSpan MaxAgeOf(string type) => type == NotificationTypes.StreakReminder ? StreakReminderMaxAge : MaxAge;
 
@@ -161,12 +162,18 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
         var age = utcNow - entry.UpdatedAt;
         if (age > MaxAgeOf(entry.Type) || !context.Users.TryGetValue(entry.UserId, out var user)) return Skip();
 
-        if (NotificationTypes.IsConfigurable(entry.Type)
+        var data = NotificationData.Parse(entry.Data);
+        // A test announcement (F23) goes to its author at once, whatever their mode and quiet hours.
+        var forced = data.IsTest == true;
+
+        if (!forced && NotificationTypes.IsConfigurable(entry.Type)
             && context.Modes.GetValueOrDefault((entry.UserId, entry.Type), NotificationMode.All) != NotificationMode.All)
             return Skip();
 
-        var after = NotificationSchedule.PushAfter(entry.Type, utcNow, user.TimeZone,
-            NotificationSchedule.QuietHoursOf(user.QuietEnabled, user.QuietStart, user.QuietEnd));
+        var after = forced
+            ? utcNow
+            : NotificationSchedule.PushAfter(entry.Type, utcNow, user.TimeZone,
+                NotificationSchedule.QuietHoursOf(user.QuietEnabled, user.QuietStart, user.QuietEnd));
         if (after > utcNow)
         {
             entry.DeferPush(after);
@@ -176,7 +183,6 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
 
         if (user.Tokens.Count == 0) return Skip();
 
-        var data = NotificationData.Parse(entry.Data);
         var article = entry.ArticleId is { } articleId ? context.Articles.GetValueOrDefault(articleId) : null;
         string? comment = null;
         NoticeInfo? notice = null;
@@ -193,6 +199,14 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
             case NotificationTypes.ReactionsMilestone or NotificationTypes.FollowedWriterArticle or NotificationTypes.DailyArticle
                 or NotificationTypes.ArticleReposted:
                 if (article is not { IsVisible: true }) return Skip();
+                break;
+            case NotificationTypes.Announcement when entry.ArticleId is not null:
+                // An announcement that links to an article: the article is still readable (F23).
+                if (article is not { IsVisible: true }) return Skip();
+                break;
+            case NotificationTypes.SupportReply or NotificationTypes.SupportTicket:
+                // The ticket is still there (F35): a deleted account or the retention job took it.
+                if (data.TicketId is not { } ticketId || !context.Tickets.Contains(ticketId)) return Skip();
                 break;
             case NotificationTypes.ModerationNotice:
                 if (data.NoticeId is not { } noticeId || !context.Notices.TryGetValue(noticeId, out notice) || notice.Acknowledged)
@@ -213,7 +227,8 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
             notice?.Label));
 
         var link = NotificationLinks.For(
-            entry.Type, actor.Count, actor.Username, user.Username, article?.Slug, entry.CommentId, OfficialArticles.CountOf(data));
+            entry.Type, actor.Count, actor.Username, user.Username, article?.Slug, entry.CommentId, OfficialArticles.CountOf(data),
+            data.PathSlug, data.TicketId);
         var payload = new Dictionary<string, string>
         {
             ["type"] = entry.Type,
@@ -223,6 +238,8 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
         // Article links say which version the text came from, as the daily article does; the web opens /{lang}/a/{slug}.
         if (article is not null && translation is not null && link.StartsWith(NotificationLinks.Article(article.Slug), StringComparison.Ordinal))
             payload["lang"] = translation.Language == ArticleLanguages.English ? UiLanguages.English : UiLanguages.Arabic;
+        if (data.AnnouncementId is { } announcementId) payload["announcementId"] = announcementId.ToString();
+        if (data.TicketId is { } pushTicketId) payload["ticketId"] = pushTicketId.ToString();
         if (notice is not null)
         {
             // As F22's push had them, so clients that refresh their notices on this push keep working.
@@ -324,7 +341,17 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
                 .Select(m => new NoticeInfo(m.Id, m.NoticeKind, m.Note, m.TargetLabel, m.AcknowledgedAt != null))
                 .ToDictionaryAsync(m => m.Id, ct);
 
-        return new Context(users, modes, actors, articles, comments, notices);
+        var ticketIds = batch.Where(n => n.Type is NotificationTypes.SupportReply or NotificationTypes.SupportTicket)
+            .Select(n => NotificationData.Parse(n.Data).TicketId)
+            .Where(id => id != null)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+        var tickets = ticketIds.Count == 0
+            ? []
+            : (await db.SupportTickets.AsNoTracking().Where(t => ticketIds.Contains(t.Id)).Select(t => t.Id).ToListAsync(ct)).ToHashSet();
+
+        return new Context(users, modes, actors, articles, comments, notices, tickets);
     }
 
     [LoggerMessage(Level = LogLevel.Information,

@@ -92,9 +92,11 @@ internal sealed class UpdateNotificationSettingsCommandHandler(IAppDbContext db,
         var userId = currentUser.RequireUserId();
 
         var modes = new Dictionary<string, NotificationMode>(StringComparer.Ordinal);
+        // support_ticket (F35) is only for those who get it: holders of support.manage.
+        var configurable = NotificationTypes.ConfigurableFor(currentUser.Permissions.Contains(Permissions.Support.Manage));
         foreach (var (type, value) in command.Types ?? new Dictionary<string, string?>())
         {
-            if (!NotificationTypes.IsConfigurable(type)) return NotificationErrors.TypeInvalid;
+            if (!configurable.Contains(type)) return NotificationErrors.TypeInvalid;
             if (!TryParseMode(value, out var mode)) return NotificationErrors.ModeInvalid;
             modes[type] = mode;
         }

@@ -178,6 +178,9 @@ public sealed record ArticleDetailsDto : ArticleCardDto
     /// <summary>The writer's category of the article (SPEC F31); null when it has none.</summary>
     public WriterCategoryRefDto? Category { get; init; }
 
+    /// <summary>Featured on Explore (SPEC F23); the same for everyone. Drives the "Feature" / "Unfeature" menu item.</summary>
+    public bool IsFeatured { get; init; }
+
     /// <summary>Raw RDoc from the projection; parsed into <see cref="Content"/> by the handler.</summary>
     [JsonIgnore]
     public string ContentJson { get; init; } = default!;

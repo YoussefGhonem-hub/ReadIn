@@ -44,12 +44,26 @@ public sealed record NotificationCommentDto(Guid Id, Guid? ParentId, string Exce
 /// The official @readin account's day entry (<c>followed_writer_article</c>): how many of its new articles it holds (≥ 1);
 /// from 2 the text is "ReadIn published {n} new articles" and the link the account's profile.
 /// </param>
+/// <param name="AnnouncementId"><c>announcement</c> (F23): the announcement.</param>
+/// <param name="Title"><c>announcement</c>: its title in the request's UI language.</param>
+/// <param name="Body"><c>announcement</c>: its text in the request's UI language.</param>
+/// <param name="TicketId"><c>support_reply</c>, <c>support_ticket</c> (F35): the ticket.</param>
+/// <param name="TicketNumber">The ticket's number ("#12").</param>
+/// <param name="Subject">The ticket's subject.</param>
+/// <param name="Closed"><c>support_reply</c>: true when support closed the ticket.</param>
 public sealed record NotificationDataDto(
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? Threshold,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? StreakDays,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] SecurityChange? SecurityChange,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] bool? Approved = null,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ArticleCount = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? ArticleCount = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? AnnouncementId = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Title = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Body = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Guid? TicketId = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? TicketNumber = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Subject = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] bool? Closed = null);
 
 /// <summary>GET /me/notifications/unread-count: the badge without the Realtime Database.</summary>
 public sealed record UnreadNotificationsDto(int Unread);

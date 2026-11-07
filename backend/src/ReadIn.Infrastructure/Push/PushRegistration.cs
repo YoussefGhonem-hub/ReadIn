@@ -16,14 +16,27 @@ internal static class PushRegistration
     /// </summary>
     public static IServiceCollection AddPush(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
+        // The sender, wrapped so every send's results reach the admin console's system page (SPEC F23).
         if (UsesFcm(configuration.GetSection(FirebaseOptions.Section).Get<FirebaseOptions>() ?? new FirebaseOptions(), environment))
-            services.AddSingleton<IPushSender, FcmPushSender>();
+        {
+            services.AddSingleton<FcmPushSender>();
+            services.AddSingleton<IPushSender>(sp => Recorded(sp, sp.GetRequiredService<FcmPushSender>()));
+        }
         else
-            services.AddSingleton<IPushSender, LoggingPushSender>();
+        {
+            services.AddSingleton<LoggingPushSender>();
+            services.AddSingleton<IPushSender>(sp => Recorded(sp, sp.GetRequiredService<LoggingPushSender>()));
+        }
 
         services.AddScoped<DailyArticleJob>();
         return services;
     }
+
+    private static PushDeliveryRecorder Recorded(IServiceProvider services, IPushSender inner) => new(
+        inner,
+        services.GetRequiredService<IServiceScopeFactory>(),
+        services.GetRequiredService<TimeProvider>(),
+        services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<PushDeliveryRecorder>>());
 
     internal static bool UsesFcm(FirebaseOptions firebase, IHostEnvironment environment) =>
         !firebase.UseEmulator && (!environment.IsDevelopment() || !string.IsNullOrWhiteSpace(firebase.ServiceAccountJson));

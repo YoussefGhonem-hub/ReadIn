@@ -63,6 +63,19 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public Guid? HiddenById { get; private set; }
 
     /// <summary>
+    /// Hidden by <c>hide_content</c> with all of its author's content (SPEC F23), so <c>unhide_content</c> brings back exactly
+    /// this; any unhide clears it.
+    /// </summary>
+    public bool HiddenWithAccount { get; private set; }
+
+    /// <summary>
+    /// Featured by <c>articles.feature</c> (SPEC F23): Explore's featured articles, the most recently featured first. No
+    /// foreign key on <see cref="FeaturedById"/>: account deletion nulls it.
+    /// </summary>
+    public DateTime? FeaturedAt { get; private set; }
+    public Guid? FeaturedById { get; private set; }
+
+    /// <summary>
     /// The writer's own category (SPEC F31); null for none. Changed at once by the writer, outside the editor's working
     /// copy, so it needs no publish and makes no revision. Deleting the category sets it back to null.
     /// </summary>
@@ -313,7 +326,37 @@ public sealed class Article : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     {
         HiddenAt = null;
         HiddenById = null;
+        HiddenWithAccount = false;
     }
+
+    /// <summary>Hidden with all of the author's content (SPEC F23 <c>hide_content</c>); returns false when it was hidden already.</summary>
+    public bool HideWithAccount(Guid moderatorId, DateTime now)
+    {
+        if (IsHidden) return false;
+        Hide(moderatorId, now);
+        HiddenWithAccount = true;
+        return true;
+    }
+
+    /// <summary>Featured on Explore (SPEC F23); featuring it again keeps the first time. Returns whether it changed.</summary>
+    public bool Feature(Guid byId, DateTime now)
+    {
+        if (FeaturedAt is not null) return false;
+        FeaturedAt = now;
+        FeaturedById = byId;
+        return true;
+    }
+
+    public bool Unfeature()
+    {
+        if (FeaturedAt is null) return false;
+        FeaturedAt = null;
+        FeaturedById = null;
+        return true;
+    }
+
+    /// <summary>Account deletion (SPEC §9.6): the article stays featured, without the link to who featured it.</summary>
+    public void ForgetFeaturedBy() => FeaturedById = null;
 
     /// <summary>Content-pipeline articles passed every automatic check (SPEC §19.3) on <paramref name="checkedAt"/>.</summary>
     public void MarkAutoChecked(DateTime checkedAt) => AutoCheckedAt = checkedAt;

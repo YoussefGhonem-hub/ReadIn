@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Hybrid;
 using ReadIn.Application.Common.Behaviors;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
+using ReadIn.Application.Features.Admin;
 using ReadIn.Application.Features.Articles;
 using ReadIn.Application.Features.Comments;
 using ReadIn.Application.Features.Tags;
@@ -37,6 +38,7 @@ public sealed record ReportContentCommand(string TargetType, Guid TargetId, stri
 /// <param name="Note">≤ 500; required to warn or suspend.</param>
 /// <param name="DurationDays">Suspend only: 1–365, null = permanent.</param>
 /// <param name="CategoryId">clear_category only (required there): one of the user's writer categories.</param>
+/// <param name="HideContent">suspend only (SPEC F23): also hide all of the user's articles and comments (hide_content).</param>
 [RequirePermission(Permissions.Moderation.Manage)]
 public sealed record ModerateContentCommand(
     string Action,
@@ -45,7 +47,8 @@ public sealed record ModerateContentCommand(
     string? Note = null,
     int? DurationDays = null,
     ModerationTargetRef? ResolveReportsOf = null,
-    Guid? CategoryId = null) : ICommand<Result>;
+    Guid? CategoryId = null,
+    bool? HideContent = null) : ICommand<Result>;
 
 /// <summary>Another target, e.g. the article an author is warned for, whose open reports the action also resolves.</summary>
 public sealed record ModerationTargetRef(string TargetType, Guid TargetId);
@@ -70,16 +73,26 @@ public static class ModerationVerbs
     /// <summary>Removes the user's title (SPEC F14).</summary>
     public const string ClearHeadline = "clear_headline";
 
+    /// <summary>Hides every article and comment of the user at once (SPEC F23), e.g. a spam account.</summary>
+    public const string HideContent = "hide_content";
+
+    /// <summary>Brings back what <see cref="HideContent"/> hid and is still hidden (SPEC F23).</summary>
+    public const string UnhideContent = "unhide_content";
+
     public static bool Allows(string? action, ReportTargetType target) => (action, target) switch
     {
         (Hide or Unhide or Delete or Dismiss, ReportTargetType.Comment) => true,
         (Hide or Unhide or Dismiss, ReportTargetType.Article) => true,
-        (Warn or Suspend or Unsuspend or ClearCategory or ClearLinks or ClearHeadline or Dismiss, ReportTargetType.User) => true,
+        (Warn or Suspend or Unsuspend or ClearCategory or ClearLinks or ClearHeadline or HideContent or UnhideContent or Dismiss,
+            ReportTargetType.User) => true,
         _ => false,
     };
 
     /// <summary>The content actions on a user (F14, F31): allowed on anyone, staff and yourself included, like hiding content.</summary>
     public static bool IsProfileContent(string action) => action is ClearCategory or ClearLinks or ClearHeadline;
+
+    /// <summary>Allowed on anyone, staff and yourself included: content actions, and <see cref="UnhideContent"/>, which only gives back.</summary>
+    public static bool IsUnprotected(string action) => action is Dismiss or UnhideContent || IsProfileContent(action);
 
     /// <summary>
     /// Hide, delete, warn, suspend and the clears (category, links, title) resolve the target's open reports; dismiss closes
@@ -170,15 +183,23 @@ internal sealed class ModerateContentCommandHandler(
     HybridCache cache,
     WriterCategoryReader categories,
     AuthorCaches authorCaches,
+    ProtectedAccounts protectedAccounts,
     TimeProvider clock)
     : ICommandHandler<ModerateContentCommand, Result>
 {
+    /// <summary>What hide_content or unhide_content touched: the articles (whose cached pages go) and the threads to recount.</summary>
+    private sealed record AccountContentChange(List<Article> Articles, int Comments, HashSet<Guid> Threads)
+    {
+        public bool Changed => Articles.Count > 0 || Comments > 0;
+    }
+
     private readonly record struct Acting(Guid ModeratorId, string? Note, DateTime Now);
 
     public async ValueTask<Result> Handle(ModerateContentCommand command, CancellationToken cancellationToken)
     {
         if (!ModerationValues.TryParseTarget(command.TargetType, out var targetType) || !ModerationVerbs.Allows(command.Action, targetType))
             return ModerationErrors.ActionInvalid;
+        if (command.HideContent == true && command.Action != ModerationVerbs.Suspend) return ModerationErrors.ActionInvalid;
         if ((command.Action is ModerationVerbs.Suspend or ModerationVerbs.Unsuspend) && !currentUser.Permissions.Contains(Permissions.Users.Suspend))
             return AuthErrors.Forbidden;
 
@@ -288,18 +309,25 @@ internal sealed class ModerateContentCommandHandler(
         if (user is null || (user.IsDeleted && command.Action != ModerationVerbs.Dismiss)) return UserErrors.NotFound;
 
         // Clearing a category name, the links or the title is about content, like hiding an article: allowed on anyone,
-        // staff and yourself included.
-        if (command.Action != ModerationVerbs.Dismiss && !ModerationVerbs.IsProfileContent(command.Action))
-        {
-            if (user.Id == acting.ModeratorId) return ModerationErrors.Self;
-            if (await IsStaffAsync(user, ct)) return ModerationErrors.StaffTarget;
-        }
+        // staff and yourself included. Staff (F23): holders of admin.access or moderation.manage, and system accounts.
+        if (!ModerationVerbs.IsUnprotected(command.Action) &&
+            await protectedAccounts.CheckAsync(user.Id, user.IsSystemAccount, ct) is { } protectedError)
+            return protectedError;
 
         var accessChanged = false;
         var headlineCleared = false;
         List<string>? clearedCategoryArticles = null;
+        AccountContentChange? contentChange = null;
         switch (command.Action)
         {
+            case ModerationVerbs.HideContent:
+                contentChange = await HideAccountContentAsync(user, acting, ct);
+                if (!contentChange.Changed) return Result.Success();
+                break;
+            case ModerationVerbs.UnhideContent:
+                contentChange = await UnhideAccountContentAsync(user, acting, ct);
+                if (!contentChange.Changed) return Result.Success();
+                break;
             case ModerationVerbs.ClearLinks:
             {
                 // Nothing to clear: nothing to log, and the reports stay as they are (as for clear_category).
@@ -366,6 +394,8 @@ internal sealed class ModerateContentCommandHandler(
                 var resolved = await CloseReportsAsync(command, ReportTargetType.User, acting, ct);
                 if (accessChanged || resolved > 0)
                     Log(ModerationAction.Suspension(user.Id, user.Username, acting.ModeratorId, acting.Note!, until, resolved, acting.Now));
+                // F23: "Also hide all of their articles and comments", in the same transaction.
+                if (command.HideContent == true) contentChange = await HideAccountContentAsync(user, acting, ct);
                 break;
             }
             case ModerationVerbs.Unsuspend:
@@ -391,6 +421,7 @@ internal sealed class ModerateContentCommandHandler(
         }
 
         await db.SaveChangesAsync(ct);
+        if (contentChange is { Changed: true }) await RefreshAccountContentAsync(contentChange, ct);
         // The next request of the account is blocked (or let through) at once; the outbox handler of
         // UserRolesChangedDomainEvent drops the same cache entry a moment later.
         if (accessChanged) await access.InvalidateAsync(user.Id, ct);
@@ -401,9 +432,77 @@ internal sealed class ModerateContentCommandHandler(
         return Result.Success();
     }
 
-    /// <summary>Staff can't be warned or suspended (SPEC F22): anyone who holds <c>moderation.manage</c>, and system accounts.</summary>
-    private async Task<bool> IsStaffAsync(User user, CancellationToken ct) =>
-        user.IsSystemAccount || (await access.GetAsync(user.Id, ct))?.Permissions.Contains(Permissions.Moderation.Manage) == true;
+    /// <summary>
+    /// hide_content (SPEC F23): every published or archived article and every comment of the user that isn't hidden or
+    /// deleted, flagged as hidden with the account; the open reports of what it hid are resolved. No notices or pushes. Logged
+    /// once on the user and audited, when it hid anything.
+    /// </summary>
+    private async Task<AccountContentChange> HideAccountContentAsync(User user, Acting acting, CancellationToken ct)
+    {
+        var articles = await db.Articles
+            .Where(a => a.AuthorId == user.Id && a.Status != ArticleStatus.Draft && a.HiddenAt == null)
+            .ToListAsync(ct);
+        var comments = await db.Comments.Where(c => c.AuthorId == user.Id && c.HiddenAt == null).ToListAsync(ct);
+        foreach (var article in articles) article.HideWithAccount(acting.ModeratorId, acting.Now);
+        var threads = new HashSet<Guid>();
+        foreach (var comment in comments)
+        {
+            if (comment.HideWithAccount(acting.ModeratorId, acting.Now) && comment.ParentId is { } parentId) threads.Add(parentId);
+        }
+
+        var articleIds = articles.Select(a => a.Id).ToList();
+        var commentIds = comments.Select(c => c.Id).ToList();
+        var open = await db.Reports
+            .Where(r => r.Status == ReportStatus.Open &&
+                ((r.TargetType == ReportTargetType.Article && articleIds.Contains(r.TargetId)) ||
+                 (r.TargetType == ReportTargetType.Comment && commentIds.Contains(r.TargetId))))
+            .ToListAsync(ct);
+        foreach (var report in open) report.Resolve(acting.ModeratorId, acting.Now);
+
+        var change = new AccountContentChange(articles, comments.Count, threads);
+        if (change.Changed)
+        {
+            audit.Record(AuditActions.ContentHidden, user.Id, AuditTargets.User, user.Id, $"articles={articles.Count} comments={comments.Count}");
+            Log(ModerationAction.AccountContent(ModerationActionTypes.UserHideContent, user.Id, user.Username, acting.ModeratorId, acting.Note,
+                open.Count, acting.Now));
+        }
+        return change;
+    }
+
+    /// <summary>
+    /// unhide_content (SPEC F23): unhides what hide_content hid and is still hidden; content hidden one by one stays hidden.
+    /// Closed reports stay closed.
+    /// </summary>
+    private async Task<AccountContentChange> UnhideAccountContentAsync(User user, Acting acting, CancellationToken ct)
+    {
+        var articles = await db.Articles.Where(a => a.AuthorId == user.Id && a.HiddenWithAccount).ToListAsync(ct);
+        var comments = await db.Comments.Where(c => c.AuthorId == user.Id && c.HiddenWithAccount).ToListAsync(ct);
+        foreach (var article in articles) article.Unhide();
+        var threads = new HashSet<Guid>();
+        foreach (var comment in comments)
+        {
+            comment.Unhide();
+            if (comment.ParentId is { } parentId) threads.Add(parentId);
+        }
+
+        var change = new AccountContentChange(articles, comments.Count, threads);
+        if (change.Changed)
+        {
+            audit.Record(AuditActions.ContentRestored, user.Id, AuditTargets.User, user.Id, $"articles={articles.Count} comments={comments.Count}");
+            Log(ModerationAction.AccountContent(ModerationActionTypes.UserUnhideContent, user.Id, user.Username, acting.ModeratorId, acting.Note,
+                0, acting.Now));
+        }
+        return change;
+    }
+
+    /// <summary>After the commit: reply counts of the threads touched, and the cached pages of the articles touched.</summary>
+    private async Task RefreshAccountContentAsync(AccountContentChange change, CancellationToken ct)
+    {
+        foreach (var parentId in change.Threads) await posting.RecountRepliesAsync(parentId, ct);
+        if (change.Articles.Count == 0) return;
+        await cache.RemoveByTagAsync(
+            [CacheTags.Feed, CacheTags.Tags, .. change.Articles.SelectMany(a => new[] { CacheTags.Article(a.Slug), CacheTags.ArticleById(a.Id) })], ct);
+    }
 
     /// <returns>How many open reports were closed.</returns>
     private async Task<int> CloseReportsAsync(ModerateContentCommand command, ReportTargetType targetType, Acting acting, CancellationToken ct)

@@ -114,8 +114,17 @@ internal sealed class PathEndpoints : IEndpointGroup
                 (await sender.Send(new DeletePathCommand(id), ct)).ToHttp(http))
             .RequireRateLimiting(RateLimitPolicies.Writes)
             .WithSummary("Delete a learning path and its enrollments (paths.manage)");
+
+        // F23: beside PUT /{id:guid}; the guid constraint keeps them apart.
+        admin.MapPut("/featured", async (SetFeaturedPathsRequest body, ISender sender, HttpContext http, CancellationToken ct) =>
+                (await sender.Send(new SetFeaturedPathsCommand(body.PathIds), ct)).ToHttp(http))
+            .RequireRateLimiting(RateLimitPolicies.Writes)
+            .WithSummary("The whole featured list in Explore order: 0–20 different paths, editorial ones too; [] unfeatures all (articles.feature)");
     }
 }
 
 /// <summary>Body of PUT /admin/paths/{id}/items.</summary>
 internal sealed record SetPathItemsRequest(IReadOnlyList<Guid>? ArticleIds);
+
+/// <summary>Body of PUT /admin/paths/featured (SPEC F23).</summary>
+internal sealed record SetFeaturedPathsRequest(IReadOnlyList<Guid>? PathIds);

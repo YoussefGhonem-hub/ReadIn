@@ -47,6 +47,12 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(RecoveryOptions.Section))
             .Validate(o => o.PinLength is >= 4 and <= 8, "Recovery:PinLength must be between 4 and 8.")
             .ValidateOnStart();
+        // Help & support (SPEC F35): the support email the clients show.
+        services.AddOptions<Application.Features.Support.SupportOptions>()
+            .Bind(configuration.GetSection(Application.Features.Support.SupportOptions.Section));
+        // The admin console's calendar days (SPEC F23); an unknown time zone falls back to UTC.
+        services.AddOptions<Application.Features.Admin.AdminOptions>()
+            .Bind(configuration.GetSection(Application.Features.Admin.AdminOptions.Section));
         // The forced-update policy of the app: a version the app can't parse would block nobody or everybody.
         services.AddOptions<MobileAppOptions>()
             .Bind(configuration.GetSection(MobileAppOptions.Section))
@@ -77,6 +83,8 @@ public static class DependencyInjection
         });
         services.AddSingleton<IProviderTokenProtector, AesGcmProviderTokenProtector>();
         services.AddScoped<IAccountEraser, AccountEraser>();
+        // "Last seen" of the admin console (SPEC F23): at most one write an hour per account, off the Users row.
+        services.AddScoped<Application.Features.Admin.Users.IPresenceTracker, PresenceTracker>();
 
         // Uploads live on this server's disk (ADR 0010); swap IFileStorage to move them to shared storage.
         services.AddSingleton<WwwrootFileStorage>();
@@ -121,6 +129,12 @@ public static class DependencyInjection
         services.AddScoped<LiveEventsCleanupJob>();
         services.AddScoped<NotificationPushJob>();
         services.AddScoped<StreakReminderJob>();
+        // The admin console's system page and its cleanup (SPEC F23).
+        services.AddScoped<AdminCleanupJob>();
+        services.AddScoped<Application.Features.Admin.SystemPage.ISystemProbe, Admin.SystemProbe>();
+        // Help & support (SPEC F35): auto-close after 14 days Answered, and deletion a year after closing.
+        services.AddScoped<SupportAutoCloseJob>();
+        services.AddScoped<SupportRetentionJob>();
 
         if (IsHangfireEnabled(configuration))
         {
@@ -145,6 +159,11 @@ public static class DependencyInjection
         }
 
         services.AddSingleton<ContentRepository>();
+        // The taxonomy file's slugs for the admin console (SPEC F23 inTaxonomyFile).
+        services.AddSingleton<Application.Features.Admin.Taxonomy.IContentTaxonomy, ContentTaxonomyReader>();
+        // The dashboard's content pipeline, and the searches with no results it lists (SPEC F23, §22).
+        services.AddScoped<Application.Features.Admin.Dashboard.IContentPipelineSource, ContentPipelineSource>();
+        services.AddHostedService<Search.SearchMissFlusher>();
 
         // Seeding order: SPEC §18.2. Comments join the demo interactions with F11.
         services.AddScoped<ISeeder, RolesAndPermissionsSeeder>();
@@ -220,6 +239,13 @@ public static class DependencyInjection
         jobs.AddOrUpdate<LiveEventsCleanupJob>("rtdb-events-cleanup", job => job.RunAsync(CancellationToken.None), Cron.Hourly());
         jobs.AddOrUpdate<NotificationPushJob>("notification-push", job => job.RunAsync(CancellationToken.None), Cron.Minutely());
         jobs.AddOrUpdate<StreakReminderJob>("streak-reminder", job => job.RunAsync(CancellationToken.None), StreakReminderJob.Schedule);
+        // F23: searches with no results after 90 days, job runs and push results after 7 (RecurringJobCatalog lists every job).
+        jobs.AddOrUpdate<AdminCleanupJob>(RecurringJobCatalog.AdminCleanup, job => job.RunAsync(CancellationToken.None), Cron.Daily(3, 50));
+        // F35: Answered tickets close 14 days after the last reply; closed ones go a year after closing, with their files.
+        jobs.AddOrUpdate<SupportAutoCloseJob>(RecurringJobCatalog.SupportAutoClose, job => job.RunAsync(CancellationToken.None), Cron.Hourly(20));
+        jobs.AddOrUpdate<SupportRetentionJob>(RecurringJobCatalog.SupportRetention, job => job.RunAsync(CancellationToken.None), Cron.Daily(4, 15));
+        // F23: every run of a job is recorded in JobRuns for the system page.
+        GlobalJobFilters.Filters.Add(ActivatorUtilities.CreateInstance<JobRunRecorder>(services));
     }
 
     /// <summary>

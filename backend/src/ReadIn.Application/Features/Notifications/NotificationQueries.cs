@@ -119,9 +119,10 @@ internal sealed class GetNotificationsQueryHandler(IAppDbContext db, ICurrentUse
                         p.ActorCount,
                         article,
                         comment,
-                        data.ToDto(),
+                        data.ToDto(currentUser.UiLanguage),
                         NotificationLinks.For(
-                            p.Type, p.ActorCount, actor?.Username, viewer.Username, article?.Slug, p.CommentId, OfficialArticles.CountOf(data)));
+                            p.Type, p.ActorCount, actor?.Username, viewer.Username, article?.Slug, p.CommentId, OfficialArticles.CountOf(data),
+                            data.PathSlug, data.TicketId));
                 }),
             ],
             next);
@@ -151,7 +152,9 @@ internal sealed class GetNotificationSettingsQueryHandler(IAppDbContext db, ICur
 
         return new NotificationSettingsDto(
             new QuietHoursDto(quiet.QuietHoursEnabled, Format(quiet.QuietHoursStart), Format(quiet.QuietHoursEnd)),
-            NotificationTypes.Configurable.ToDictionary(t => t, t => stored.GetValueOrDefault(t, NotificationMode.All)));
+            // support_ticket (F35) is listed only for those who get it: holders of support.manage.
+            NotificationTypes.ConfigurableFor(currentUser.Permissions.Contains(Permissions.Support.Manage))
+                .ToDictionary(t => t, t => stored.GetValueOrDefault(t, NotificationMode.All)));
     }
 
     internal static string Format(TimeOnly time) => time.ToString("HH:mm", CultureInfo.InvariantCulture);

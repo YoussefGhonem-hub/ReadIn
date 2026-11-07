@@ -168,7 +168,9 @@ public sealed class DailyArticleJobTests(ApiFactory api)
         using var scope = api.Services.CreateScope();
 
         scope.ServiceProvider.GetRequiredService<DailyArticleJob>().Should().NotBeNull();
-        scope.ServiceProvider.GetRequiredService<IPushSender>().GetType().Name.Should().Be("LoggingPushSender", "FCM has no emulator");
+        // F23: the sender is wrapped so the system page counts push results.
+        scope.ServiceProvider.GetRequiredService<IPushSender>().Should().BeOfType<ReadIn.Infrastructure.Push.PushDeliveryRecorder>()
+            .Which.Inner.GetType().Name.Should().Be("LoggingPushSender", "FCM has no emulator");
     }
 
     // ---- F17: the notification center entry, the user's mode and quiet hours ----

@@ -135,12 +135,24 @@ public static class NotificationLinks
 
     public static string Followers(string username) => $"readin://u/{username}/followers";
 
+    /// <summary>A learning path (F09), e.g. the link of an announcement (F23).</summary>
+    public static string Path(string slug) => $"readin://paths/{Uri.EscapeDataString(slug)}";
+
+    /// <summary>The member's ticket (F35, <c>support_reply</c>).</summary>
+    public static string SupportTicket(Guid ticketId) => $"readin://support/{ticketId}";
+
+    /// <summary>The ticket in the admin console (F35, <c>support_ticket</c>).</summary>
+    public static string AdminSupportTicket(Guid ticketId) => $"readin://admin/support/{ticketId}";
+
     /// <param name="actorUsername">The latest actor's @username, when they still have an account.</param>
     /// <param name="myUsername">The recipient's @username.</param>
     /// <param name="articleSlug">The article's slug, when it is shown.</param>
     /// <param name="articleCount">The articles the entry holds (<see cref="OfficialArticles.CountOf"/>); 1 for most entries.</param>
+    /// <param name="pathSlug">An announcement's learning path (F23), when it links to one.</param>
+    /// <param name="ticketId">A support entry's ticket (F35).</param>
     public static string For(
-        string type, int actorCount, string? actorUsername, string myUsername, string? articleSlug, Guid? commentId, int articleCount = 1) =>
+        string type, int actorCount, string? actorUsername, string myUsername, string? articleSlug, Guid? commentId, int articleCount = 1,
+        string? pathSlug = null, Guid? ticketId = null) =>
         type switch
         {
             NotificationTypes.NewFollower => actorCount == 1 && actorUsername is not null ? Profile(actorUsername) : Followers(myUsername),
@@ -157,6 +169,11 @@ public static class NotificationLinks
             // center, and the app shows the notice itself from GET /me/moderation-notices.
             NotificationTypes.ModerationNotice => articleSlug is null ? Center : Article(articleSlug),
             NotificationTypes.VerificationResult => Verification,
+            // An announcement opens its article, its path, or the center (F23).
+            NotificationTypes.Announcement => articleSlug is not null ? Article(articleSlug) : pathSlug is not null ? Path(pathSlug) : Center,
+            // A support reply opens the member's ticket, a new support message the console's ticket (F35).
+            NotificationTypes.SupportReply => ticketId is { } replyTicket ? SupportTicket(replyTicket) : Center,
+            NotificationTypes.SupportTicket => ticketId is { } adminTicket ? AdminSupportTicket(adminTicket) : Center,
             _ => Center,
         };
 }
@@ -178,6 +195,10 @@ public static class NotificationTexts
     public const string VerificationRejectedTitleEn = "Your verification request wasn't approved";
     public const string VerificationRejectedBodyAr = "افتحه لمعرفة السبب";
     public const string VerificationRejectedBodyEn = "Open it to see why";
+    public const string SupportReplyTitleAr = "ردّ فريق الدعم على تذكرتك";
+    public const string SupportReplyTitleEn = "Support replied to your ticket";
+    public const string SupportClosedTitleAr = "أُغلقت تذكرتك";
+    public const string SupportClosedTitleEn = "Your ticket was closed";
 
     /// <param name="ActorName">The latest actor's display name; null when they deleted their account.</param>
     /// <param name="ActorCount">Distinct actors.</param>
@@ -233,6 +254,15 @@ public static class NotificationTexts
                 ? (english ? ArticleHiddenTitleEn : ArticleHiddenTitleAr, input.NoticeLabel ?? input.NoticeNote ?? article)
                 : (english ? ModerationWarningTitleEn : ModerationWarningTitleAr, input.NoticeNote ?? string.Empty),
             // The reason of a rejection is only on the verification page, never in a push.
+            // An announcement is the team's own text, in the user's language (F23).
+            NotificationTypes.Announcement => english
+                ? (input.Data.TitleEn ?? "ReadIn", input.Data.BodyEn ?? string.Empty)
+                : (input.Data.TitleAr ?? "ReadIn", input.Data.BodyAr ?? string.Empty),
+            // Support stays anonymous to the member; the body is the ticket (F35).
+            NotificationTypes.SupportReply => input.Data.Closed == true
+                ? (english ? SupportClosedTitleEn : SupportClosedTitleAr, TicketLine(input.Data))
+                : (english ? SupportReplyTitleEn : SupportReplyTitleAr, TicketLine(input.Data)),
+            NotificationTypes.SupportTicket => (english ? $"New support message from {name}" : $"رسالة دعم جديدة من {name}", TicketLine(input.Data)),
             NotificationTypes.VerificationResult => input.Data.Approved switch
             {
                 true => (english ? VerificationApprovedTitleEn : VerificationApprovedTitleAr, string.Empty),
@@ -244,6 +274,10 @@ public static class NotificationTexts
             _ => ("ReadIn", string.Empty),
         };
     }
+
+    /// <summary>"#12 · Can't sign in": the ticket's number and subject (the subject isolated, it may be either language).</summary>
+    public static string TicketLine(NotificationData data) =>
+        data.TicketNumber is { } number ? $"#{number} · {Isolate(data.Subject ?? string.Empty)}" : Isolate(data.Subject ?? string.Empty);
 
     /// <summary>"Ahmed and 9 others" / "أحمد و9 آخرون" (SPEC §21.1).</summary>
     private static string OthersEn(int others) => others switch

@@ -12,6 +12,11 @@ internal sealed class AuditTrail(IAppDbContext db, ICurrentUser currentUser, ICl
 {
     public void Record(string action, Guid? userId) =>
         db.AuditLogs.Add(AuditLog.Record(action, currentUser.UserId, userId, client.IpAddress, clock.GetUtcNow().UtcDateTime));
+
+    /// <summary>An admin action (SPEC F23) with what it touched (<see cref="AuditTargets"/>) and a short note, never personal data.</summary>
+    public void Record(string action, Guid? userId, string? targetType, Guid? targetId, string? details = null) =>
+        db.AuditLogs.Add(AuditLog.Record(
+            action, currentUser.UserId, userId, client.IpAddress, clock.GetUtcNow().UtcDateTime, targetType, targetId, details));
 }
 
 /// <summary>

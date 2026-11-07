@@ -183,6 +183,7 @@ public static class ApiSetup
         app.UseCors(CorsPolicy);
         app.UseAuthentication();
         app.Use(RejectSuspendedUsers);
+        app.Use(TrackPresence);
         app.UseAuthorization();
         app.UseRateLimiter();
 
@@ -220,6 +221,18 @@ public static class ApiSetup
     /// Suspended users get 403 <c>user.suspended</c> on every authenticated call (SPEC §9.2 step 6), with
     /// <c>suspendedUntil</c> (null = permanent) so clients can say when it ends (F22).
     /// </summary>
+    /// <summary>"Last seen" (SPEC F23): any signed-in request; the tracker writes at most once an hour per account.</summary>
+    private static async Task TrackPresence(HttpContext context, RequestDelegate next)
+    {
+        if (context.User.Identity?.IsAuthenticated == true &&
+            Guid.TryParse(context.User.FindFirst(JwtClaims.Subject)?.Value, out var userId))
+        {
+            await context.RequestServices.GetRequiredService<Application.Features.Admin.Users.IPresenceTracker>()
+                .SeenAsync(userId, context.RequestAborted);
+        }
+        await next(context);
+    }
+
     private static async Task RejectSuspendedUsers(HttpContext context, RequestDelegate next)
     {
         if (context.User.HasClaim(ReadInClaims.Suspended, "true"))

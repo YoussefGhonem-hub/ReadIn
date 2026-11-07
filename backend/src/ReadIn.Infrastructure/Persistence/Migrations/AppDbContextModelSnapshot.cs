@@ -22,6 +22,167 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ReadIn.Domain.Admin.Announcement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AudienceType")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<string>("BodyAr")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("nvarchar(180)");
+
+                    b.Property<string>("BodyEn")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("nvarchar(180)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("FieldId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Language")
+                        .HasMaxLength(5)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(5)");
+
+                    b.Property<Guid?>("LinkId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LinkType")
+                        .HasMaxLength(8)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("RecipientCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SentById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("TitleAr")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("TitleEn")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("LocalDate")
+                        .IsUnique();
+
+                    b.ToTable("Announcements", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Admin.JobRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Job")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartedAt");
+
+                    b.HasIndex("Job", "StartedAt");
+
+                    b.ToTable("JobRuns", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Admin.PushDeliveryStat", b =>
+                {
+                    b.Property<DateTime>("Hour")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Failed")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InvalidTokens")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Sent")
+                        .HasColumnType("int");
+
+                    b.HasKey("Hour");
+
+                    b.ToTable("PushDeliveryStats", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Admin.SearchMiss", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(2)");
+
+                    b.Property<string>("Query")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date", "Language", "Query")
+                        .IsUnique();
+
+                    b.ToTable("SearchMisses", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Articles.Article", b =>
                 {
                     b.Property<Guid>("Id")
@@ -50,6 +211,12 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("FeaturedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("FeaturedById")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("FieldId")
                         .HasColumnType("uniqueidentifier");
 
@@ -61,6 +228,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("HiddenById")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("HiddenWithAccount")
+                        .HasColumnType("bit");
 
                     b.Property<int>("InsightfulCount")
                         .HasColumnType("int");
@@ -135,6 +305,10 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
+
+                    b.HasIndex("FeaturedAt")
+                        .IsDescending()
+                        .HasFilter("[FeaturedAt] IS NOT NULL");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -607,6 +781,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("HiddenById")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("HiddenWithAccount")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -638,6 +815,8 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("ParentId");
 
@@ -749,6 +928,8 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ReactedAt");
+
                     b.HasIndex("ArticleId", "ReactedAt")
                         .IsDescending(false, true);
 
@@ -781,6 +962,8 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("ArticleId", "CreatedAt")
                         .IsDescending(false, true);
@@ -948,10 +1131,22 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Ip")
                         .HasMaxLength(45)
                         .IsUnicode(false)
                         .HasColumnType("varchar(45)");
+
+                    b.Property<Guid?>("TargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TargetType")
+                        .HasMaxLength(16)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(16)");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -960,7 +1155,11 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CreatedAt");
 
+                    b.HasIndex("ActorId", "CreatedAt");
+
                     b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("TargetType", "TargetId", "CreatedAt");
 
                     b.ToTable("AuditLogs", (string)null);
                 });
@@ -1698,6 +1897,11 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompletedAt")
+                        .HasFilter("[CompletedAt] IS NOT NULL");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("CompletedAt"), new[] { "UserId", "ArticleId" });
+
                     b.HasIndex("ArticleId", "CompletedAt");
 
                     b.HasIndex("UserId", "ArticleId")
@@ -1737,6 +1941,167 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("UserStats", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Support.SupportAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Position")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int>("SizeBytes")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId");
+
+                    b.ToTable("SupportAttachments", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Support.SupportMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AuthorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("FromSupport")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsInternalNote")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("TicketId", "CreatedAt");
+
+                    b.ToTable("SupportMessages", (string)null);
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Support.SupportTicket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AppVersion")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte?>("ClosedBy")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid?>("ClosedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Language")
+                        .HasMaxLength(2)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(2)");
+
+                    b.Property<DateTime?>("LastAdminReplyAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastUserMessageAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Number")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Number"));
+
+                    b.Property<string>("OsVersion")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Platform")
+                        .HasMaxLength(8)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<string>("Screen")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)")
+                        .UseCollation("Arabic_100_CI_AI");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "ClosedAt");
+
+                    b.HasIndex("Status", "LastAdminReplyAt");
+
+                    b.HasIndex("Status", "LastUserMessageAt");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("SupportTickets", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Taxonomy.Field", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1753,6 +2118,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CustomizedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Icon")
                         .IsRequired()
@@ -1853,14 +2221,62 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("Tags", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Taxonomy.TagAlias", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
+                        .UseCollation("Arabic_100_CI_AI");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<string>("Slug")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasFilter("[Slug] IS NOT NULL");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("TagAliases", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Taxonomy.Topic", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("CustomizedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("FieldId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
 
                     b.Property<string>("NameAr")
                         .IsRequired()
@@ -2131,6 +2547,11 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<string>("SignUpMethod")
+                        .HasMaxLength(8)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(8)");
+
                     b.Property<DateTime?>("SuspendedUntil")
                         .HasColumnType("datetime2");
 
@@ -2172,6 +2593,8 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasDefaultValue("Everyone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
 
                     b.HasIndex("Email")
                         .IsUnique()
@@ -2269,6 +2692,21 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_UserInterests_Target", "([FieldId] IS NOT NULL AND [TopicId] IS NULL) OR ([FieldId] IS NULL AND [TopicId] IS NOT NULL)");
                         });
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Users.UserPresence", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("LastSeenAt");
+
+                    b.ToTable("UserPresence", (string)null);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Users.UserRole", b =>
@@ -2947,6 +3385,42 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Support.SupportAttachment", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Support.SupportMessage", null)
+                        .WithMany("Attachments")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Support.SupportMessage", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Support.SupportTicket", null)
+                        .WithMany("Messages")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Support.SupportTicket", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Taxonomy.TagAlias", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Taxonomy.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Taxonomy.Topic", b =>
                 {
                     b.HasOne("ReadIn.Domain.Taxonomy.Field", null)
@@ -3013,6 +3487,15 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Users.User", null)
                         .WithMany("Interests")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Users.UserPresence", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithOne()
+                        .HasForeignKey("ReadIn.Domain.Users.UserPresence", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -3088,6 +3571,16 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ReadIn.Domain.Notifications.Notification", b =>
                 {
                     b.Navigation("Actors");
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Support.SupportMessage", b =>
+                {
+                    b.Navigation("Attachments");
+                });
+
+            modelBuilder.Entity("ReadIn.Domain.Support.SupportTicket", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Taxonomy.Field", b =>

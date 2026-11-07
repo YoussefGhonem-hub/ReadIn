@@ -37,7 +37,8 @@ internal sealed record ExploreSnapshot(
     IReadOnlyList<ArticleCardDto> Trending,
     IReadOnlyList<ArticleCardDto> MostSaved,
     IReadOnlyList<UserSummaryDto> NewWriters,
-    IReadOnlyList<PathCardDto> FeaturedPaths);
+    IReadOnlyList<PathCardDto> FeaturedPaths,
+    IReadOnlyList<ArticleCardDto> FeaturedArticles);
 
 internal sealed class GetExploreQueryHandler(
     IAppDbContext db,
@@ -66,23 +67,25 @@ internal sealed class GetExploreQueryHandler(
             ct);
 
         var fields = snapshot.Fields;
-        IReadOnlyList<ArticleCardDto> trending = snapshot.Trending, mostSaved = snapshot.MostSaved;
+        IReadOnlyList<ArticleCardDto> trending = snapshot.Trending, mostSaved = snapshot.MostSaved, featuredArticles = snapshot.FeaturedArticles;
         if (viewerId is { } viewer)
         {
             // The cached lists are shared, so the caller's mutes and "show less" marks (F28) apply here.
-            var articleIds = trending.Concat(mostSaved).Select(c => c.Id).Distinct().ToList();
+            var articleIds = trending.Concat(mostSaved).Concat(featuredArticles).Select(c => c.Id).Distinct().ToList();
             var keptArticles = (await db.Articles.AsNoTracking().Where(a => articleIds.Contains(a.Id))
                 .WithoutMutedFor(db, viewer).WithoutShownLessFor(db, viewer)
                 .Select(a => a.Id).ToListAsync(ct)).ToHashSet();
             var keptFields = (await db.Fields.AsNoTracking().WithoutMutedFor(db, viewer).Select(f => f.Id).ToListAsync(ct)).ToHashSet();
             trending = [.. trending.Where(c => keptArticles.Contains(c.Id))];
             mostSaved = [.. mostSaved.Where(c => keptArticles.Contains(c.Id))];
+            featuredArticles = [.. featuredArticles.Where(c => keptArticles.Contains(c.Id))];
             fields = [.. fields.Where(f => keptFields.Contains(f.Id))];
         }
 
         trending = [.. trending.Take(ExploreLimits.SectionArticles)];
         mostSaved = [.. mostSaved.Take(ExploreLimits.SectionArticles)];
-        var completed = await cards.CompleteAsync([.. trending, .. mostSaved], ct);
+        featuredArticles = [.. featuredArticles.Take(ExploreLimits.SectionArticles)];
+        var completed = await cards.CompleteAsync([.. trending, .. mostSaved, .. featuredArticles], ct);
         var writers = await rankings.ForViewerAsync(snapshot.NewWriters, viewerId, ct);
 
         IReadOnlyList<PathCardDto> featured = [.. snapshot.FeaturedPaths.Take(ExploreLimits.SectionPaths)];
@@ -92,9 +95,10 @@ internal sealed class GetExploreQueryHandler(
         return new ExploreDto(
             fields,
             [.. completed.Take(trending.Count)],
-            [.. completed.Skip(trending.Count)],
+            [.. completed.Skip(trending.Count).Take(mostSaved.Count)],
             [.. writers.Take(ExploreLimits.SectionWriters)],
-            featured);
+            featured,
+            [.. completed.Skip(trending.Count + mostSaved.Count)]);
     }
 
     private async Task<ExploreSnapshot> BuildAsync(string ui, string articleLanguage, CancellationToken ct)
@@ -125,7 +129,17 @@ internal sealed class GetExploreQueryHandler(
             .ToListAsync(ct);
         var featured = await paths.BuildAsync(featuredIds, progressUserId: null, ui, articleLanguage, ct);
 
-        return new ExploreSnapshot(fields, trending, mostSaved, writers, [.. featured.Take(ExploreLimits.SectionPaths * Spare)]);
+        // F23: the articles featured in the console that readers can open, the most recently featured first.
+        var featuredArticleIds = await visible
+            .Where(a => a.FeaturedAt != null)
+            .OrderByDescending(a => a.FeaturedAt).ThenByDescending(a => a.Id)
+            .Select(a => a.Id)
+            .Take(ExploreLimits.SectionArticles * Spare)
+            .ToListAsync(ct);
+        var featuredArticles = await rankings.CardsAsync(featuredArticleIds, ui, articleLanguage, viewerId: null, ct);
+
+        return new ExploreSnapshot(
+            fields, trending, mostSaved, writers, [.. featured.Take(ExploreLimits.SectionPaths * Spare)], featuredArticles);
     }
 }
 

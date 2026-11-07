@@ -44,6 +44,19 @@ public sealed record NotificationRequest(Guid UserId, string Type)
 
     /// <summary>The push waits this long after the write, so a burst of activity is one push; quiet hours still apply.</summary>
     public TimeSpan PushDelay { get; init; }
+
+    /// <summary>
+    /// Written and pushed whatever the type's mode and the recipient's quiet hours: a test announcement its author sends
+    /// to themselves (F23). Mark its data <see cref="NotificationData.IsTest"/> so the push job doesn't hold it either.
+    /// </summary>
+    public bool Forced { get; init; }
+
+    /// <summary>
+    /// Groups with an unread entry of <see cref="GroupKey"/> without an actor (a support reply, F35: support stays anonymous):
+    /// the entry moves up with this request's data. <see cref="NotificationData.SourceKey"/> identifies the activity, so a
+    /// redelivered event changes nothing.
+    /// </summary>
+    public bool GroupsWithoutActor { get; init; }
 }
 
 /// <summary>
@@ -138,7 +151,7 @@ public sealed class NotificationWriter(
             if (request.ActorId == request.UserId || !recipients.TryGetValue(request.UserId, out var recipient)) continue;
             if (request.ActorId is { } actor && muted.Contains((request.UserId, actor))) continue;
 
-            var mode = NotificationTypes.IsConfigurable(request.Type)
+            var mode = NotificationTypes.IsConfigurable(request.Type) && !request.Forced
                 ? modes.GetValueOrDefault((request.UserId, request.Type), NotificationMode.All)
                 : NotificationMode.All;
             if (mode == NotificationMode.Off) continue;
@@ -149,7 +162,9 @@ public sealed class NotificationWriter(
                 if (created.TryGetValue((request.UserId, key), out var twin)) { results[i] = twin.Id; continue; }
             }
 
-            DateTime? pushAfter = mode == NotificationMode.All && !request.PushedByCaller
+            DateTime? pushAfter = request.Forced
+                ? now
+                : mode == NotificationMode.All && !request.PushedByCaller
                 ? NotificationSchedule.PushAfter(request.Type, now + request.PushDelay, recipient.TimeZone,
                     NotificationSchedule.QuietHoursOf(recipient.QuietEnabled, recipient.QuietStart, recipient.QuietEnd))
                 : null;
@@ -187,6 +202,17 @@ public sealed class NotificationWriter(
                 touched.Add(first);
                 entries.Add(first);
                 results[i] = first.Id;
+                continue;
+            }
+
+            if (request is { GroupsWithoutActor: true, GroupKey: { } plainGroup }
+                && await RefreshGroupAsync(request, plainGroup, now, pushAfter, ct) is { } refreshed)
+            {
+                var entry = refreshed.Entry;
+                results[i] = entry.Id;
+                if (touched.Contains(entry)) continue;
+                if (refreshed.Changed) touched.Add(entry);
+                else Forget([entry]);
                 continue;
             }
 
@@ -280,6 +306,28 @@ public sealed class NotificationWriter(
 
         var changed = entry.AddActivity(actorId, request.ActorAt ?? now, request.CommentId, request.RepeatsCount, now, pushAfter);
         return (entry, changed);
+    }
+
+    /// <summary>
+    /// For <see cref="NotificationRequest.GroupsWithoutActor"/>: the entry of the group that already told this activity (no
+    /// change), else the unread one that moved within the window, refreshed with the request's data. Null when there is none.
+    /// </summary>
+    private async Task<(Notification Entry, bool Changed)?> RefreshGroupAsync(
+        NotificationRequest request, string group, DateTime now, DateTime? pushAfter, CancellationToken ct)
+    {
+        var entries = await db.Notifications
+            .Where(n => n.UserId == request.UserId && n.Type == request.Type && n.GroupKey == group)
+            .OrderByDescending(n => n.UpdatedAt)
+            .ToListAsync(ct);
+        var source = request.Data.SourceKey;
+        var told = source is null ? null : entries.FirstOrDefault(e => NotificationData.Parse(e.Data).SourceKey == source);
+        var open = told ?? entries.FirstOrDefault(e => e.CanAggregate(now));
+        Forget(entries.Where(e => e != open));
+        if (open is null) return null;
+        if (told is not null) return (told, false);
+
+        open.Refresh(request.Data.Serialize(), now, pushAfter);
+        return (open, true);
     }
 
     private void Forget(IEnumerable<Notification> notifications)

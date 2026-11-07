@@ -42,6 +42,12 @@ public sealed class Comment : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
     public DateTime? HiddenAt { get; private set; }
     public Guid? HiddenById { get; private set; }
 
+    /// <summary>
+    /// Hidden by <c>hide_content</c> with all of its author's content (SPEC F23), so <c>unhide_content</c> brings back exactly
+    /// this; any unhide clears it.
+    /// </summary>
+    public bool HiddenWithAccount { get; private set; }
+
     /// <summary>Removed by a moderator rather than by its author.</summary>
     public bool DeletedByModerator { get; private set; }
 
@@ -136,11 +142,21 @@ public sealed class Comment : AggregateRoot, IAuditable, ISoftDeletable, IHasRow
         Raise(() => new CommentChangedDomainEvent(ArticleId, Id, ParentId, CommentChange.Hidden));
     }
 
+    /// <summary>Hidden with all of the author's content (SPEC F23 <c>hide_content</c>); returns false when nothing changed.</summary>
+    public bool HideWithAccount(Guid moderatorId, DateTime now)
+    {
+        if (IsHidden || IsDeleted) return false;
+        Hide(moderatorId, now);
+        HiddenWithAccount = true;
+        return true;
+    }
+
     public void Unhide()
     {
         if (!IsHidden || IsDeleted) return;
         HiddenAt = null;
         HiddenById = null;
+        HiddenWithAccount = false;
         Raise(() => new CommentChangedDomainEvent(ArticleId, Id, ParentId, CommentChange.Unhidden));
     }
 

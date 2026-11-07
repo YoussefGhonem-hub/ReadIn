@@ -67,5 +67,10 @@ internal sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(a => a.Ip).HasMaxLength(45).IsUnicode(false);
         builder.HasIndex(a => new { a.UserId, a.CreatedAt });
         builder.HasIndex(a => a.CreatedAt);
+        // F23: what an admin action touched, and the audit log browser by actor and by target.
+        builder.Property(a => a.TargetType).HasMaxLength(16).IsUnicode(false);
+        builder.Property(a => a.Details).HasMaxLength(AuditLog.MaxDetailsLength);
+        builder.HasIndex(a => new { a.ActorId, a.CreatedAt });
+        builder.HasIndex(a => new { a.TargetType, a.TargetId, a.CreatedAt });
     }
 }

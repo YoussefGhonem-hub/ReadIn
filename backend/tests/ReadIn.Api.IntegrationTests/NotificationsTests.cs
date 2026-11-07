@@ -318,7 +318,8 @@ public sealed class NotificationsTests(ApiFactory api)
         defaults["quietHours"]!["start"]!.GetValue<string>().Should().Be("23:00");
         defaults["quietHours"]!["end"]!.GetValue<string>().Should().Be("07:00");
         var types = defaults["types"]!.AsObject();
-        types.Select(t => t.Key).Should().BeEquivalentTo(NotificationTypes.Configurable);
+        // A member gets every configurable type but support_ticket, which only holders of support.manage get (F35).
+        types.Select(t => t.Key).Should().BeEquivalentTo(NotificationTypes.ConfigurableFor(managesSupport: false));
         types.Should().OnlyContain(t => t.Value!.GetValue<string>() == "all");
 
         (await user.Client.PutAsJsonAsync("/api/v1/me/notification-settings", new

@@ -72,7 +72,7 @@ internal sealed class SaveArticleDraftCommandHandler(IAppDbContext db, ICurrentU
         var article = await db.Articles.Include(a => a.Draft).FirstOrDefaultAsync(a => a.Id == command.ArticleId, cancellationToken);
         if (article is null || article.AuthorId != userId) return ArticleErrors.NotFound;
 
-        var taxonomy = await drafts.CheckTaxonomyAsync(command.Document, cancellationToken);
+        var taxonomy = await drafts.CheckTaxonomyAsync(command.Document, cancellationToken, article.TopicId);
         if (taxonomy.IsFailure) return taxonomy.Error;
 
         var document = drafts.ToStored(command.Document);

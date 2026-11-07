@@ -161,6 +161,19 @@ public sealed class Notification : Entity
         ArmPush(pushAfter);
     }
 
+    /// <summary>
+    /// New activity of an entry without actors (a support reply, SPEC F35): it moves to the top as unseen and unread, holds
+    /// <paramref name="data"/>, and its push is armed again.
+    /// </summary>
+    public void Refresh(string? data, DateTime now, DateTime? pushAfter)
+    {
+        Data = data;
+        UpdatedAt = now;
+        SeenAt = null;
+        ReadAt = null;
+        ArmPush(pushAfter);
+    }
+
     /// <returns>false when it was seen already.</returns>
     public bool MarkSeen(DateTime now)
     {
@@ -313,22 +326,39 @@ public static class NotificationTypes
     /// <summary>Someone reposted your article (SPEC F29, which calls it <c>article.reposted</c>); aggregated per article.</summary>
     public const string ArticleReposted = "article_reposted";
 
+    /// <summary>A broadcast from the ReadIn team (SPEC F23): configurable, quiet hours apply, no actor.</summary>
+    public const string Announcement = "announcement";
+
+    /// <summary>Support replied to, or closed, the member's ticket (SPEC F35): always comes, like <see cref="VerificationResult"/>; no actor.</summary>
+    public const string SupportReply = "support_reply";
+
+    /// <summary>A new ticket or a member's message, to holders of <c>support.manage</c> (SPEC F35): configurable by them only.</summary>
+    public const string SupportTicket = "support_ticket";
+
     public static readonly IReadOnlyList<string> All =
     [
         NewFollower, ArticleComment, CommentReply, Mention, ReactionsMilestone, FollowedWriterArticle, DailyArticle, StreakReminder,
-        SecurityAlert, VerificationResult, ModerationNotice, ArticleReposted,
+        SecurityAlert, VerificationResult, ModerationNotice, ArticleReposted, Announcement, SupportReply, SupportTicket,
     ];
 
-    /// <summary>The types a user can set to all / in-app / off. Security alerts and moderation notices always come.</summary>
+    /// <summary>
+    /// The types a user can set to all / in-app / off. Security alerts, moderation notices, verification results and
+    /// support replies always come. <see cref="SupportTicket"/> is configurable only by holders of <c>support.manage</c>
+    /// (<see cref="ConfigurableFor"/>).
+    /// </summary>
     public static readonly IReadOnlyList<string> Configurable =
     [
         NewFollower, ArticleComment, CommentReply, Mention, ReactionsMilestone, FollowedWriterArticle, DailyArticle, StreakReminder,
-        ArticleReposted,
+        ArticleReposted, Announcement, SupportTicket,
     ];
 
     public static bool IsKnown(string? type) => type is not null && All.Contains(type);
 
     public static bool IsConfigurable(string? type) => type is not null && Configurable.Contains(type);
+
+    /// <summary>The types this user can set: <see cref="SupportTicket"/> only with <paramref name="managesSupport"/>.</summary>
+    public static IReadOnlyList<string> ConfigurableFor(bool managesSupport) =>
+        managesSupport ? Configurable : [.. Configurable.Where(t => t != SupportTicket)];
 
     /// <summary>Security alerts go out at once, even at night (SPEC §9.5, §21.1).</summary>
     public static bool IgnoresQuietHours(string type) => type == SecurityAlert;

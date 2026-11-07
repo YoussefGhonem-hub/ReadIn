@@ -17,7 +17,7 @@ internal sealed class FollowInterestCommandHandler(IAppDbContext db, ICurrentUse
         {
             if (!await db.Fields.AnyAsync(f => f.Id == command.TargetId && f.IsEnabled, cancellationToken)) return TaxonomyErrors.FieldNotFound;
         }
-        else if (!await db.Topics.AnyAsync(t => t.Id == command.TargetId, cancellationToken))
+        else if (!await db.Topics.AnyAsync(t => t.Id == command.TargetId && t.IsEnabled, cancellationToken))
         {
             return TaxonomyErrors.TopicNotFound;
         }
