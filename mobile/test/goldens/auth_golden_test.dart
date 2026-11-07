@@ -214,7 +214,7 @@ void main() {
           ),
         ],
       );
-      await tester.drag(find.byType(ListView), const Offset(0, -400));
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
       await expectGolden(tester, 'auth_sign_in_external', variant, spinning: true);
     });
 

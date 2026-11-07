@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:readin/core/theme/theme_x.dart';
+import 'package:readin/features/auth/presentation/widgets/auth_showcase.dart';
 import 'package:readin/shared/media/media_image.dart';
 import 'package:readin/shared/widgets/app_network_image.dart';
 
@@ -33,6 +34,9 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   // asynchronous BlurHash decoding. Goldens install FakeMedia on top.
   MediaImages.networkProvider = NetworkImage.new;
   MediaImages.placeholder = (context, _) => ColoredBox(color: context.colors.surfaceVariant, child: const SizedBox.expand());
+  // Sign in's showcase loops for as long as the screen is open, so `pumpAndSettle` would never settle: tests and goldens
+  // see the screen at rest. test/features/auth/auth_motion_test.dart turns the motion on.
+  AuthMotion.enabled = false;
   await testMain();
 }
 

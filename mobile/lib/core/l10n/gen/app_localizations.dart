@@ -2102,6 +2102,48 @@ abstract class AppLocalizations {
   /// **'Sign in with your mobile number and password.'**
   String get signInSubtitle;
 
+  /// The sample cards in the Sign in header (decorative, hidden from screen readers), as on the web login: an article being read, a streak, a highlighted line.
+  ///
+  /// In en, this message translates to:
+  /// **'Technology'**
+  String get authShowcaseField;
+
+  /// No description provided for @authShowcaseMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'5 min read'**
+  String get authShowcaseMinutes;
+
+  /// No description provided for @authShowcaseArticle.
+  ///
+  /// In en, this message translates to:
+  /// **'How do language models actually learn?'**
+  String get authShowcaseArticle;
+
+  /// No description provided for @authShowcaseAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Salma Ibrahim'**
+  String get authShowcaseAuthor;
+
+  /// No description provided for @authShowcaseStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'days in a row'**
+  String get authShowcaseStreak;
+
+  /// No description provided for @authShowcaseQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'A little reading every day adds up to a lot.'**
+  String get authShowcaseQuote;
+
+  /// No description provided for @authShowcaseHighlighted.
+  ///
+  /// In en, this message translates to:
+  /// **'You highlighted this'**
+  String get authShowcaseHighlighted;
+
   /// No description provided for @phoneLabel.
   ///
   /// In en, this message translates to:

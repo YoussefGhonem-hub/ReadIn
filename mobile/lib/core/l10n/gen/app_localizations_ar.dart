@@ -1184,6 +1184,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get signInSubtitle => 'سجّل الدخول برقم هاتفك وكلمة المرور.';
 
   @override
+  String get authShowcaseField => 'التقنية';
+
+  @override
+  String get authShowcaseMinutes => 'قراءة في 5 دقائق';
+
+  @override
+  String get authShowcaseArticle => 'كيف تتعلّم النماذج اللغوية فعلًا؟';
+
+  @override
+  String get authShowcaseAuthor => 'سلمى إبراهيم';
+
+  @override
+  String get authShowcaseStreak => 'يومًا متتاليًا';
+
+  @override
+  String get authShowcaseQuote => 'القليل من القراءة كل يوم يصنع فرقًا كبيرًا.';
+
+  @override
+  String get authShowcaseHighlighted => 'ظلّلتَ هذه العبارة';
+
+  @override
   String get phoneLabel => 'رقم الهاتف';
 
   @override

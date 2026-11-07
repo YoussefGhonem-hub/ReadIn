@@ -522,6 +522,8 @@ Sign in ─► Forgot password ─► (phone + PIN) ─► New password ─► S
 
 **Look (web):** the auth screens share one frame: the wordmark (to Home) and the language switch on top, the tagline at the bottom. On wide screens a brand panel fills the other half: sample cards (today's article being read, a reading streak, a highlighted line) float over the brand green, lean toward the mouse, and a headline cycles through topics. It is decorative and hidden from screen readers. On phones the forms sit in a card and Welcome shows a small version of the cards above its title. Content rises in when a screen opens, an error shakes once and the main button shines on hover; with reduce motion nothing moves ([§26](#26-accessibility)).
 
+**Look (mobile app, Sign in):** the same brand panel sits on top of the screen. It holds back (when there is a screen to go back to), the wordmark and the language switch, with the same three sample cards over the brand green. The cards rise in, then float, the streak counts up and the highlight sweeps in. The form sits on a white sheet whose rounded top overlaps the panel. The form rises in piece by piece, an error shakes once and the main button shines once (phones have no hover) and gives a little when pressed. The cards are decorative and hidden from screen readers. With reduce motion nothing moves (§26).
+
 **Sign in:**
 - Phone field, password field, "نسيت كلمة السر؟" link, "سجل دخول" button, "معندكش حساب؟ اعمل حساب" link, then "أو" and the Google / Apple buttons.
 - Wrong credentials → one generic error: "رقم التليفون أو كلمة السر غلط" (never reveals whether the number exists).

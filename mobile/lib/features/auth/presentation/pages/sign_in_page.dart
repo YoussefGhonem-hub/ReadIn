@@ -15,6 +15,7 @@ import '../../../../shared/widgets/inputs/phone_field.dart';
 import '../cubit/external_sign_in_cubit.dart';
 import '../cubit/form_support.dart';
 import '../cubit/sign_in_cubit.dart';
+import '../widgets/auth_showcase.dart';
 import '../widgets/auth_widgets.dart';
 import '../widgets/dev_login_panel.dart';
 import '../widgets/external_sign_in.dart';
@@ -57,7 +58,9 @@ class SignInPage extends StatelessWidget {
       );
 }
 
-/// Sign in (SPEC §9.2): phone, password, "forgot password", one generic error for a wrong number or password.
+/// Sign in (SPEC §9.2): phone, password, "forgot password", one generic error for a wrong number or password. It looks
+/// and moves like the web login: the brand showcase on top ([AuthShowcaseHeader]), the form on a rounded sheet over it,
+/// rising piece by piece; an error shakes once and the button shines once ([AuthMotion]).
 class SignInView extends StatefulWidget {
   const SignInView({super.key, this.args = const SignInArgs(), this.showDevLogin = false, this.alternatives = const []});
 
@@ -121,89 +124,160 @@ class _SignInViewState extends State<SignInView> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Scaffold(
+      backgroundColor: colors.surface,
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        // Once the header has scrolled away, the status bar is over the sheet.
+        value: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: context.isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: Theme.of(context).brightness,
+        ),
+        child: AuthMotionScope(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AuthShowcaseHeader(),
+                // The form's sheet, its rounded top over the header's green.
+                Transform.translate(
+                  offset: const Offset(0, -AuthShowcaseHeader.sheetOverlap),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(AuthShowcaseHeader.sheetOverlap)),
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 480),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s6, ReadInSpace.s5, ReadInSpace.s5),
+                            child: _form(context),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _form(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
     return BlocConsumer<SignInCubit, SignInState>(
       listenWhen: (a, b) => a.status != b.status && b.status == FormStatus.success,
       listener: (_, _) => TextInput.finishAutofillContext(), // offer to save the password; the router moves on
       builder: (context, state) {
         final busy = state.submitting;
-        return AuthScaffold(
-          showLogo: true,
-          title: l10n.signInTitle,
-          subtitle: l10n.signInSubtitle,
-          footer: Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(l10n.noAccount, style: context.textTheme.bodyMedium),
-              TextButton(onPressed: () => context.pushReplacement('/auth/sign-up'), child: Text(l10n.createAccountLink)),
-            ],
-          ),
+        // The form rises piece by piece, 60 ms apart, as on the web. The keys keep each piece's state when a banner
+        // comes or goes above it.
+        var order = 0;
+        Widget rise(String key, Widget child) => AuthRise(key: ValueKey(key), delay: 0.06 * ++order, child: child);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            rise('title', Semantics(header: true, child: Text(l10n.signInTitle, style: context.textTheme.headlineMedium))),
+            const SizedBox(height: ReadInSpace.s2),
+            rise(
+              'subtitle',
+              Text(l10n.signInSubtitle, style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary)),
+            ),
+            const SizedBox(height: ReadInSpace.s5),
             // Read from the arguments (not kept): Delete account replaces this route's arguments once it's done.
             if (widget.args.accountDeleted && !_passwordReset && state.failure == null) ...[
-              FormBanner(message: l10n.accountDeleted, tone: BannerTone.success),
+              rise('deleted', FormBanner(message: l10n.accountDeleted, tone: BannerTone.success)),
               const SizedBox(height: ReadInSpace.s4),
             ],
             if (_passwordReset && state.failure == null) ...[
-              FormBanner(message: l10n.passwordResetBanner, tone: BannerTone.success),
+              rise('reset', FormBanner(message: l10n.passwordResetBanner, tone: BannerTone.success)),
               const SizedBox(height: ReadInSpace.s4),
             ],
             if (state.failure ?? _endedBy case final failure?) ...[
-              FailureBanner(failure: failure),
+              rise('failure', AuthShake(trigger: failure, child: FailureBanner(failure: failure))),
               const SizedBox(height: ReadInSpace.s4),
             ],
-            AutofillGroup(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  PhoneField(
-                    controller: _phone,
-                    enabled: !busy,
-                    errorText: errorText(context, state.errors[Fields.phone]),
-                    onSubmitted: _passwordFocus.requestFocus,
-                  ),
-                  const SizedBox(height: ReadInSpace.s4),
-                  PasswordField(
-                    controller: _password,
-                    focusNode: _passwordFocus,
-                    enabled: !busy,
-                    errorText: errorText(context, state.errors[Fields.password]),
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: _submit,
-                  ),
-                ],
+            rise(
+              'fields',
+              AutofillGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PhoneField(
+                      controller: _phone,
+                      enabled: !busy,
+                      errorText: errorText(context, state.errors[Fields.phone]),
+                      onSubmitted: _passwordFocus.requestFocus,
+                    ),
+                    const SizedBox(height: ReadInSpace.s4),
+                    PasswordField(
+                      controller: _password,
+                      focusNode: _passwordFocus,
+                      enabled: !busy,
+                      errorText: errorText(context, state.errors[Fields.password]),
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: _submit,
+                    ),
+                  ],
+                ),
               ),
             ),
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: TextButton(
-                onPressed: busy ? null : _forgotPassword,
-                child: Text(l10n.forgotPassword),
+            rise(
+              'forgot',
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton(onPressed: busy ? null : _forgotPassword, child: Text(l10n.forgotPassword)),
               ),
             ),
             const SizedBox(height: ReadInSpace.s2),
             // The sign-in actions: the phone sign in first, then any alternatives under "أو".
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SubmitButton(label: l10n.signIn, submitting: busy, onPressed: _submit),
-                if (widget.alternatives.isNotEmpty) ...[
-                  const SizedBox(height: ReadInSpace.s5),
-                  const OrDivider(),
-                  const SizedBox(height: ReadInSpace.s4),
-                  ...widget.alternatives,
+            rise(
+              'actions',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AuthButtonMotion(child: SubmitButton(label: l10n.signIn, submitting: busy, onPressed: _submit)),
+                  if (widget.alternatives.isNotEmpty) ...[
+                    const SizedBox(height: ReadInSpace.s5),
+                    const OrDivider(),
+                    const SizedBox(height: ReadInSpace.s4),
+                    ...widget.alternatives,
+                  ],
                 ],
-              ],
+              ),
             ),
             if (!kReleaseMode && widget.showDevLogin) ...[
               const SizedBox(height: ReadInSpace.s4),
-              OutlinedButton.icon(
-                icon: Icon(Icons.developer_mode_rounded, color: context.colors.textSecondary),
-                label: Text(l10n.devLoginOpen),
-                onPressed: busy ? null : _openDevLogin,
+              rise(
+                'dev',
+                OutlinedButton.icon(
+                  icon: Icon(Icons.developer_mode_rounded, color: colors.textSecondary),
+                  label: Text(l10n.devLoginOpen),
+                  onPressed: busy ? null : _openDevLogin,
+                ),
               ),
             ],
+            const SizedBox(height: ReadInSpace.s5),
+            rise(
+              'footer',
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(l10n.noAccount, style: context.textTheme.bodyMedium),
+                  TextButton(onPressed: () => context.pushReplacement('/auth/sign-up'), child: Text(l10n.createAccountLink)),
+                ],
+              ),
+            ),
           ],
         );
       },

@@ -1176,6 +1176,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInSubtitle => 'Sign in with your mobile number and password.';
 
   @override
+  String get authShowcaseField => 'Technology';
+
+  @override
+  String get authShowcaseMinutes => '5 min read';
+
+  @override
+  String get authShowcaseArticle => 'How do language models actually learn?';
+
+  @override
+  String get authShowcaseAuthor => 'Salma Ibrahim';
+
+  @override
+  String get authShowcaseStreak => 'days in a row';
+
+  @override
+  String get authShowcaseQuote =>
+      'A little reading every day adds up to a lot.';
+
+  @override
+  String get authShowcaseHighlighted => 'You highlighted this';
+
+  @override
   String get phoneLabel => 'Mobile number';
 
   @override
