@@ -3,9 +3,14 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using ReadIn.Application.Common.Security;
+using ReadIn.Application.Features.Auth;
+using ReadIn.Infrastructure.Jobs;
+using ReadIn.Infrastructure.Persistence;
 
 namespace ReadIn.Api.IntegrationTests;
 
@@ -29,6 +34,31 @@ public sealed class AuthTests(ApiFactory api)
 
     private Task<HttpResponseMessage> RefreshAsync(string refreshToken) =>
         api.GuestClient().PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken }, Ct);
+
+    /// <summary>
+    /// A refresh sent with <paramref name="user"/>'s access token, so the auth rate limit counts it against that user and
+    /// not against the budget every guest request of the suite shares (TestServer has no remote IP).
+    /// </summary>
+    private static Task<HttpResponseMessage> RefreshAsync(SignedInUser user, string refreshToken, string? retryKey = null) =>
+        user.Client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken, retryKey }, Ct);
+
+    private static string RefreshTokenOf(JsonObject session) => session["refreshToken"]!.GetValue<string>();
+
+    private static DateTime RefreshExpiryOf(JsonObject session) => session["refreshTokenExpiresAt"]!.GetValue<DateTime>();
+
+    /// <summary>The mobile app's headers, with <paramref name="user"/>'s access token for the same reason as <see cref="RefreshAsync(SignedInUser, string, string?)"/>.</summary>
+    private HttpClient MobileClient(SignedInUser user)
+    {
+        var client = api.ClientWithToken(user.Session["accessToken"]!.GetValue<string>());
+        client.DefaultRequestHeaders.Add("X-ReadIn-Client", "Mobile"); // the value is read case-insensitively
+        return client;
+    }
+
+    private async Task InScopeAsync(Func<IServiceProvider, Task> work)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        await work(scope.ServiceProvider);
+    }
 
     [Fact]
     public async Task Config_exposes_the_pin_length_and_password_rules()
@@ -126,6 +156,136 @@ public sealed class AuthTests(ApiFactory api)
         raced.StatusCode.Should().Be(HttpStatusCode.OK, "a second tab refreshing at the same moment must not sign the user out");
         var winner = (await ApiFactory.ReadSessionAsync(first))["refreshToken"]!.GetValue<string>();
         (await client.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken = winner }, Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task A_refresh_whose_answer_was_lost_can_be_retried_with_its_key()
+    {
+        var user = await api.SignUpAsync();
+        var key = Guid.NewGuid().ToString("N");
+
+        var lost = await ApiFactory.ReadSessionAsync(await RefreshAsync(user, user.RefreshToken, key));
+        var retried = await ApiFactory.ReadSessionAsync(await RefreshAsync(user, user.RefreshToken, key));
+
+        RefreshTokenOf(retried).Should().NotBe(RefreshTokenOf(lost));
+        retried["user"]!["id"]!.GetValue<Guid>().Should().Be(user.Id);
+        (await api.ClientWithToken(retried["accessToken"]!.GetValue<string>()).GetAsync("/api/v1/me", Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // The second answer is lost too: the same old token and key still work, and the newest token is the session.
+        var lostAgain = await ApiFactory.ReadSessionAsync(await RefreshAsync(user, user.RefreshToken, key));
+        var kept = await ApiFactory.ReadSessionAsync(await RefreshAsync(user, RefreshTokenOf(lostAgain)));
+        kept["user"]!["id"]!.GetValue<Guid>().Should().Be(user.Id);
+
+        // The tokens whose answers were lost never reached the app: presenting one later is reuse.
+        var orphan = await RefreshAsync(user, RefreshTokenOf(lost));
+        orphan.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await CodeOf(orphan)).Should().Be("auth.refresh_invalid");
+        (await RefreshAsync(user, RefreshTokenOf(kept))).StatusCode.Should().Be(HttpStatusCode.Unauthorized, "reuse revokes the whole family");
+    }
+
+    [Fact]
+    public async Task A_retry_with_another_key_ends_the_session()
+    {
+        var user = await api.SignUpAsync();
+        var next = await ApiFactory.ReadSessionAsync(await RefreshAsync(user, user.RefreshToken, "key-of-the-app"));
+
+        var stolen = await RefreshAsync(user, user.RefreshToken, "key-of-someone-else");
+
+        stolen.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await CodeOf(stolen)).Should().Be("auth.refresh_invalid");
+        (await RefreshAsync(user, RefreshTokenOf(next))).StatusCode.Should().Be(HttpStatusCode.Unauthorized, "reuse revokes the whole family");
+        (await RefreshAsync(user, user.RefreshToken, "key-of-the-app")).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task A_retry_after_the_new_token_was_used_ends_the_session()
+    {
+        var user = await api.SignUpAsync();
+        var key = Guid.NewGuid().ToString("N");
+        var first = await ApiFactory.ReadSessionAsync(await RefreshAsync(user, user.RefreshToken, key));
+        var second = await ApiFactory.ReadSessionAsync(await RefreshAsync(user, RefreshTokenOf(first))); // the answer did arrive
+
+        var late = await RefreshAsync(user, user.RefreshToken, key);
+
+        late.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await CodeOf(late)).Should().Be("auth.refresh_invalid");
+        (await RefreshAsync(user, RefreshTokenOf(second))).StatusCode.Should().Be(HttpStatusCode.Unauthorized,
+            "a copied token with a copied key, presented after its owner moved on, is still theft");
+    }
+
+    [Fact]
+    public async Task A_retry_key_counts_only_when_it_came_with_the_rotation()
+    {
+        var user = await api.SignUpAsync();
+        var next = await ApiFactory.ReadSessionAsync(await RefreshAsync(user, user.RefreshToken)); // no key
+
+        (await RefreshAsync(user, user.RefreshToken, "a-key-added-later")).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await RefreshAsync(user, RefreshTokenOf(next))).StatusCode.Should().Be(HttpStatusCode.Unauthorized, "reuse revokes the whole family");
+    }
+
+    [Fact]
+    public async Task A_retry_key_has_at_most_200_characters()
+    {
+        var user = await api.SignUpAsync();
+
+        var tooLong = await RefreshAsync(user, user.RefreshToken, new string('k', 201));
+        tooLong.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ErrorsOf(tooLong, "retryKey")).Should().Equal("validation.max_length");
+
+        (await RefreshAsync(user, user.RefreshToken, new string('k', 200))).StatusCode.Should().Be(HttpStatusCode.OK, "the refused request rotated nothing");
+        (await RefreshAsync(user, user.RefreshToken, new string('k', 200))).StatusCode.Should().Be(HttpStatusCode.OK, "and 200 characters is a key");
+    }
+
+    [Fact]
+    public async Task An_empty_retry_key_is_no_key()
+    {
+        var user = await api.SignUpAsync();
+        await ApiFactory.ReadSessionAsync(await RefreshAsync(user, user.RefreshToken, ""));
+
+        (await RefreshAsync(user, user.RefreshToken, "")).StatusCode.Should().Be(HttpStatusCode.Unauthorized, "without a key a second use is reuse");
+    }
+
+    [Fact]
+    public async Task The_cleanup_keeps_a_rotated_token_the_app_may_still_retry()
+    {
+        var user = await api.SignUpAsync();
+        var other = await api.SignUpAsync();
+        await ApiFactory.ReadSessionAsync(await RefreshAsync(user, user.RefreshToken, "lost-answer")); // the app never got it
+        await ApiFactory.ReadSessionAsync(await RefreshAsync(other, other.RefreshToken)); // no key: nothing to retry
+        var retryable = SecretTokens.Hash(user.RefreshToken);
+        var rotated = SecretTokens.Hash(other.RefreshToken);
+
+        // The app stays closed for more than the week revoked tokens are kept.
+        await InScopeAsync(async services =>
+        {
+            var db = services.GetRequiredService<AppDbContext>();
+            await db.RefreshTokens.Where(t => t.TokenHash == retryable || t.TokenHash == rotated)
+                .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, DateTime.UtcNow.AddDays(-8)), Ct);
+            await services.GetRequiredService<IdentityCleanupJob>().RunAsync(Ct);
+
+            (await db.RefreshTokens.AnyAsync(t => t.TokenHash == rotated, Ct)).Should().BeFalse();
+            (await db.RefreshTokens.AnyAsync(t => t.TokenHash == retryable, Ct)).Should().BeTrue();
+        });
+
+        (await RefreshAsync(user, user.RefreshToken, "lost-answer")).StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Mobile_sessions_last_ten_years_and_others_thirty_days()
+    {
+        var user = await api.SignUpAsync();
+        RefreshExpiryOf(user.Session).Should().BeCloseTo(DateTime.UtcNow.AddDays(30), TimeSpan.FromMinutes(5));
+
+        var mobile = MobileClient(user);
+        var login = await ApiFactory.ReadSessionAsync(await LoginAsync(user.PhoneNumber, ApiFactory.TestPassword, mobile));
+        RefreshExpiryOf(login).Should().BeCloseTo(DateTime.UtcNow.AddDays(3650), TimeSpan.FromMinutes(5));
+
+        var refreshed = await ApiFactory.ReadSessionAsync(
+            await mobile.PostAsJsonAsync("/api/v1/auth/refresh", new { refreshToken = RefreshTokenOf(login) }, Ct));
+        RefreshExpiryOf(refreshed).Should().BeCloseTo(DateTime.UtcNow.AddDays(3650), TimeSpan.FromMinutes(5), "every refresh slides it");
+
+        var withoutHeader = await ApiFactory.ReadSessionAsync(await RefreshAsync(user, RefreshTokenOf(refreshed)));
+        RefreshExpiryOf(withoutHeader).Should().BeCloseTo(DateTime.UtcNow.AddDays(30), TimeSpan.FromMinutes(5));
     }
 
     [Fact]

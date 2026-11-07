@@ -175,6 +175,7 @@ internal sealed class NoClientInfo : IClientInfo
 {
     public string? IpAddress => null;
     public string? DeviceName => null;
+    public bool IsMobileApp => false;
 }
 
 internal sealed class NoAccessTokens : IAccessTokenIssuer

@@ -4,7 +4,8 @@ namespace ReadIn.Domain.Identity;
 
 /// <summary>
 /// One link of a rotating refresh-token chain (SPEC §9.3). Only the SHA-256 hash of the token is stored. Every sign in
-/// starts a new <see cref="FamilyId"/>; presenting an already-rotated token revokes the whole family (theft detection).
+/// starts a new <see cref="FamilyId"/>; presenting an already-rotated token revokes the whole family (theft detection),
+/// unless the client that rotated it retries with its retry key (<see cref="CanBeRetriedWith"/>).
 /// </summary>
 public sealed class RefreshToken : Entity
 {
@@ -19,6 +20,12 @@ public sealed class RefreshToken : Entity
     public string? DeviceName { get; private set; }
     public DateTime? RevokedAt { get; private set; }
     public Guid? ReplacedById { get; private set; }
+
+    /// <summary>
+    /// SHA-256 of the retry key the client sent with the refresh that rotated this token. The mobile app keeps the key until
+    /// it has stored the new token, so a refresh whose answer was lost can be repeated (<see cref="CanBeRetriedWith"/>).
+    /// </summary>
+    public string? RetryKeyHash { get; private set; }
 
     public static RefreshToken Issue(
         Guid userId, string tokenHash, Guid familyId, DateTime now, TimeSpan lifetime, string? ip, string? deviceName) =>
@@ -40,9 +47,34 @@ public sealed class RefreshToken : Entity
 
     public void Revoke(DateTime now) => RevokedAt ??= now;
 
-    public void RotateTo(RefreshToken next, DateTime now)
+    /// <param name="retryKeyHash">The hash of the client's retry key, when it sent one: only that client may repeat this refresh.</param>
+    public void RotateTo(RefreshToken next, DateTime now, string? retryKeyHash = null)
     {
         RevokedAt = now;
+        ReplacedById = next.Id;
+        RetryKeyHash = retryKeyHash;
+    }
+
+    /// <summary>
+    /// The client that rotated this token repeats the refresh with the same retry key, and <paramref name="successor"/>, the
+    /// token that replaced it, was never used: the answer was lost on the way, the token wasn't copied. A rotated token
+    /// presented without the key, with another key or after its successor was used is still reuse.
+    /// </summary>
+    public bool CanBeRetriedWith(string retryKeyHash, RefreshToken successor, DateTime now) =>
+        WasRotated && RetryKeyHash is not null && string.Equals(RetryKeyHash, retryKeyHash, StringComparison.Ordinal) &&
+        successor.Id == ReplacedById && successor.IsActiveAt(now) && !successor.WasRotated;
+
+    /// <summary>
+    /// Repeats a refresh whose answer was lost: <paramref name="next"/> replaces this token instead of the unused
+    /// <paramref name="successor"/>, which counts as rotated from now on, so presenting it later is reuse. The retry key stays,
+    /// so a second lost answer can be retried the same way.
+    /// </summary>
+    public void RetryTo(RefreshToken successor, RefreshToken next, DateTime now)
+    {
+        if (successor.Id != ReplacedById || !successor.IsActiveAt(now) || successor.WasRotated)
+            throw new InvalidOperationException("Only the unused token that replaced this one can be replaced again.");
+
+        successor.RotateTo(next, now);
         ReplacedById = next.Id;
     }
 }

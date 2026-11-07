@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Auth;
+using ReadIn.Application.Features.MobileApp;
 using ReadIn.Application.Features.Search;
 using ReadIn.Infrastructure.Content;
 using ReadIn.Infrastructure.Identity;
@@ -45,6 +46,14 @@ public static class DependencyInjection
         services.AddOptions<RecoveryOptions>()
             .Bind(configuration.GetSection(RecoveryOptions.Section))
             .Validate(o => o.PinLength is >= 4 and <= 8, "Recovery:PinLength must be between 4 and 8.")
+            .ValidateOnStart();
+        // The forced-update policy of the app: a version the app can't parse would block nobody or everybody.
+        services.AddOptions<MobileAppOptions>()
+            .Bind(configuration.GetSection(MobileAppOptions.Section))
+            .Validate(o => o.Ios.HasValidMinimumVersion, "MobileApp:Ios:MinimumVersion must look like 1.2, 1.2.0 or 1.2.0+57, or be empty.")
+            .Validate(o => o.Android.HasValidMinimumVersion, "MobileApp:Android:MinimumVersion must look like 1.2, 1.2.0 or 1.2.0+57, or be empty.")
+            .Validate(o => o.Ios.HasValidStoreUrl, "MobileApp:Ios:StoreUrl must be an absolute https URL, or be empty.")
+            .Validate(o => o.Android.HasValidStoreUrl, "MobileApp:Android:StoreUrl must be an absolute https URL, or be empty.")
             .ValidateOnStart();
         services.AddMemoryCache();
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();

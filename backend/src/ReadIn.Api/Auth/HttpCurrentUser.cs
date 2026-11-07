@@ -30,7 +30,13 @@ internal sealed class HttpClientInfo(IHttpContextAccessor accessor) : IClientInf
     /// <summary>Optional header with a readable device name, e.g. "Pixel 8" (mobile); the user agent otherwise.</summary>
     public const string DeviceNameHeader = "X-Device-Name";
 
+    /// <summary>The mobile app sends <c>X-ReadIn-Client: mobile</c> on every request; the web sends <c>web</c> on its auth calls.</summary>
+    public const string MobileClient = "mobile";
+
     public string? IpAddress => accessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+
+    public bool IsMobileApp => string.Equals(
+        accessor.HttpContext?.Request.Headers[RefreshCookie.ClientHeader].ToString(), MobileClient, StringComparison.OrdinalIgnoreCase);
 
     public string? DeviceName
     {

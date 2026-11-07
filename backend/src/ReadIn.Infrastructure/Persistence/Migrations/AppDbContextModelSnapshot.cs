@@ -1070,6 +1070,12 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ReplacedById")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("RetryKeyHash")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength();
+
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("datetime2");
 

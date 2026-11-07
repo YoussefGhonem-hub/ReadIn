@@ -53,6 +53,9 @@ public interface IClientInfo
 
     /// <summary>Shown in a future "active sessions" list, e.g. "Pixel 8" or the browser's user agent.</summary>
     string? DeviceName { get; }
+
+    /// <summary>The request comes from the mobile app, whose sessions last until the user signs out (<c>Auth:MobileRefreshTokenLifetime</c>).</summary>
+    bool IsMobileApp { get; }
 }
 
 /// <summary>Fixed-window counters for per-number limits that the IP-based rate limiter can't express (SPEC §9.5).</summary>

@@ -45,9 +45,10 @@ internal sealed class AuthEndpoints : IEndpointGroup
             .Produces<SessionResponse>();
 
         auth.MapPost("/refresh", async (RefreshTokenRequest? body, ISender sender, HttpContext http, CancellationToken ct) =>
-                (await sender.Send(new RefreshSessionCommand(RefreshCookie.Read(http, body)), ct)).ToSession(http))
+                (await sender.Send(new RefreshSessionCommand(RefreshCookie.Read(http, body), body?.RetryKey), ct)).ToSession(http))
             .RequireRateLimiting(RateLimitPolicies.Auth)
-            .WithSummary("Rotate the refresh token (body on mobile, cookie on the web) and get a new access token")
+            .WithSummary("Rotate the refresh token (body on mobile, cookie on the web) and get a new access token; "
+                + "an optional retryKey lets the same client repeat a refresh whose answer was lost")
             .Produces<SessionResponse>();
 
         auth.MapPost("/logout", async (RefreshTokenRequest? body, ISender sender, HttpContext http, CancellationToken ct) =>

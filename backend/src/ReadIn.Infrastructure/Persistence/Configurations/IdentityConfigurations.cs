@@ -23,6 +23,7 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.HasIndex(t => t.FamilyId);
         builder.Property(t => t.CreatedByIp).HasMaxLength(45).IsUnicode(false);
         builder.Property(t => t.DeviceName).HasMaxLength(200);
+        builder.Property(t => t.RetryKeyHash).HasMaxLength(TokenHashColumn.Length).IsUnicode(false).IsFixedLength();
         builder.HasOne<User>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }

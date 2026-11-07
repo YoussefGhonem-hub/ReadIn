@@ -5,7 +5,14 @@ public sealed class AuthOptions
 {
     public const string Section = "Auth";
 
+    /// <summary>Web and unknown clients. Every refresh issues a new token with a full lifetime, so it slides.</summary>
     public TimeSpan RefreshTokenLifetime { get; set; } = TimeSpan.FromDays(30);
+
+    /// <summary>
+    /// Sessions of the mobile app (<see cref="Common.Interfaces.IClientInfo.IsMobileApp"/>): they last until the user signs
+    /// out, so the lifetime is long, and it slides like <see cref="RefreshTokenLifetime"/>.
+    /// </summary>
+    public TimeSpan MobileRefreshTokenLifetime { get; set; } = TimeSpan.FromDays(3650);
 
     /// <summary>
     /// A token rotated this recently may be presented again without revoking its family: two browser tabs refreshing at

@@ -17,7 +17,11 @@ public sealed record SessionResponse(
     MeDto User);
 
 /// <summary>Body of <c>/auth/refresh</c> and <c>/auth/logout</c>; empty for the web, which uses the cookie.</summary>
-public sealed record RefreshTokenRequest(string? RefreshToken);
+/// <param name="RetryKey">
+/// <c>/auth/refresh</c> only, optional: the mobile app's key for repeating a refresh whose answer it never got, with the
+/// same old token (at most 200 characters).
+/// </param>
+public sealed record RefreshTokenRequest(string? RefreshToken, string? RetryKey = null);
 
 /// <summary>
 /// The web's refresh token cookie: <c>HttpOnly</c>, <c>Secure</c>, <c>SameSite=Strict</c>, path <c>/api/v1/auth</c>. The web
