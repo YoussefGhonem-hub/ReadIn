@@ -521,3 +521,26 @@ but it looks like Google's, not ours.
 3. Restart the API. `GET /api/v1/auth/config` then answers `"googleCodeSignIn": true`, and the web shows its own button.
    A wrong secret makes every web Google sign in fail with `auth.external_invalid`, and the API logs
    "Google rejected our web client (invalid_client)".
+
+## 12. UAT: push to `uat` to deploy (SmarterASP)
+
+The hosted test environment (user, 2026-11-07): the API on the SmarterASP site `ghyoussef-002-site4`
+(`https://api.readin.online`, still also `https://ghyoussef-002-site4.ftempurl.com`) and the web on
+`ghyoussef-002-site3` (`https://readin.online`), Node 24 behind IIS through the ASP.NET Core Module (out of process),
+started by `deploy/web/start.mjs`.
+
+**Deploy:** move `uat` to a `dev` commit that passed its gates: `git push origin dev:uat`. That push runs
+`.github/workflows/uat.yml` (builds the API self-contained win-x64 and the web, syncs both over Web Deploy with
+`app_offline`, then checks `/health` and the home page) and `ios.yml` (a TestFlight build). Nobody commits on `uat`.
+
+**What the deploy never touches:** each server's `web.config`, which holds the settings and secrets as environment
+variables (connection string, JWT key, PIN pepper, Firebase key, CORS origins, `Database__MigrateOnStartup=true` so the
+API applies new migrations when it starts), the uploads, private files, logs and `.well-known` (the SSL challenge
+files). The only secret on GitHub is the Web Deploy password: environment `uat`, secret `WEBDEPLOY_PASSWORD`.
+Settings change from the manual kit outside git (`D:\tmp\readin-deploy` for the API, `D:\tmp\readin-web-deploy` for
+the web), which regenerates and uploads `web.config`.
+
+**When it fails:** a site that stays on `503 Application Shutting Down` after a deploy needs **Recycle App Pool** in the
+SmarterASP panel (Web Deploy's recycle is refused there); the workflow's last step says so. The SSL certificates are
+Let's Encrypt ones imported by hand (the plan's free-SSL quota is used up): they expire on 2027-02-05 and are renewed
+from `D:\tmp\readin-ssl` (README there).

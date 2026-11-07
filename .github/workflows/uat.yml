@@ -1,0 +1,123 @@
+name: uat-deploy
+
+# A push to `uat` builds the API and the web and deploys both to SmarterASP over Web Deploy:
+#   API → ghyoussef-002-site4 (https://api.readin.online), web → ghyoussef-002-site3 (https://readin.online).
+# The same push starts the TestFlight build (ios.yml).
+# The servers keep their own web.config (connection string, keys, Firebase key): this workflow never sends or changes
+# it, so the only secret here is the Web Deploy password (environment `uat`, secret WEBDEPLOY_PASSWORD).
+# The API applies new migrations itself when it starts (Database__MigrateOnStartup on the server).
+# Setup and the manual kit: docs/setup/deployment.md, "UAT".
+on:
+  push:
+    branches: [uat]
+  workflow_dispatch:
+
+concurrency:
+  group: uat-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  WD_HOST: https://win8119.site4now.net:8172/MsDeploy.axd
+  WD_USER: ghyoussef-002
+  API_SITE: ghyoussef-002-site4
+  WEB_SITE: ghyoussef-002-site3
+  API_URL: https://api.readin.online
+  WEB_URL: https://readin.online
+  NODE_VERSION: "24.16.0"
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    environment: uat
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Web Deploy available
+        run: |
+          MSD="/c/Program Files/IIS/Microsoft Web Deploy V3/msdeploy.exe"
+          if [ ! -f "$MSD" ]; then choco install webdeploy -y --no-progress; fi
+          test -f "$MSD" && echo "msdeploy: $MSD"
+
+      - name: Build the API (self-contained win-x64)
+        run: dotnet publish backend/src/ReadIn.Api/ReadIn.Api.csproj -c Release -r win-x64 --self-contained true -o out/api -nologo
+
+      - name: Build the web (Angular SSR)
+        working-directory: web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Package the web (build + node.exe + start.mjs)
+        run: |
+          mkdir -p out/web/node
+          cp -r web/dist/readin-web/browser web/dist/readin-web/server out/web/
+          cp web/dist/readin-web/3rdpartylicenses.txt out/web/ 2>/dev/null || true
+          cp "$(cygpath -u "$(node -p 'process.execPath')")" out/web/node/node.exe
+          cp deploy/web/start.mjs out/web/start.mjs
+          out/web/node/node.exe -v
+
+      - name: Deploy the API
+        env:
+          WEBDEPLOY_PASSWORD: ${{ secrets.WEBDEPLOY_PASSWORD }}
+        run: |
+          MSD="/c/Program Files/IIS/Microsoft Web Deploy V3/msdeploy.exe"
+          DEST="computerName='$WD_HOST?site=$API_SITE',userName='$WD_USER',password='$WEBDEPLOY_PASSWORD',authType='Basic'"
+          # Never touched on the server: web.config (settings and secrets), the uploads, private files, logs, the SSL
+          # challenge folder.
+          "$MSD" -verb:sync -source:contentPath="$PWD/out/api" -dest:contentPath="$API_SITE",$DEST \
+            -enableRule:AppOffline -useChecksum \
+            -skip:objectName=filePath,absolutePath='\\web\.config$' \
+            -skip:objectName=dirPath,absolutePath='site4\\wwwroot$' \
+            -skip:objectName=dirPath,absolutePath='wwwroot\\uploads' \
+            -skip:objectName=filePath,absolutePath='wwwroot\\uploads\\.*' \
+            -skip:objectName=dirPath,absolutePath='App_Data' \
+            -skip:objectName=dirPath,absolutePath='logs' \
+            -skip:objectName=dirPath,absolutePath='\.well-known' \
+            -skip:objectName=filePath,absolutePath='\.pdb$' \
+            -skip:objectName=filePath,absolutePath='appsettings\.Development\.json$' \
+            | grep -v "skipped due to skip" | tail -n 5
+
+      - name: Deploy the web
+        env:
+          WEBDEPLOY_PASSWORD: ${{ secrets.WEBDEPLOY_PASSWORD }}
+        run: |
+          MSD="/c/Program Files/IIS/Microsoft Web Deploy V3/msdeploy.exe"
+          DEST="computerName='$WD_HOST?site=$WEB_SITE',userName='$WD_USER',password='$WEBDEPLOY_PASSWORD',authType='Basic'"
+          "$MSD" -verb:sync -source:contentPath="$PWD/out/web" -dest:contentPath="$WEB_SITE",$DEST \
+            -enableRule:AppOffline -useChecksum \
+            -skip:objectName=filePath,absolutePath='\\web\.config$' \
+            -skip:objectName=dirPath,absolutePath='site3\\logs$' \
+            -skip:objectName=dirPath,absolutePath='\.well-known' \
+            | grep -v "skipped due to skip" | tail -n 5
+
+      - name: Both sites answer
+        run: |
+          check() {
+            for i in $(seq 1 20); do
+              code=$(curl -s -m 60 -o /dev/null -w "%{http_code}" "$1" || true)
+              echo "$(date -u +%T) $1 → $code"
+              [ "$code" = 200 ] && return 0
+              sleep 15
+            done
+            echo "::error::$1 is not answering 200. If it says 503 'Application Shutting Down', recycle the site's app pool in the SmarterASP panel."
+            return 1
+          }
+          check "$API_URL/health"
+          check "$WEB_URL/"
