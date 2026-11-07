@@ -49,6 +49,8 @@ abstract class ExploreModel with _$ExploreModel {
     @Default(<ArticleCardModel>[]) List<ArticleCardModel> mostSaved,
     @Default(<UserSummaryModel>[]) List<UserSummaryModel> newWriters,
     @Default(<PathCardModel>[]) List<PathCardModel> featuredPaths,
+    // F23: the articles the SuperAdmin featured (≤ 6, most recently featured first); [] hides the section.
+    @Default(<ArticleCardModel>[]) List<ArticleCardModel> featuredArticles,
   }) = _ExploreModel;
 
   factory ExploreModel.fromJson(Map<String, dynamic> json) => _$ExploreModelFromJson(json);
@@ -59,6 +61,7 @@ abstract class ExploreModel with _$ExploreModel {
         mostSaved: [for (final a in mostSaved) a.toEntity()],
         newWriters: [for (final u in newWriters) u.toEntity()],
         featuredPaths: [for (final p in featuredPaths) p.toEntity()],
+        featuredArticles: [for (final a in featuredArticles) a.toEntity()],
       );
 }
 

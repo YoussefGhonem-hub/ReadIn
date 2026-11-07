@@ -46,7 +46,12 @@ extension SeedCubit<S> on MockCubit<S> {
   void hold(S state) => whenListen(this, Stream<S>.empty(), initialState: state);
 }
 
-MockProfileCubit profileCubit(UserProfile profile) => MockProfileCubit()..hold(ProfileState(status: ProfileStatus.ready, profile: profile));
+MockProfileCubit profileCubit(UserProfile profile) {
+  final cubit = MockProfileCubit()..hold(ProfileState(status: ProfileStatus.ready, profile: profile));
+  // An admin action from the "⋯" (F23) reads the profile again.
+  when(cubit.refresh).thenAnswer((_) async {});
+  return cubit;
+}
 
 MockProfileArticlesCubit articlesCubit(List<ArticleCard> items, {String? nextCursor}) {
   final cubit = MockProfileArticlesCubit()..hold(FeedState(status: FeedStatus.ready, items: items, nextCursor: nextCursor));

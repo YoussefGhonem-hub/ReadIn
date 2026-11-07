@@ -63,8 +63,15 @@ class TakeModerationAction {
 
   static const maxNoteLength = 500;
 
-  /// The suspension lengths offered (days); null = permanent.
-  static const suspensionDays = <int?>[1, 7, 30, null];
+  /// The suspension lengths offered (days, F23: 1, 3, 7 or 30, a custom number, or permanently); null = permanent.
+  static const suspensionDays = <int?>[1, 3, 7, 30, null];
+
+  /// A custom suspension: 1–365 days.
+  static const minSuspensionDays = 1;
+  static const maxSuspensionDays = 365;
+
+  /// The console's form asks for a reason of 5–500 characters to suspend (SPEC F23); the server only requires one.
+  static const minSuspensionReason = 5;
 
   Future<Result<void>> call(ModerationCommand command) => _repository.act(ModerationCommand(
         command.action,
@@ -72,6 +79,8 @@ class TakeModerationAction {
         note: _trimmed(command.note),
         durationDays: command.durationDays,
         resolveReportsOf: command.resolveReportsOf,
+        categoryId: command.categoryId,
+        hideContent: command.hideContent,
       ));
 }
 

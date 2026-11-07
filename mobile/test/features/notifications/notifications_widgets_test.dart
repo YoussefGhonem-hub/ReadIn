@@ -126,8 +126,14 @@ void main() {
       expect(notificationTypeLabel(ar, NotificationType.mention), 'الإشارات');
       expect(notificationTypeHint(en, NotificationType.mention), 'When someone mentions you in a comment or an article');
       expect(notificationTypeHint(ar, NotificationType.mention), 'عندما يشير إليك أحد في تعليق أو مقال');
-      // Reposts (F29) say what they cover too, as the contract asks.
-      for (final type in NotificationType.configurable.where((type) => type != NotificationType.mention && type != NotificationType.articleReposted)) {
+      // Reposts (F29) say what they cover too, as the contract asks; so do announcements and new tickets (F23, F35).
+      const withHints = {
+        NotificationType.mention,
+        NotificationType.articleReposted,
+        NotificationType.announcement,
+        NotificationType.supportTicket,
+      };
+      for (final type in NotificationType.configurable.where((type) => !withHints.contains(type))) {
         expect(notificationTypeHint(en, type), isNull, reason: '${type.wire}: the name says it all');
       }
     });
@@ -146,7 +152,8 @@ void main() {
 
       expect(NotificationType.fromWire('article_reposted'), NotificationType.articleReposted);
       expect(NotificationType.articleReposted.isConfigurable, isTrue);
-      expect(NotificationType.configurable, hasLength(9));
+      // Changed on purpose: F23 adds announcements and F35 new tickets (support.manage only), 11 in all.
+      expect(NotificationType.configurable, hasLength(11));
       expect(notificationTypeLabel(en, NotificationType.articleReposted), 'Reposts');
       expect(notificationTypeLabel(ar, NotificationType.articleReposted), 'إعادة النشر');
       expect(notificationTypeHint(en, NotificationType.articleReposted), 'When someone reposts your article');
@@ -525,7 +532,8 @@ void main() {
         final cubit = settingsCubit();
         await cubit.load();
         await pumpSettings(tester, cubit, variant: variant);
-        for (final type in NotificationType.configurable) {
+        // Announcements and new tickets (F23, F35) show only when the API lists them (support/support_widgets_test).
+        for (final type in NotificationType.configurable.where((t) => !NotificationType.listedWhenSent.contains(t))) {
           expect(find.text(notificationTypeLabel(l10n, type)), findsOneWidget);
         }
         // Mentions cover comments and articles: the hint sits under the name, on the mention row.

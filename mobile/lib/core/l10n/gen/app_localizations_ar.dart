@@ -5425,4 +5425,1258 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get updateRequiredAction => 'حدِّث الآن';
+
+  @override
+  String get adminConsoleTitle => 'لوحة التحكم';
+
+  @override
+  String get adminConsoleEntryHint =>
+      'لوحة البيانات والمستخدمون والمحتوى وقوائم المراجعة';
+
+  @override
+  String adminWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عنصر بانتظار المراجعة',
+      many: '$count عنصرًا بانتظار المراجعة',
+      few: '$count عناصر بانتظار المراجعة',
+      two: 'عنصران بانتظار المراجعة',
+      one: 'عنصر واحد بانتظار المراجعة',
+      zero: 'لا يوجد ما ينتظر المراجعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminConfirm => 'موافق';
+
+  @override
+  String get adminNoAccessTitle => 'هذه الصفحة للمسؤول';
+
+  @override
+  String get adminNoAccessBody =>
+      'لا يملك حسابك صلاحية الوصول إلى لوحة التحكم.';
+
+  @override
+  String get adminWebOnlyNote =>
+      'المجالات والوسوم، والمسارات والمحتوى المميز، والإعلانات، وسجل التدقيق، وصفحة النظام متاحة في لوحة التحكم على الويب.';
+
+  @override
+  String get adminSearchClear => 'مسح البحث';
+
+  @override
+  String get adminSectionDashboard => 'لوحة البيانات';
+
+  @override
+  String get adminSectionDashboardHint =>
+      'أرقام اليوم والرسوم البيانية والقوائم الأعلى';
+
+  @override
+  String get adminSectionUsers => 'المستخدمون';
+
+  @override
+  String get adminSectionUsersHint => 'البحث عن حساب واتخاذ إجراء بشأنه';
+
+  @override
+  String get adminSectionContent => 'المحتوى';
+
+  @override
+  String get adminSectionContentHint => 'المقالات وأحدث التعليقات';
+
+  @override
+  String get adminSectionReports => 'البلاغات';
+
+  @override
+  String get adminSectionReportsHint => 'قائمة الإشراف';
+
+  @override
+  String get adminSectionTickets => 'التذاكر';
+
+  @override
+  String get adminSectionTicketsHint => 'طلبات المساعدة والدعم';
+
+  @override
+  String get adminSectionVerification => 'التوثيق';
+
+  @override
+  String get adminSectionVerificationHint => 'طلبات توثيق الكتّاب';
+
+  @override
+  String get adminPeriodToday => 'اليوم';
+
+  @override
+  String get adminPeriodYesterday => 'أمس';
+
+  @override
+  String get adminPeriod7Days => '7 أيام';
+
+  @override
+  String get adminPeriod30Days => '30 يومًا';
+
+  @override
+  String adminDashboardRange(String from, String to, String time) {
+    return 'من $from إلى $to · آخر تحديث $time';
+  }
+
+  @override
+  String get adminDashboardActivity => 'النشاط';
+
+  @override
+  String get adminDashboardNow => 'الآن';
+
+  @override
+  String get adminDashboardCharts => 'آخر 30 يومًا';
+
+  @override
+  String get adminCardArticlesPublished => 'المقالات المنشورة';
+
+  @override
+  String get adminCardNewUsers => 'المستخدمون الجدد';
+
+  @override
+  String adminCardNewUsersSplit(String phone, String google, String apple) {
+    return 'الهاتف $phone · Google $google · Apple $apple';
+  }
+
+  @override
+  String get adminCardActiveReaders => 'القرّاء النشطون';
+
+  @override
+  String get adminCardReads => 'القراءات';
+
+  @override
+  String get adminCardComments => 'التعليقات';
+
+  @override
+  String get adminCardReactions => 'التفاعلات';
+
+  @override
+  String get adminCardReposts => 'إعادات النشر';
+
+  @override
+  String get adminCardOpenReports => 'البلاغات المفتوحة';
+
+  @override
+  String get adminCardOpenTickets => 'التذاكر المفتوحة';
+
+  @override
+  String get adminCardPendingVerifications => 'طلبات التوثيق المعلقة';
+
+  @override
+  String get adminCardSuspendedNow => 'الحسابات الموقوفة';
+
+  @override
+  String adminChangeUp(String count) {
+    return 'أكثر بـ $count من الفترة السابقة';
+  }
+
+  @override
+  String adminChangeDown(String count) {
+    return 'أقل بـ $count من الفترة السابقة';
+  }
+
+  @override
+  String get adminChangeSame => 'مثل الفترة السابقة';
+
+  @override
+  String adminChartCaption(String total, String peak) {
+    return '$total إجمالًا، وبحد أقصى $peak في اليوم';
+  }
+
+  @override
+  String get adminTopArticles => 'المقالات الأكثر قراءة';
+
+  @override
+  String get adminTopWriters => 'الكتّاب الأكثر قراءة';
+
+  @override
+  String adminReads(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count قراءة',
+      many: '$count قراءة',
+      few: '$count قراءات',
+      two: 'قراءتان',
+      one: 'قراءة واحدة',
+      zero: 'لا قراءات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adminArticlesRead(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مقال مقروء',
+      many: '$count مقالًا مقروءًا',
+      few: '$count مقالات مقروءة',
+      two: 'مقالان مقروءان',
+      one: 'مقال واحد مقروء',
+      zero: 'لا مقالات مقروءة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminMissedSearches => 'عمليات بحث بلا نتائج';
+
+  @override
+  String get adminMissedSearchesHint => 'ما بحث عنه القرّاء ولم يجدوه.';
+
+  @override
+  String adminSearchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مرة',
+      many: '$count مرة',
+      few: '$count مرات',
+      two: 'مرتان',
+      one: 'مرة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminNothingInPeriod => 'لا يوجد شيء في هذه الفترة.';
+
+  @override
+  String get adminStreakRetention => 'الاحتفاظ بسلسلة القراءة';
+
+  @override
+  String get adminStreakRetentionHint =>
+      'قرّاء الأسبوع الماضي النشطون الذين حافظوا على سلسلة قراءة من 3 أيام أو أكثر.';
+
+  @override
+  String adminStreakRetentionDetail(String kept, String cohort) {
+    return '$kept من أصل $cohort من القرّاء';
+  }
+
+  @override
+  String get adminContentPipeline => 'خط إنتاج المحتوى';
+
+  @override
+  String get adminPipelineFolders => 'مجلدات المقالات';
+
+  @override
+  String get adminPipelineSeeded => 'مقالات @readin';
+
+  @override
+  String get adminPipelinePublished => 'المتاحة للقراءة الآن';
+
+  @override
+  String get adminPipelineLastRun => 'آخر تشغيل للتعبئة';
+
+  @override
+  String get adminSuspendCustom => 'مدة مخصصة…';
+
+  @override
+  String get adminSuspendCustomLabel => 'عدد الأيام (1–365)';
+
+  @override
+  String get adminSuspendCustomInvalid => 'أدخل رقمًا من 1 إلى 365.';
+
+  @override
+  String get adminSuspendReason => 'السبب';
+
+  @override
+  String get adminSuspendReasonHint => 'من 5 إلى 500 حرف.';
+
+  @override
+  String get adminSuspendHideContent => 'إخفاء كل مقالاته وتعليقاته أيضًا';
+
+  @override
+  String get adminSuspendHideContentHint =>
+      'لحسابات الرسائل المزعجة. يمكنك استعادتها لاحقًا.';
+
+  @override
+  String adminHideContentTitle(String name) {
+    return 'هل تريد إخفاء كل محتوى $name؟';
+  }
+
+  @override
+  String get adminHideContentBody =>
+      'تُخفى كل مقالاته وتعليقاته عن الجميع، وتُغلق البلاغات المفتوحة عليها. يمكنك استعادتها من صفحته في لوحة التحكم. لن يُرسل إليه إشعار.';
+
+  @override
+  String get adminContentHidden => 'تم إخفاء المحتوى';
+
+  @override
+  String adminRestoreContentTitle(String name) {
+    return 'هل تريد استعادة محتوى $name؟';
+  }
+
+  @override
+  String get adminRestoreContentBody =>
+      'تظهر من جديد المقالات والتعليقات التي أُخفيت مع الحساب. ويبقى مخفيًّا كل ما أُخفي منفردًا.';
+
+  @override
+  String get adminContentRestored => 'تمت استعادة المحتوى';
+
+  @override
+  String get adminLogUserHideContent => 'أخفى كل محتوى مستخدم';
+
+  @override
+  String get adminLogUserUnhideContent => 'استعاد محتوى مستخدم';
+
+  @override
+  String get adminUserTitle => 'المستخدم';
+
+  @override
+  String get adminUsersSearchHint => 'الاسم أو @اسم المستخدم';
+
+  @override
+  String get adminUsersSearchHintPii => 'الاسم أو @اسم المستخدم أو رقم الهاتف';
+
+  @override
+  String get adminUsersEmpty => 'لا يوجد مستخدمون مطابقون';
+
+  @override
+  String adminUsersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مستخدم',
+      many: '$count مستخدمًا',
+      few: '$count مستخدمين',
+      two: 'مستخدمان',
+      one: 'مستخدم واحد',
+      zero: 'لا يوجد مستخدمون',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminSort => 'الترتيب';
+
+  @override
+  String get adminSortJoined => 'الأحدث';
+
+  @override
+  String get adminSortLastSeen => 'آخر ظهور';
+
+  @override
+  String get adminSortFollowers => 'الأكثر متابِعين';
+
+  @override
+  String get adminSortOpenReports => 'الأكثر بلاغات مفتوحة';
+
+  @override
+  String get adminFilterSuspended => 'الموقوفون';
+
+  @override
+  String get adminFilterVerified => 'الموثّقون';
+
+  @override
+  String get adminFilterHasReports => 'عليهم بلاغات';
+
+  @override
+  String get adminFilterHidden => 'المخفية';
+
+  @override
+  String get adminFilterVisible => 'الظاهرة';
+
+  @override
+  String get adminFilterFeatured => 'المميزة';
+
+  @override
+  String get adminFilterReported => 'المبلَّغ عنها';
+
+  @override
+  String get adminSignInPhone => 'الهاتف';
+
+  @override
+  String get adminStatusActive => 'نشط';
+
+  @override
+  String get adminSystemAccount => 'الحساب الرسمي';
+
+  @override
+  String get adminStaff => 'فريق العمل';
+
+  @override
+  String adminJoined(String date) {
+    return 'انضم في $date';
+  }
+
+  @override
+  String adminLastSeen(String time) {
+    return 'آخر ظهور $time';
+  }
+
+  @override
+  String get adminNeverSeen => 'لم يظهر بعد';
+
+  @override
+  String adminOpenReports(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count بلاغ مفتوح',
+      many: '$count بلاغًا مفتوحًا',
+      few: '$count بلاغات مفتوحة',
+      two: 'بلاغان مفتوحان',
+      one: 'بلاغ مفتوح واحد',
+      zero: 'لا بلاغات مفتوحة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminPhone => 'رقم الهاتف';
+
+  @override
+  String get adminShowPhone => 'عرض';
+
+  @override
+  String get adminCopy => 'نسخ';
+
+  @override
+  String get adminOpenProfile => 'فتح الملف الشخصي';
+
+  @override
+  String get adminOpenInConsole => 'فتح في لوحة التحكم';
+
+  @override
+  String get adminSuspend => 'إيقاف الحساب…';
+
+  @override
+  String get adminHideContent => 'إخفاء كل محتواه';
+
+  @override
+  String adminRestoreContent(int count) {
+    return 'استعادة محتواه ($count)';
+  }
+
+  @override
+  String get adminResetPassword => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String adminResetPasswordTitle(String name) {
+    return 'هل تريد إعادة تعيين كلمة مرور $name؟';
+  }
+
+  @override
+  String get adminResetPasswordBody =>
+      'تُنشأ كلمة مرور مؤقتة، وعليه تغييرها وتعيين رمز الاسترداد (PIN) عند تسجيل الدخول التالي.';
+
+  @override
+  String get adminTempPasswordTitle => 'كلمة المرور المؤقتة';
+
+  @override
+  String get adminTempPasswordBody =>
+      'تظهر مرة واحدة فقط. أرسلها إليه بطريقة آمنة.';
+
+  @override
+  String get adminLogoutAll => 'تسجيل الخروج من كل الأجهزة';
+
+  @override
+  String adminLogoutAllTitle(String name) {
+    return 'هل تريد تسجيل خروج $name من كل الأجهزة؟';
+  }
+
+  @override
+  String get adminLogoutAllBody =>
+      'تنتهي كل جلسات هذا الحساب الآن، ويجب تسجيل الدخول من جديد على كل جهاز. لن يُرسل إليه إشعار.';
+
+  @override
+  String get adminLoggedOut => 'تم تسجيل الخروج من كل الأجهزة';
+
+  @override
+  String get adminRemoveBadge => 'إزالة شارة التوثيق';
+
+  @override
+  String adminRemoveBadgeTitle(String name) {
+    return 'هل تريد إزالة شارة التوثيق من $name؟';
+  }
+
+  @override
+  String get adminRemoveBadgeBody =>
+      'تختفي شارة التوثيق من اسمه في كل مكان، ويمكنه طلب التوثيق من جديد. لن يُرسل إليه إشعار.';
+
+  @override
+  String get adminBadgeRemoved => 'تمت إزالة الشارة';
+
+  @override
+  String get adminStats => 'الإحصاءات';
+
+  @override
+  String get adminStatArticles => 'المقالات المنشورة';
+
+  @override
+  String get adminStatFollowers => 'المتابِعون';
+
+  @override
+  String get adminStatFollowing => 'المتابَعون';
+
+  @override
+  String get adminStatTotalReads => 'قراءات مقالاته';
+
+  @override
+  String get adminStatDrafts => 'المسودات';
+
+  @override
+  String get adminStatComments => 'التعليقات';
+
+  @override
+  String get adminStatArticlesRead => 'المقالات التي قرأها';
+
+  @override
+  String get adminStatStreak => 'سلسلة القراءة';
+
+  @override
+  String adminStreakValue(int current, int longest) {
+    return '$current حاليًا · الأطول $longest';
+  }
+
+  @override
+  String get adminAccess => 'تسجيل الدخول';
+
+  @override
+  String get adminJoinedLabel => 'تاريخ الانضمام';
+
+  @override
+  String get adminLastSeenLabel => 'آخر ظهور';
+
+  @override
+  String get adminSignUpMethod => 'طريقة إنشاء الحساب';
+
+  @override
+  String get adminActiveSessions => 'الأجهزة المسجّل الدخول عليها';
+
+  @override
+  String get adminHasRecoveryPin => 'رمز الاسترداد (PIN) معيَّن';
+
+  @override
+  String get adminRecoveryDisabled => 'الاسترداد معطّل';
+
+  @override
+  String get adminMustChangePassword => 'يجب تغيير كلمة المرور';
+
+  @override
+  String get adminLockedOutUntil => 'الدخول مقفل حتى';
+
+  @override
+  String get adminUiLanguage => 'لغة التطبيق';
+
+  @override
+  String get adminRole => 'الدور';
+
+  @override
+  String get adminYes => 'نعم';
+
+  @override
+  String get adminNo => 'لا';
+
+  @override
+  String get adminNone => 'لا يوجد.';
+
+  @override
+  String adminModerationHistory(int count) {
+    return 'سجل الإشراف ($count)';
+  }
+
+  @override
+  String get adminWarnings => 'التحذيرات';
+
+  @override
+  String get adminSuspensions => 'مرات الإيقاف';
+
+  @override
+  String get adminHiddenArticles => 'المقالات المخفية';
+
+  @override
+  String get adminHiddenComments => 'التعليقات المخفية';
+
+  @override
+  String get adminHiddenWithAccount => 'المخفي مع الحساب';
+
+  @override
+  String adminReportsAgainst(int count) {
+    return 'البلاغات عنه ($count)';
+  }
+
+  @override
+  String adminReportsFiled(int count) {
+    return 'البلاغات التي قدّمها ($count)';
+  }
+
+  @override
+  String adminVerificationHistory(int count) {
+    return 'طلبات التوثيق ($count)';
+  }
+
+  @override
+  String adminTicketsOfUser(int count) {
+    return 'التذاكر ($count)';
+  }
+
+  @override
+  String adminAuditOfUser(int count) {
+    return 'سجل التدقيق ($count)';
+  }
+
+  @override
+  String get adminAuditPiiViewed => 'عرض رقم الهاتف';
+
+  @override
+  String get adminAuditSessionsRevoked => 'إنهاء كل الجلسات';
+
+  @override
+  String get adminAuditPasswordReset => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get adminAuditVerificationApproved => 'قبول طلب توثيق';
+
+  @override
+  String get adminAuditVerificationRejected => 'رفض طلب توثيق';
+
+  @override
+  String get adminAuditVerificationRemoved => 'إزالة شارة التوثيق';
+
+  @override
+  String get adminAuditArticleFeatured => 'إبراز مقال';
+
+  @override
+  String get adminAuditArticleUnfeatured => 'إلغاء إبراز مقال';
+
+  @override
+  String get adminContentArticles => 'المقالات';
+
+  @override
+  String get adminContentComments => 'أحدث التعليقات';
+
+  @override
+  String get adminArticlesSearchHint => 'البحث في العناوين';
+
+  @override
+  String get adminArticlesEmpty => 'لا توجد مقالات مطابقة';
+
+  @override
+  String adminArticlesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مقال',
+      many: '$count مقالًا',
+      few: '$count مقالات',
+      two: 'مقالان',
+      one: 'مقال واحد',
+      zero: 'لا توجد مقالات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adminPeriodRange(String from, String to) {
+    return 'من $from إلى $to';
+  }
+
+  @override
+  String get adminClearPeriod => 'إزالة الفترة';
+
+  @override
+  String get adminFeatured => 'مميز';
+
+  @override
+  String get adminArchived => 'مؤرشف';
+
+  @override
+  String get adminCommentsEmpty => 'لا توجد تعليقات';
+
+  @override
+  String get adminCommentMenu => 'خيارات التعليق';
+
+  @override
+  String get adminOpenComment => 'فتح في المقال';
+
+  @override
+  String get adminSeeReports => 'عرض البلاغات';
+
+  @override
+  String get adminReply => 'رد';
+
+  @override
+  String get adminArticleTitle => 'المقال';
+
+  @override
+  String get adminArticleField => 'المجال';
+
+  @override
+  String get adminArticlePublished => 'تاريخ النشر';
+
+  @override
+  String get adminArticleReports => 'البلاغات';
+
+  @override
+  String get adminArticleHiddenAt => 'تاريخ الإخفاء';
+
+  @override
+  String get adminArticleFeaturedAt => 'تاريخ الإبراز';
+
+  @override
+  String get adminOpenWriter => 'فتح الكاتب في لوحة التحكم';
+
+  @override
+  String get adminFeature => 'إبراز';
+
+  @override
+  String get adminUnfeature => 'إلغاء الإبراز';
+
+  @override
+  String get adminFeatureHint => 'المقالات المميزة في صفحة الاستكشاف';
+
+  @override
+  String get adminFeatureTitle => 'هل تريد إبراز هذا المقال؟';
+
+  @override
+  String get adminFeatureBody =>
+      'يظهر ضمن المقالات المميزة في صفحة الاستكشاف، والأحدث إبرازًا أولًا.';
+
+  @override
+  String get adminUnfeatureTitle => 'هل تريد إلغاء إبراز هذا المقال؟';
+
+  @override
+  String get adminUnfeatureBody =>
+      'يخرج من المقالات المميزة في صفحة الاستكشاف.';
+
+  @override
+  String get adminFeaturedDone => 'تم إبراز المقال';
+
+  @override
+  String get adminUnfeaturedDone => 'تم إلغاء الإبراز';
+
+  @override
+  String get adminVerificationPending => 'المعلّقة';
+
+  @override
+  String get adminVerificationApproved => 'المقبولة';
+
+  @override
+  String get adminVerificationRejected => 'المرفوضة';
+
+  @override
+  String get adminVerificationTagPending => 'معلّق';
+
+  @override
+  String get adminVerificationTagApproved => 'مقبول';
+
+  @override
+  String get adminVerificationTagRejected => 'مرفوض';
+
+  @override
+  String get adminVerificationEmptyPending => 'لا توجد طلبات بانتظار المراجعة';
+
+  @override
+  String get adminVerificationEmpty => 'لا يوجد شيء هنا';
+
+  @override
+  String adminVerificationSubmitted(String time) {
+    return 'أُرسل $time';
+  }
+
+  @override
+  String adminVerificationDecided(String time) {
+    return 'بُتّ فيه $time';
+  }
+
+  @override
+  String get adminVerificationRequestTitle => 'طلب التوثيق';
+
+  @override
+  String get adminVerificationField => 'المجال';
+
+  @override
+  String get adminVerificationJobTitle => 'المسمى الوظيفي';
+
+  @override
+  String get adminVerificationSubmittedLabel => 'تاريخ الإرسال';
+
+  @override
+  String get adminVerificationDecidedLabel => 'تاريخ البت';
+
+  @override
+  String get adminVerificationDecidedBy => 'بتّ فيه';
+
+  @override
+  String get adminVerificationProofLink => 'رابط الإثبات';
+
+  @override
+  String adminVerificationSaveProof(String name) {
+    return 'حفظ ملف الإثبات ($name)';
+  }
+
+  @override
+  String get adminVerificationNoProof => 'لا يوجد ملف إثبات.';
+
+  @override
+  String get adminVerificationProofSaved => 'تم حفظ الملف';
+
+  @override
+  String get adminVerificationProofSaveFailed =>
+      'تعذّر حفظ الملف. حاول مرة أخرى.';
+
+  @override
+  String get adminVerificationNote => 'ملاحظته';
+
+  @override
+  String get adminVerificationReason => 'السبب';
+
+  @override
+  String get adminVerificationApprove => 'قبول';
+
+  @override
+  String adminVerificationApproveTitle(String name) {
+    return 'هل تريد قبول طلب $name؟';
+  }
+
+  @override
+  String get adminVerificationApproveBody =>
+      'يحصل على شارة التوثيق فورًا، ويصله إشعار بذلك.';
+
+  @override
+  String get adminVerificationApprovedDone => 'تم قبول الطلب';
+
+  @override
+  String get adminVerificationReject => 'رفض';
+
+  @override
+  String get adminVerificationRejectTitle => 'هل تريد رفض هذا الطلب؟';
+
+  @override
+  String get adminVerificationRejectBody =>
+      'يرى السبب في صفحة التوثيق لديه، ويمكنه الطلب من جديد.';
+
+  @override
+  String get adminVerificationRejectedDone => 'تم رفض الطلب';
+
+  @override
+  String get adminNotifAnnouncement => 'أخبار من فريق ReadIn';
+
+  @override
+  String get adminNotifTypeAnnouncement => 'الإعلانات';
+
+  @override
+  String get adminNotifTypeAnnouncementHint => 'إعلانات من فريق ReadIn';
+
+  @override
+  String get errAdminVerificationAlreadyDecided =>
+      'تم البت في هذا الطلب بالفعل.';
+
+  @override
+  String get errAdminVerificationProofNotFound => 'ملف الإثبات لم يعد موجودًا.';
+
+  @override
+  String get supportHelpTitle => 'المساعدة والدعم';
+
+  @override
+  String get supportEntryHint => 'الإبلاغ عن مشكلة أو إرسال اقتراح';
+
+  @override
+  String get supportEmailUs => 'مراسلة الدعم';
+
+  @override
+  String get supportEmailBody => 'يمكنك أيضًا مراسلتنا بالبريد الإلكتروني.';
+
+  @override
+  String get supportAppealLine => 'للتظلّم، راسل';
+
+  @override
+  String get supportAppealBody =>
+      'لا يمكن للحساب الموقوف تسجيل الدخول لإرسال تذكرة. للتظلّم، راسل فريق الدعم من رقم حسابك أو بريده الإلكتروني، واذكر سبب طلبك رفع الإيقاف.';
+
+  @override
+  String get supportTabActive => 'المفتوحة';
+
+  @override
+  String get supportTabClosed => 'المغلقة';
+
+  @override
+  String get supportNewTicket => 'تذكرة جديدة';
+
+  @override
+  String get supportEmptyActive => 'لا توجد تذاكر مفتوحة';
+
+  @override
+  String get supportEmptyActiveBody =>
+      'هل تحتاج إلى مساعدة أو لديك فكرة؟ أرسل إلينا تذكرة.';
+
+  @override
+  String get supportEmptyClosed => 'لا توجد تذاكر مغلقة';
+
+  @override
+  String get supportCategoryLabel => 'ما موضوع التذكرة؟';
+
+  @override
+  String get supportCategoryRequired => 'اختر تصنيفًا.';
+
+  @override
+  String get supportCategoryAppProblem => 'مشكلة في التطبيق';
+
+  @override
+  String get supportCategoryAccount => 'الحساب وتسجيل الدخول';
+
+  @override
+  String get supportCategoryContent => 'المحتوى أو بلاغ';
+
+  @override
+  String get supportCategoryVerification => 'التوثيق';
+
+  @override
+  String get supportCategorySuggestion => 'اقتراح';
+
+  @override
+  String get supportCategoryOther => 'أخرى';
+
+  @override
+  String get supportSubject => 'الموضوع';
+
+  @override
+  String get supportSubjectError => 'اكتب من 5 إلى 120 حرفًا.';
+
+  @override
+  String get supportMessage => 'الرسالة';
+
+  @override
+  String get supportMessageHint => 'صف ما حدث، وكيف يمكننا رؤيته.';
+
+  @override
+  String get supportMessageError => 'اكتب من 10 إلى 2000 حرف.';
+
+  @override
+  String get supportScreenshots => 'لقطات الشاشة (اختيارية)';
+
+  @override
+  String get supportScreenshotsHint =>
+      'حتى 3 صور بصيغة JPEG أو PNG أو WebP، وبحد أقصى 5 م.ب لكل صورة.';
+
+  @override
+  String supportAddScreenshot(int count, int max) {
+    return 'إضافة لقطة شاشة ($count/$max)';
+  }
+
+  @override
+  String get supportRemoveScreenshot => 'إزالة لقطة الشاشة';
+
+  @override
+  String get supportAttach => 'إضافة لقطات شاشة';
+
+  @override
+  String get supportDeviceNote =>
+      'لمساعدتنا، نضيف نظام هاتفك وإصداره، وإصدار التطبيق ولغته. ولا شيء يحدد جهازك.';
+
+  @override
+  String get supportSend => 'إرسال';
+
+  @override
+  String get supportSending => 'جارٍ الإرسال…';
+
+  @override
+  String get supportStatusOpen => 'مفتوحة';
+
+  @override
+  String get supportStatusAnswered => 'تم الرد';
+
+  @override
+  String get supportStatusClosed => 'مغلقة';
+
+  @override
+  String get supportTeam => 'فريق الدعم';
+
+  @override
+  String get supportYou => 'أنت';
+
+  @override
+  String get supportMember => 'العضو';
+
+  @override
+  String get supportInternalNote => 'ملاحظة داخلية';
+
+  @override
+  String get supportTicketTitle => 'التذكرة';
+
+  @override
+  String supportTicketNumber(String number) {
+    return 'التذكرة $number';
+  }
+
+  @override
+  String get supportTicketMenu => 'خيارات التذكرة';
+
+  @override
+  String get supportCloseTicket => 'إغلاق التذكرة';
+
+  @override
+  String get supportCloseTitle => 'هل تريد إغلاق هذه التذكرة؟';
+
+  @override
+  String get supportCloseBody => 'يمكنك إعادة فتحها خلال 30 يومًا.';
+
+  @override
+  String get supportAdminCloseBody =>
+      'سيُبلَّغ العضو بإغلاق تذكرته. يمكنك إعادة فتحها في أي وقت.';
+
+  @override
+  String get supportClosed => 'تم إغلاق التذكرة';
+
+  @override
+  String get supportReopen => 'إعادة الفتح';
+
+  @override
+  String get supportReopened => 'تمت إعادة فتح التذكرة';
+
+  @override
+  String get supportClosedCanReopen =>
+      'هذه التذكرة مغلقة. يمكنك إعادة فتحها خلال 30 يومًا من إغلاقها.';
+
+  @override
+  String get supportClosedExpired =>
+      'أُغلقت هذه التذكرة منذ أكثر من 30 يومًا. أرسل تذكرة جديدة إن كنت ما زلت تحتاج إلى مساعدة.';
+
+  @override
+  String get supportOpenHint =>
+      'بانتظار رد فريق الدعم. سنرسل إليك إشعارًا عند الرد.';
+
+  @override
+  String get supportReplyHint => 'اكتب ردًّا…';
+
+  @override
+  String get supportImageFailed => 'تعذّر تحميل الصورة';
+
+  @override
+  String get supportOpenImage => 'فتح الصورة';
+
+  @override
+  String supportWaiting(String time) {
+    return 'بانتظار الرد · $time';
+  }
+
+  @override
+  String get supportSearchHint => 'الموضوع أو العضو أو #12';
+
+  @override
+  String supportTicketsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تذكرة',
+      many: '$count تذكرة',
+      few: '$count تذاكر',
+      two: 'تذكرتان',
+      one: 'تذكرة واحدة',
+      zero: 'لا توجد تذاكر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get supportQueueEmptyOpen => 'لا توجد تذاكر بانتظار الرد';
+
+  @override
+  String get supportQueueEmpty => 'لا توجد تذاكر هنا';
+
+  @override
+  String get supportChangeCategory => 'تغيير التصنيف';
+
+  @override
+  String get supportCategoryChanged => 'تم تغيير التصنيف';
+
+  @override
+  String get supportReplyMode => 'رد';
+
+  @override
+  String get supportNoteMode => 'ملاحظة داخلية';
+
+  @override
+  String get supportAdminReplyHint => 'اكتب ردًّا للعضو…';
+
+  @override
+  String get supportNoteHint => 'ملاحظة لا يراها إلا المسؤولون…';
+
+  @override
+  String get supportAddNote => 'إضافة ملاحظة';
+
+  @override
+  String get supportReopenToReply => 'أعد فتح التذكرة للرد.';
+
+  @override
+  String get supportReplySent => 'تم إرسال الرد';
+
+  @override
+  String get supportNoteAdded => 'تمت إضافة الملاحظة';
+
+  @override
+  String supportClosedOn(String date, String by) {
+    return 'أُغلقت في $date بواسطة $by';
+  }
+
+  @override
+  String get supportClosedAuto => 'النظام';
+
+  @override
+  String get supportDevice => 'الجهاز';
+
+  @override
+  String get supportDevicePlatform => 'المنصة';
+
+  @override
+  String get supportDeviceOs => 'النظام';
+
+  @override
+  String get supportDeviceApp => 'إصدار التطبيق';
+
+  @override
+  String get supportDeviceLanguage => 'اللغة';
+
+  @override
+  String get supportDeviceScreen => 'الشاشة';
+
+  @override
+  String get supportDeviceSent => 'تاريخ الإرسال';
+
+  @override
+  String supportMemberTickets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تذكرة',
+      many: '$count تذكرة',
+      few: '$count تذاكر',
+      two: 'تذكرتان',
+      one: 'تذكرة واحدة',
+      zero: 'لا توجد تذاكر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get supportMemberModeration => 'التحذيرات ومرات الإيقاف';
+
+  @override
+  String supportMemberReports(int count) {
+    return 'بلاغاته ($count)';
+  }
+
+  @override
+  String get supportNotifReply => 'ردّ فريق الدعم على تذكرتك';
+
+  @override
+  String get supportNotifClosed => 'أُغلقت تذكرتك';
+
+  @override
+  String supportNotifTicket(String name) {
+    return 'رسالة دعم جديدة من $name';
+  }
+
+  @override
+  String get supportNotifTypeTicket => 'تذاكر الدعم';
+
+  @override
+  String get supportNotifTypeTicketHint => 'التذاكر الجديدة وردود الأعضاء';
+
+  @override
+  String get supportAuditReplied => 'الرد على تذكرة';
+
+  @override
+  String get supportAuditNoteAdded => 'إضافة ملاحظة داخلية';
+
+  @override
+  String get supportAuditClosed => 'إغلاق تذكرة';
+
+  @override
+  String get supportAuditReopened => 'إعادة فتح تذكرة';
+
+  @override
+  String get supportAuditCategoryChanged => 'تغيير تصنيف تذكرة';
+
+  @override
+  String get errSupportLimit =>
+      'وصلت إلى حد التذاكر: 5 تذاكر جديدة في اليوم و10 تذاكر مفتوحة على الأكثر.';
+
+  @override
+  String get errSupportLimitDaily =>
+      'أرسلت 5 تذاكر خلال آخر 24 ساعة. حاول مرة أخرى لاحقًا.';
+
+  @override
+  String get errSupportLimitOpen =>
+      'لديك 10 تذاكر مفتوحة. أغلق إحداها أو انتظر الرد قبل إرسال تذكرة أخرى.';
+
+  @override
+  String get errSupportTicketNotFound => 'التذكرة غير موجودة.';
+
+  @override
+  String get errSupportAttachmentNotFound => 'المرفق غير موجود.';
+
+  @override
+  String get errSupportTicketClosed => 'هذه التذكرة مغلقة. أعد فتحها أولًا.';
+
+  @override
+  String get errSupportReopenExpired =>
+      'مضى أكثر من 30 يومًا على إغلاق التذكرة. أرسل تذكرة جديدة.';
+
+  @override
+  String get errSupportAttachmentInvalid =>
+      'يجب أن تكون الصورة بصيغة JPEG أو PNG أو WebP، وألا يزيد حجمها على 5 م.ب.';
+
+  @override
+  String get errSupportTooManyAttachments => 'يمكن إرفاق 3 صور على الأكثر.';
+
+  @override
+  String get errSupportCategoryInvalid => 'اختر تصنيفًا من القائمة.';
+
+  @override
+  String get adminExploreFeatured => 'مقالات مختارة';
+
+  @override
+  String get adminFilterJoined => 'تاريخ الانضمام…';
+
+  @override
+  String adminJoinedRange(String range) {
+    return 'الانضمام $range';
+  }
+
+  @override
+  String get adminFilterPublished => 'تاريخ النشر…';
+
+  @override
+  String get adminFilterField => 'المجال…';
+
+  @override
+  String get adminFilterTopic => 'الموضوع…';
+
+  @override
+  String get adminChooseField => 'اختر مجالًا';
+
+  @override
+  String get adminChooseTopic => 'اختر موضوعًا';
+
+  @override
+  String get adminAllFields => 'كل المجالات';
+
+  @override
+  String get adminAllTopics => 'كل المواضيع';
+
+  @override
+  String adminWriterChip(String name) {
+    return 'الكاتب: $name';
+  }
+
+  @override
+  String get adminWriterUnknown => 'كاتب محدد';
+
+  @override
+  String get adminTheirArticles => 'مقالاته';
+
+  @override
+  String get adminRemoveFilter => 'إزالة عامل التصفية';
+
+  @override
+  String get adminSuspendedProfileHint =>
+      'لا يفتح هذا الملف الشخصي إلا المسؤولون ما دام الحساب موقوفًا.';
+
+  @override
+  String get adminNeverPublished => 'لم يُنشر قط';
 }

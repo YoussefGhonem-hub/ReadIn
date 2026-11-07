@@ -311,6 +311,7 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(
   isTopicMuted: json['isTopicMuted'] as bool? ?? false,
   repostCount: (json['repostCount'] as num?)?.toInt() ?? 0,
   isReposted: json['isReposted'] as bool? ?? false,
+  isFeatured: json['isFeatured'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
@@ -352,4 +353,5 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'isTopicMuted': instance.isTopicMuted,
   'repostCount': instance.repostCount,
   'isReposted': instance.isReposted,
+  'isFeatured': instance.isFeatured,
 };

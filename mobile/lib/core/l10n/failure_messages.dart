@@ -235,6 +235,18 @@ String localizeErrorCode(AppLocalizations l10n, String code) => switch (code) {
       FailureCodes.verificationNotFound => l10n.errVerificationNotFound,
       FailureCodes.verificationNotVerified => l10n.errVerificationNotVerified,
       FailureCodes.verificationSystemAccount => l10n.errVerificationSystemAccount,
+      // The admin console's verification queue (F23, F19).
+      FailureCodes.verificationAlreadyDecided => l10n.errAdminVerificationAlreadyDecided,
+      FailureCodes.verificationProofNotFound => l10n.errAdminVerificationProofNotFound,
+      // Help & support (F35).
+      FailureCodes.supportLimit => l10n.errSupportLimit,
+      FailureCodes.supportTicketNotFound => l10n.errSupportTicketNotFound,
+      FailureCodes.supportAttachmentNotFound => l10n.errSupportAttachmentNotFound,
+      FailureCodes.supportTicketClosed => l10n.errSupportTicketClosed,
+      FailureCodes.supportReopenExpired => l10n.errSupportReopenExpired,
+      FailureCodes.supportAttachmentInvalid => l10n.errSupportAttachmentInvalid,
+      FailureCodes.supportTooManyAttachments => l10n.errSupportTooManyAttachments,
+      FailureCodes.supportCategoryInvalid => l10n.errSupportCategoryInvalid,
       FailureCodes.requestCancelled => l10n.errCancelled,
       FailureCodes.networkOffline => l10n.errOffline,
       FailureCodes.networkTimeout => l10n.errTimeout,

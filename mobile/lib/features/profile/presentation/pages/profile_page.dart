@@ -12,6 +12,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/page_block.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../admin/presentation/widgets/admin_profile_banner.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../categories/presentation/widgets/categories_tab.dart';
@@ -179,7 +180,8 @@ class ProfileView extends StatelessWidget {
               if (own)
                 const _SettingsButton()
               else if (profile != null && state.status == ProfileStatus.ready)
-                ProfileMenuButton(profile: profile),
+                // After an admin action (suspend, unsuspend, remove the badge, F23) the profile is read again.
+                ProfileMenuButton(profile: profile, onChanged: () => unawaited(context.read<ProfileCubit>().refresh())),
             ],
           ),
           body: switch (state.status) {
@@ -247,6 +249,15 @@ class _ProfileContent extends StatelessWidget {
                 userId: profile.id,
                 name: profile.displayName,
                 initiallyMuted: profile.isMuted,
+                padding: const EdgeInsets.fromLTRB(PageBlock.gutter, PageBlock.gap, PageBlock.gutter, 0),
+              ),
+            ),
+          // A suspended account's profile opens only for holders of users.read (F23): it says so.
+          if (profile.admin case final admin? when admin.isSuspended)
+            SliverToBoxAdapter(
+              child: AdminSuspendedProfileBanner(
+                userId: profile.id,
+                until: admin.suspendedUntil,
                 padding: const EdgeInsets.fromLTRB(PageBlock.gutter, PageBlock.gap, PageBlock.gutter, 0),
               ),
             ),

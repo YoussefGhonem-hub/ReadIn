@@ -21,6 +21,15 @@ enum NotificationType {
   /// Someone reposted your article (F29): aggregated per article, opens the article.
   articleReposted('article_reposted'),
 
+  /// News from the ReadIn team (F23): its own title and body; opens its article, its path or the center.
+  announcement('announcement'),
+
+  /// Support replied to your ticket or closed it (F35); it always comes, like a verification result.
+  supportReply('support_reply'),
+
+  /// A new ticket or a member's reply, for holders of `support.manage` (F35).
+  supportTicket('support_ticket'),
+
   /// A type this app version doesn't know yet: shown with generic text.
   unknown('');
 
@@ -32,7 +41,7 @@ enum NotificationType {
       values.where((type) => type != unknown && type.wire == wire).firstOrNull ?? unknown;
 
   /// The types with a mode in Settings (`NotificationSettingsDto.types`), in the order Settings lists them. Security
-  /// alerts, moderation notices and verification results can't be turned off.
+  /// alerts, moderation notices, verification results and support replies can't be turned off.
   static const configurable = [
     newFollower,
     articleComment,
@@ -43,7 +52,13 @@ enum NotificationType {
     dailyArticle,
     streakReminder,
     articleReposted,
+    announcement,
+    supportTicket,
   ];
+
+  /// Configurable types Settings lists only when the API sends their mode: announcements (an API before F23 has
+  /// none) and new tickets (only holders of `support.manage` get them, F35).
+  static const listedWhenSent = {announcement, supportTicket};
 
   bool get isConfigurable => configurable.contains(this);
 }
@@ -136,6 +151,11 @@ class AppNotification extends Equatable {
     this.approved,
     this.articleCount,
     this.link = '',
+    this.title,
+    this.body,
+    this.ticketNumber,
+    this.subject,
+    this.closed = false,
   });
 
   final String id;
@@ -171,6 +191,17 @@ class AppNotification extends Equatable {
   /// `readin://…`, the same link a push of this notification opens.
   final String link;
 
+  /// `announcement` (F23): its title and body in the UI language.
+  final String? title;
+  final String? body;
+
+  /// `support_reply` and `support_ticket` (F35): the ticket's number ("#12") and subject.
+  final int? ticketNumber;
+  final String? subject;
+
+  /// `support_reply`: support closed the ticket.
+  final bool closed;
+
   /// The "and N others" of an aggregated row.
   int get otherActors => math.max(0, actorCount - 1);
 
@@ -190,6 +221,11 @@ class AppNotification extends Equatable {
         approved: approved,
         articleCount: articleCount,
         link: link,
+        title: title,
+        body: body,
+        ticketNumber: ticketNumber,
+        subject: subject,
+        closed: closed,
       );
 
   @override
@@ -209,5 +245,10 @@ class AppNotification extends Equatable {
         approved,
         articleCount,
         link,
+        title,
+        body,
+        ticketNumber,
+        subject,
+        closed,
       ];
 }

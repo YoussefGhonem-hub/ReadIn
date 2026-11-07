@@ -4,7 +4,18 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/push/push_links.dart';
+import '../features/admin/domain/entities/admin_content.dart';
+import '../features/admin/presentation/admin_routes.dart';
+import '../features/admin/presentation/pages/admin_article_page.dart';
+import '../features/admin/presentation/pages/admin_console_page.dart';
+import '../features/admin/presentation/pages/admin_content_page.dart';
+import '../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../features/admin/presentation/pages/admin_user_page.dart';
+import '../features/admin/presentation/pages/admin_users_page.dart';
+import '../features/admin/presentation/pages/admin_verification_page.dart';
+import '../features/admin/presentation/pages/admin_verification_request_page.dart';
 import '../features/article/presentation/pages/article_page.dart';
+import '../features/auth/domain/entities/permissions.dart';
 import '../features/auth/presentation/pages/account_pages.dart';
 import '../features/auth/presentation/pages/complete_profile_page.dart';
 import '../features/auth/presentation/pages/delete_account_page.dart';
@@ -49,6 +60,12 @@ import '../features/settings/domain/entities/app_settings.dart';
 import '../features/settings/presentation/cubit/settings_cubit.dart';
 import '../features/settings/presentation/pages/interests_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
+import '../features/support/presentation/pages/admin_ticket_page.dart';
+import '../features/support/presentation/pages/admin_tickets_page.dart';
+import '../features/support/presentation/pages/new_ticket_page.dart';
+import '../features/support/presentation/pages/support_page.dart';
+import '../features/support/presentation/pages/support_ticket_page.dart';
+import '../features/support/presentation/support_routes.dart';
 import '../features/tags/presentation/pages/tag_page.dart';
 import '../features/tags/presentation/tag_routes.dart';
 import '../features/verification/presentation/pages/verification_page.dart';
@@ -154,7 +171,10 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
       targetPath == AppRoutes.interests ||
       targetPath == MutedPage.path || // Settings → Muted (F28)
       targetPath == AppRoutes.readingStats ||
-      targetPath == AppRoutes.verification;
+      targetPath == AppRoutes.verification ||
+      // The admin console (F23) and Help & support (F35); the pages check the permissions.
+      AdminRoutes.isConsole(targetPath) ||
+      SupportRoutes.isSupport(targetPath);
   // Shared links (articles, profiles, tag pages, field pages) open for first-time guests too, without Welcome first.
   final isArticle = targetPath.startsWith('/a/') ||
       targetPath.startsWith('/u/') ||
@@ -170,6 +190,10 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
     // Mandatory screens that no longer apply, and the sign-in screens, lead home.
     if (isAuthRoute || targetPath == AppRoutes.setRecoveryPin || targetPath == AppRoutes.completeProfile) {
       return AppRoutes.home;
+    }
+    // A console ticket (a `support_ticket` push, F35) for someone without support.manage: the notification center.
+    if (AdminRoutes.isTicket(targetPath) && !(session.me?.can(Permissions.supportManage) ?? false)) {
+      return AppRoutes.notifications;
     }
     return stay();
   }
@@ -217,6 +241,27 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
       GoRoute(path: AppRoutes.readingStats, builder: (_, _) => const ReadingStatsPage()),
       GoRoute(path: AppRoutes.verification, builder: (_, _) => const VerificationPage()),
+      // Help & support (F35): the member's tickets; `?from=` is the screen a new ticket came from.
+      GoRoute(path: SupportRoutes.home, builder: (_, state) => SupportPage(from: SupportRoutes.fromOf(state.uri))),
+      GoRoute(path: SupportRoutes.newTicket, builder: (_, state) => NewTicketPage(from: SupportRoutes.fromOf(state.uri))),
+      GoRoute(
+        path: '${SupportRoutes.ticketsPrefix}/:id',
+        builder: (_, state) => SupportTicketPage(ticketId: state.pathParameters['id']!),
+      ),
+      // The admin console (F23): each page checks its own permission.
+      GoRoute(path: AdminRoutes.home, builder: (_, _) => const AdminConsolePage()),
+      GoRoute(path: AdminRoutes.dashboard, builder: (_, _) => const AdminDashboardPage()),
+      GoRoute(path: AdminRoutes.users, builder: (_, _) => const AdminUsersPage()),
+      GoRoute(path: '${AdminRoutes.users}/:id', builder: (_, state) => AdminUserPage(userId: state.pathParameters['id']!)),
+      GoRoute(path: AdminRoutes.content, builder: (_, state) => AdminContentPage(query: AdminArticleQuery.fromUri(state.uri))),
+      GoRoute(path: '${AdminRoutes.content}/:id', builder: (_, state) => AdminArticlePage(articleId: state.pathParameters['id']!)),
+      GoRoute(path: AdminRoutes.tickets, builder: (_, _) => const AdminTicketsPage()),
+      GoRoute(path: '${AdminRoutes.tickets}/:id', builder: (_, state) => AdminTicketPage(ticketId: state.pathParameters['id']!)),
+      GoRoute(path: AdminRoutes.verification, builder: (_, _) => const AdminVerificationPage()),
+      GoRoute(
+        path: '${AdminRoutes.verification}/:id',
+        builder: (_, state) => AdminVerificationRequestPage(requestId: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/a/:slug',
         builder: (_, state) => ArticlePage(

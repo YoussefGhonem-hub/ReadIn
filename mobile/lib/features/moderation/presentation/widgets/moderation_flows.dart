@@ -78,7 +78,8 @@ abstract final class ModerationFlows {
     );
   }
 
-  /// Suspend [userId] for 1, 7 or 30 days or permanently, with a note (`users.suspend`).
+  /// Suspend [userId] for 1, 3, 7 or 30 days, a custom 1–365 days or permanently, with a reason, and optionally hide
+  /// all of their articles and comments too (`users.suspend`; the console's form, F23).
   static Future<bool> suspend(BuildContext context, {required String userId, required String name, ModerationTargetRef? resolveReportsOf}) async {
     final choice = await showSuspendDialog(context, name: embedContent(name));
     if (choice == null || !context.mounted) return false;
@@ -90,8 +91,45 @@ abstract final class ModerationFlows {
         note: choice.note,
         durationDays: choice.days,
         resolveReportsOf: resolveReportsOf,
+        hideContent: choice.hideContent,
       ),
       context.l10n.moderationSuspended,
+    );
+  }
+
+  /// Hide all of [userId]'s articles and comments at once (F23, for spam accounts): asks first; "Restore their
+  /// content" undoes it. The user gets no notice.
+  static Future<bool> hideAllContent(BuildContext context, {required String userId, required String name}) async {
+    final l10n = context.l10n;
+    final confirmed = await confirmModeration(
+      context,
+      title: l10n.adminHideContentTitle(embedContent(name)),
+      body: l10n.adminHideContentBody,
+      confirmLabel: l10n.adminConfirm,
+      destructive: true,
+    );
+    if (!confirmed || !context.mounted) return false;
+    return _run(
+      context,
+      ModerationCommand(ModerationActionType.hideContent, ModerationTargetRef.user(userId)),
+      l10n.adminContentHidden,
+    );
+  }
+
+  /// Bring back what [hideAllContent] (or a suspension that hid everything) hid and is still hidden (F23).
+  static Future<bool> restoreContent(BuildContext context, {required String userId, required String name}) async {
+    final l10n = context.l10n;
+    final confirmed = await confirmModeration(
+      context,
+      title: l10n.adminRestoreContentTitle(embedContent(name)),
+      body: l10n.adminRestoreContentBody,
+      confirmLabel: l10n.adminConfirm,
+    );
+    if (!confirmed || !context.mounted) return false;
+    return _run(
+      context,
+      ModerationCommand(ModerationActionType.unhideContent, ModerationTargetRef.user(userId)),
+      l10n.adminContentRestored,
     );
   }
 

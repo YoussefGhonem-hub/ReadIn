@@ -275,6 +275,20 @@ abstract final class FailureCodes {
   // ... or the official @readin account, whose badge stays.
   static const verificationSystemAccount = 'verification.system_account';
 
+  // Admin console (F23): the verification queue (F19, `verification.manage`).
+  static const verificationAlreadyDecided = 'verification.already_decided';
+  static const verificationProofNotFound = 'verification.proof_not_found';
+
+  // Help & support (F35). `support.category_invalid` is a validation code (in `errors.category`).
+  static const supportLimit = 'support.limit';
+  static const supportTicketNotFound = 'support.ticket_not_found';
+  static const supportAttachmentNotFound = 'support.attachment_not_found';
+  static const supportTicketClosed = 'support.ticket_closed';
+  static const supportReopenExpired = 'support.reopen_expired';
+  static const supportAttachmentInvalid = 'support.attachment_invalid';
+  static const supportTooManyAttachments = 'support.too_many_attachments';
+  static const supportCategoryInvalid = 'support.category_invalid';
+
   // Client-side
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';

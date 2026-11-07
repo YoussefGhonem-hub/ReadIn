@@ -48,7 +48,7 @@ class ExploreView extends StatelessWidget {
           a.status != SessionStatus.unknown && (a.isAuthenticated, a.me?.id) != (b.isAuthenticated, b.me?.id),
       listener: (_, _) => unawaited(cubit.load()),
       child: EngagementSeeder<ExploreCubit, ExploreState>(
-        cards: (state) => [...state.sections.trending, ...state.sections.mostSaved],
+        cards: (state) => [...state.sections.featuredArticles, ...state.sections.trending, ...state.sections.mostSaved],
         child: Scaffold(
           // The tabs' top bar: its search pill is Explore's search (F16).
           appBar: const AppTopBar(),
@@ -110,6 +110,15 @@ class ExploreView extends StatelessWidget {
         _SectionBlock(
           header: ExploreSectionHeader(title: l10n.exploreFields),
           children: [padded(FieldsGrid(key: const ValueKey('explore-fields'), fields: sections.fields))],
+        ),
+      // The articles the SuperAdmin featured (F23); none hides the section.
+      if (sections.featuredArticles.isNotEmpty)
+        _SectionBlock(
+          header: ExploreSectionHeader(title: l10n.adminExploreFeatured),
+          children: [
+            for (final card in sections.featuredArticles)
+              padded(ExploreArticleRow(key: ValueKey('explore-featured-${card.id}'), article: card)),
+          ],
         ),
       for (final (ranking, cards, title) in [
         (ExploreRanking.trending, sections.trending, l10n.exploreTrending),

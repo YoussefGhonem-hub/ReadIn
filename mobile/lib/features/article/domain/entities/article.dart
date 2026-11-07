@@ -362,6 +362,7 @@ class ArticleDetails extends Equatable {
     this.isOfflineCopy = false,
     this.moderation,
     this.category,
+    this.isFeatured = false,
   });
 
   final ArticleCard card;
@@ -396,6 +397,9 @@ class ArticleDetails extends Equatable {
   /// The writer's category of the article (F31): the author row's "في قسم {name}" link. Null for none.
   final WriterCategoryRef? category;
 
+  /// Featured on Explore (F23): the "⋯" of holders of `articles.feature` offers Unfeature.
+  final bool isFeatured;
+
   /// `saveCount` moved up to the card in wave 1 (still on `ArticleDetailsDto` through inheritance).
   int get saveCount => card.saveCount;
 
@@ -422,6 +426,26 @@ class ArticleDetails extends Equatable {
         myProgress: myProgress,
         moderation: moderation,
         category: category,
+        isFeatured: isFeatured,
+      );
+
+  /// The same article, featured on Explore or not any more (F23).
+  ArticleDetails withFeatured(bool featured) => ArticleDetails(
+        card: card,
+        availableLanguages: availableLanguages,
+        content: content,
+        summary: summary,
+        topic: topic,
+        tags: tags,
+        sources: sources,
+        readCount: readCount,
+        isFollowingAuthor: isFollowingAuthor,
+        collectionIds: collectionIds,
+        isOfflineCopy: isOfflineCopy,
+        myProgress: myProgress,
+        moderation: moderation,
+        category: category,
+        isFeatured: featured,
       );
 
   @override
@@ -440,5 +464,6 @@ class ArticleDetails extends Equatable {
         isOfflineCopy,
         moderation,
         category,
+        isFeatured,
       ];
 }

@@ -67,6 +67,13 @@ String? pushLinkToPath(String? link) {
   if (parts.length == 2 && parts[0] == 'settings' && parts[1] == 'account') return '/settings?section=account';
   // A verification result (F19): the web's /verification is Settings → Writer verification here.
   if (parts.length == 1 && parts[0] == 'verification') return '/settings/verification';
+  // An announcement's learning path (F23): readin://paths/{slug}.
+  if (parts.length == 2 && parts[0] == 'paths' && _isSlug(parts[1])) return '/paths/${Uri.encodeComponent(parts[1].toLowerCase())}';
+  // A support reply (F35): the member's ticket, Settings → Help & support.
+  if (parts.length == 2 && parts[0] == 'support' && _isId(parts[1])) return '/settings/support/tickets/${parts[1]}';
+  // A new ticket for support (F35): the console's ticket (the router sends anyone without support.manage to the
+  // notification center).
+  if (parts.length == 3 && parts[0] == 'admin' && parts[1] == 'support' && _isId(parts[2])) return '/admin/tickets/${parts[2]}';
   // A tag's page (F32). The slug arrives decoded (it may hold Arabic letters) and goes back percent-encoded; slugs are
   // lower case, so a link typed as /tags/CSharp still finds csharp.
   if (parts.length == 2 && parts[0] == 'tags' && _isSlug(parts[1])) {
@@ -134,3 +141,8 @@ bool _isHandle(String value) => _handle.hasMatch(value);
 final _slug = RegExp(r'^[\p{L}\p{M}\p{Nd}-]{1,100}$', unicode: true);
 
 bool _isSlug(String value) => _slug.hasMatch(value);
+
+/// A ticket id (a GUID): letters, digits and `-` only.
+final _id = RegExp(r'^[A-Za-z0-9-]{1,64}$');
+
+bool _isId(String value) => _id.hasMatch(value);

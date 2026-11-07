@@ -89,6 +89,9 @@ _ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) =>
       readingStatsVisible: json['readingStatsVisible'] as bool? ?? false,
       isMuted: json['isMuted'] as bool? ?? false,
       isSystemAccount: json['isSystemAccount'] as bool? ?? false,
+      admin: json['admin'] == null
+          ? null
+          : ProfileAdminModel.fromJson(json['admin'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ProfileModelToJson(_ProfileModel instance) =>
@@ -111,4 +114,21 @@ Map<String, dynamic> _$ProfileModelToJson(_ProfileModel instance) =>
       'readingStatsVisible': instance.readingStatsVisible,
       'isMuted': instance.isMuted,
       'isSystemAccount': instance.isSystemAccount,
+      'admin': ?instance.admin?.toJson(),
+    };
+
+_ProfileAdminModel _$ProfileAdminModelFromJson(Map<String, dynamic> json) =>
+    _ProfileAdminModel(
+      isSuspended: json['isSuspended'] as bool? ?? false,
+      suspendedUntil: json['suspendedUntil'] == null
+          ? null
+          : DateTime.parse(json['suspendedUntil'] as String),
+      isStaff: json['isStaff'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$ProfileAdminModelToJson(_ProfileAdminModel instance) =>
+    <String, dynamic>{
+      'isSuspended': instance.isSuspended,
+      'suspendedUntil': ?instance.suspendedUntil?.toIso8601String(),
+      'isStaff': instance.isStaff,
     };

@@ -146,43 +146,70 @@ class ModerationNoteField extends StatelessWidget {
   }
 }
 
-/// A suspension: its length (null = permanent) and the moderator's note.
-typedef SuspensionChoice = ({int? days, String note});
+/// A suspension: its length (null = permanent), the reason, and whether all of the user's articles and comments are
+/// hidden too (F23, for spam accounts; it can be undone).
+typedef SuspensionChoice = ({int? days, String note, bool hideContent});
 
-/// "Suspend {name}": 1, 7 or 30 days or permanently, and a note (required). Null when cancelled.
+/// "Suspend {name}", the console's form (F23): 1, 3, 7 or 30 days, a custom 1–365 days, or permanently; a reason of
+/// 5–500 characters; and "Also hide all of their articles and comments". Null when cancelled.
 Future<SuspensionChoice?> showSuspendDialog(BuildContext context, {required String name}) =>
-    showDialog<SuspensionChoice>(context: context, builder: (_) => _SuspendDialog(name: name));
+    showDialog<SuspensionChoice>(context: context, builder: (_) => SuspendDialog(name: name));
 
-class _SuspendDialog extends StatefulWidget {
-  const _SuspendDialog({required this.name});
+class SuspendDialog extends StatefulWidget {
+  const SuspendDialog({super.key, required this.name});
 
   final String name;
 
   @override
-  State<_SuspendDialog> createState() => _SuspendDialogState();
+  State<SuspendDialog> createState() => _SuspendDialogState();
 }
 
-class _SuspendDialogState extends State<_SuspendDialog> {
+/// The custom length's chip ("Custom…").
+const _customDays = -1;
+
+class _SuspendDialogState extends State<SuspendDialog> {
   final _note = TextEditingController();
+  final _custom = TextEditingController();
   int? _days = TakeModerationAction.suspensionDays.first;
+  bool _hideContent = false;
 
   @override
   void initState() {
     super.initState();
     _note.addListener(() => setState(() {}));
+    _custom.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _note.dispose();
+    _custom.dispose();
     super.dispose();
   }
+
+  /// The custom length, when it is a whole number of 1–365 days.
+  int? get _customValue {
+    final value = int.tryParse(_custom.text.trim());
+    return value != null && value >= TakeModerationAction.minSuspensionDays && value <= TakeModerationAction.maxSuspensionDays
+        ? value
+        : null;
+  }
+
+  bool get _valid =>
+      _note.text.trim().length >= TakeModerationAction.minSuspensionReason && (_days != _customDays || _customValue != null);
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
-    final valid = _note.text.trim().isNotEmpty;
+    final customInvalid = _days == _customDays && _custom.text.trim().isNotEmpty && _customValue == null;
+    Widget chip(int? days, String label) => ChoiceChip(
+          key: ValueKey('suspend-days-${days ?? 'forever'}'),
+          label: Text(label),
+          selected: _days == days,
+          showCheckmark: false,
+          onSelected: (_) => setState(() => _days = days),
+        );
     return AlertDialog(
       title: Text(l10n.moderationSuspendTitle(widget.name)),
       scrollable: true,
@@ -199,23 +226,58 @@ class _SuspendDialogState extends State<_SuspendDialog> {
             runSpacing: ReadInSpace.s2,
             children: [
               for (final days in TakeModerationAction.suspensionDays)
-                ChoiceChip(
-                  label: Text(l10n.suspensionLength(days)),
-                  selected: _days == days,
-                  showCheckmark: false,
-                  onSelected: (_) => setState(() => _days = days),
-                ),
+                if (days != null) chip(days, l10n.suspensionLength(days)),
+              chip(_customDays, l10n.adminSuspendCustom),
+              chip(null, l10n.moderationPermanent),
             ],
           ),
+          if (_days == _customDays) ...[
+            const SizedBox(height: ReadInSpace.s3),
+            TextField(
+              key: const ValueKey('suspend-custom-days'),
+              controller: _custom,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              textDirection: TextDirection.ltr,
+              decoration: InputDecoration(
+                labelText: l10n.adminSuspendCustomLabel,
+                errorText: customInvalid ? l10n.adminSuspendCustomInvalid : null,
+              ),
+            ),
+          ],
           const SizedBox(height: ReadInSpace.s4),
-          ModerationNoteField(controller: _note, required: true),
+          BidiTextField(
+            key: const ValueKey('suspend-reason'),
+            controller: _note,
+            minLines: 2,
+            maxLines: 5,
+            maxLength: TakeModerationAction.maxNoteLength,
+            counterWithin: 100,
+            decoration: InputDecoration(labelText: l10n.adminSuspendReason, helperText: l10n.adminSuspendReasonHint),
+          ),
+          const SizedBox(height: ReadInSpace.s2),
+          CheckboxListTile(
+            key: const ValueKey('suspend-hide-content'),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            value: _hideContent,
+            onChanged: (value) => setState(() => _hideContent = value ?? false),
+            title: Text(l10n.adminSuspendHideContent),
+            subtitle: Text(l10n.adminSuspendHideContentHint),
+          ),
         ],
       ),
       actions: [
         TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: colors.error, foregroundColor: colors.onError),
-          onPressed: valid ? () => Navigator.of(context).pop((days: _days, note: _note.text.trim())) : null,
+          onPressed: _valid
+              ? () => Navigator.of(context).pop((
+                    days: _days == _customDays ? _customValue : _days,
+                    note: _note.text.trim(),
+                    hideContent: _hideContent,
+                  ))
+              : null,
           child: Text(l10n.moderationSuspendConfirm),
         ),
       ],

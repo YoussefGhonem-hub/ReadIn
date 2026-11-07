@@ -293,6 +293,8 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     // F29: the reader's Repost button.
     @Default(0) int repostCount,
     @Default(false) bool isReposted,
+    // F23: featured on Explore (the "⋯" offers Feature / Unfeature with `articles.feature`).
+    @Default(false) bool isFeatured,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
@@ -343,5 +345,6 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         isOfflineCopy: offline,
         moderation: moderation?.toEntity(),
         category: category?.toEntity(),
+        isFeatured: isFeatured,
       );
 }

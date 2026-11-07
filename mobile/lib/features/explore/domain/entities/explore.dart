@@ -54,6 +54,7 @@ class ExploreSections extends Equatable {
     this.mostSaved = const [],
     this.newWriters = const [],
     this.featuredPaths = const [],
+    this.featuredArticles = const [],
   });
 
   /// Every enabled field, in display order.
@@ -71,11 +72,19 @@ class ExploreSections extends Equatable {
   /// Learning paths flagged featured (≤ 6), in featured order.
   final List<LearningPath> featuredPaths;
 
+  /// Articles the SuperAdmin featured (F23, ≤ 6), the most recently featured first.
+  final List<ArticleCard> featuredArticles;
+
   bool get isEmpty =>
-      fields.isEmpty && trending.isEmpty && mostSaved.isEmpty && newWriters.isEmpty && featuredPaths.isEmpty;
+      fields.isEmpty &&
+      trending.isEmpty &&
+      mostSaved.isEmpty &&
+      newWriters.isEmpty &&
+      featuredPaths.isEmpty &&
+      featuredArticles.isEmpty;
 
   @override
-  List<Object?> get props => [fields, trending, mostSaved, newWriters, featuredPaths];
+  List<Object?> get props => [fields, trending, mostSaved, newWriters, featuredPaths, featuredArticles];
 }
 
 /// The two article rankings of Explore, each with a full list ("See all").

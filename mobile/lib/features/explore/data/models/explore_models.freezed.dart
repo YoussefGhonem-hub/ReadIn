@@ -299,7 +299,8 @@ as int,
 /// @nodoc
 mixin _$ExploreModel {
 
- List<FieldSummaryModel> get fields; List<ArticleCardModel> get trending; List<ArticleCardModel> get mostSaved; List<UserSummaryModel> get newWriters; List<PathCardModel> get featuredPaths;
+ List<FieldSummaryModel> get fields; List<ArticleCardModel> get trending; List<ArticleCardModel> get mostSaved; List<UserSummaryModel> get newWriters; List<PathCardModel> get featuredPaths;// F23: the articles the SuperAdmin featured (≤ 6, most recently featured first); [] hides the section.
+ List<ArticleCardModel> get featuredArticles;
 /// Create a copy of ExploreModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -312,16 +313,16 @@ $ExploreModelCopyWith<ExploreModel> get copyWith => _$ExploreModelCopyWithImpl<E
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExploreModel&&const DeepCollectionEquality().equals(other.fields, fields)&&const DeepCollectionEquality().equals(other.trending, trending)&&const DeepCollectionEquality().equals(other.mostSaved, mostSaved)&&const DeepCollectionEquality().equals(other.newWriters, newWriters)&&const DeepCollectionEquality().equals(other.featuredPaths, featuredPaths));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExploreModel&&const DeepCollectionEquality().equals(other.fields, fields)&&const DeepCollectionEquality().equals(other.trending, trending)&&const DeepCollectionEquality().equals(other.mostSaved, mostSaved)&&const DeepCollectionEquality().equals(other.newWriters, newWriters)&&const DeepCollectionEquality().equals(other.featuredPaths, featuredPaths)&&const DeepCollectionEquality().equals(other.featuredArticles, featuredArticles));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(fields),const DeepCollectionEquality().hash(trending),const DeepCollectionEquality().hash(mostSaved),const DeepCollectionEquality().hash(newWriters),const DeepCollectionEquality().hash(featuredPaths));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(fields),const DeepCollectionEquality().hash(trending),const DeepCollectionEquality().hash(mostSaved),const DeepCollectionEquality().hash(newWriters),const DeepCollectionEquality().hash(featuredPaths),const DeepCollectionEquality().hash(featuredArticles));
 
 @override
 String toString() {
-  return 'ExploreModel(fields: $fields, trending: $trending, mostSaved: $mostSaved, newWriters: $newWriters, featuredPaths: $featuredPaths)';
+  return 'ExploreModel(fields: $fields, trending: $trending, mostSaved: $mostSaved, newWriters: $newWriters, featuredPaths: $featuredPaths, featuredArticles: $featuredArticles)';
 }
 
 
@@ -332,7 +333,7 @@ abstract mixin class $ExploreModelCopyWith<$Res>  {
   factory $ExploreModelCopyWith(ExploreModel value, $Res Function(ExploreModel) _then) = _$ExploreModelCopyWithImpl;
 @useResult
 $Res call({
- List<FieldSummaryModel> fields, List<ArticleCardModel> trending, List<ArticleCardModel> mostSaved, List<UserSummaryModel> newWriters, List<PathCardModel> featuredPaths
+ List<FieldSummaryModel> fields, List<ArticleCardModel> trending, List<ArticleCardModel> mostSaved, List<UserSummaryModel> newWriters, List<PathCardModel> featuredPaths, List<ArticleCardModel> featuredArticles
 });
 
 
@@ -349,14 +350,15 @@ class _$ExploreModelCopyWithImpl<$Res>
 
 /// Create a copy of ExploreModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? fields = null,Object? trending = null,Object? mostSaved = null,Object? newWriters = null,Object? featuredPaths = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? fields = null,Object? trending = null,Object? mostSaved = null,Object? newWriters = null,Object? featuredPaths = null,Object? featuredArticles = null,}) {
   return _then(_self.copyWith(
 fields: null == fields ? _self.fields : fields // ignore: cast_nullable_to_non_nullable
 as List<FieldSummaryModel>,trending: null == trending ? _self.trending : trending // ignore: cast_nullable_to_non_nullable
 as List<ArticleCardModel>,mostSaved: null == mostSaved ? _self.mostSaved : mostSaved // ignore: cast_nullable_to_non_nullable
 as List<ArticleCardModel>,newWriters: null == newWriters ? _self.newWriters : newWriters // ignore: cast_nullable_to_non_nullable
 as List<UserSummaryModel>,featuredPaths: null == featuredPaths ? _self.featuredPaths : featuredPaths // ignore: cast_nullable_to_non_nullable
-as List<PathCardModel>,
+as List<PathCardModel>,featuredArticles: null == featuredArticles ? _self.featuredArticles : featuredArticles // ignore: cast_nullable_to_non_nullable
+as List<ArticleCardModel>,
   ));
 }
 
@@ -441,10 +443,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<FieldSummaryModel> fields,  List<ArticleCardModel> trending,  List<ArticleCardModel> mostSaved,  List<UserSummaryModel> newWriters,  List<PathCardModel> featuredPaths)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<FieldSummaryModel> fields,  List<ArticleCardModel> trending,  List<ArticleCardModel> mostSaved,  List<UserSummaryModel> newWriters,  List<PathCardModel> featuredPaths,  List<ArticleCardModel> featuredArticles)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExploreModel() when $default != null:
-return $default(_that.fields,_that.trending,_that.mostSaved,_that.newWriters,_that.featuredPaths);case _:
+return $default(_that.fields,_that.trending,_that.mostSaved,_that.newWriters,_that.featuredPaths,_that.featuredArticles);case _:
   return orElse();
 
 }
@@ -462,10 +464,10 @@ return $default(_that.fields,_that.trending,_that.mostSaved,_that.newWriters,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<FieldSummaryModel> fields,  List<ArticleCardModel> trending,  List<ArticleCardModel> mostSaved,  List<UserSummaryModel> newWriters,  List<PathCardModel> featuredPaths)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<FieldSummaryModel> fields,  List<ArticleCardModel> trending,  List<ArticleCardModel> mostSaved,  List<UserSummaryModel> newWriters,  List<PathCardModel> featuredPaths,  List<ArticleCardModel> featuredArticles)  $default,) {final _that = this;
 switch (_that) {
 case _ExploreModel():
-return $default(_that.fields,_that.trending,_that.mostSaved,_that.newWriters,_that.featuredPaths);case _:
+return $default(_that.fields,_that.trending,_that.mostSaved,_that.newWriters,_that.featuredPaths,_that.featuredArticles);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -482,10 +484,10 @@ return $default(_that.fields,_that.trending,_that.mostSaved,_that.newWriters,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<FieldSummaryModel> fields,  List<ArticleCardModel> trending,  List<ArticleCardModel> mostSaved,  List<UserSummaryModel> newWriters,  List<PathCardModel> featuredPaths)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<FieldSummaryModel> fields,  List<ArticleCardModel> trending,  List<ArticleCardModel> mostSaved,  List<UserSummaryModel> newWriters,  List<PathCardModel> featuredPaths,  List<ArticleCardModel> featuredArticles)?  $default,) {final _that = this;
 switch (_that) {
 case _ExploreModel() when $default != null:
-return $default(_that.fields,_that.trending,_that.mostSaved,_that.newWriters,_that.featuredPaths);case _:
+return $default(_that.fields,_that.trending,_that.mostSaved,_that.newWriters,_that.featuredPaths,_that.featuredArticles);case _:
   return null;
 
 }
@@ -497,7 +499,7 @@ return $default(_that.fields,_that.trending,_that.mostSaved,_that.newWriters,_th
 @JsonSerializable()
 
 class _ExploreModel extends ExploreModel {
-  const _ExploreModel({final  List<FieldSummaryModel> fields = const <FieldSummaryModel>[], final  List<ArticleCardModel> trending = const <ArticleCardModel>[], final  List<ArticleCardModel> mostSaved = const <ArticleCardModel>[], final  List<UserSummaryModel> newWriters = const <UserSummaryModel>[], final  List<PathCardModel> featuredPaths = const <PathCardModel>[]}): _fields = fields,_trending = trending,_mostSaved = mostSaved,_newWriters = newWriters,_featuredPaths = featuredPaths,super._();
+  const _ExploreModel({final  List<FieldSummaryModel> fields = const <FieldSummaryModel>[], final  List<ArticleCardModel> trending = const <ArticleCardModel>[], final  List<ArticleCardModel> mostSaved = const <ArticleCardModel>[], final  List<UserSummaryModel> newWriters = const <UserSummaryModel>[], final  List<PathCardModel> featuredPaths = const <PathCardModel>[], final  List<ArticleCardModel> featuredArticles = const <ArticleCardModel>[]}): _fields = fields,_trending = trending,_mostSaved = mostSaved,_newWriters = newWriters,_featuredPaths = featuredPaths,_featuredArticles = featuredArticles,super._();
   factory _ExploreModel.fromJson(Map<String, dynamic> json) => _$ExploreModelFromJson(json);
 
  final  List<FieldSummaryModel> _fields;
@@ -535,6 +537,15 @@ class _ExploreModel extends ExploreModel {
   return EqualUnmodifiableListView(_featuredPaths);
 }
 
+// F23: the articles the SuperAdmin featured (≤ 6, most recently featured first); [] hides the section.
+ final  List<ArticleCardModel> _featuredArticles;
+// F23: the articles the SuperAdmin featured (≤ 6, most recently featured first); [] hides the section.
+@override@JsonKey() List<ArticleCardModel> get featuredArticles {
+  if (_featuredArticles is EqualUnmodifiableListView) return _featuredArticles;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_featuredArticles);
+}
+
 
 /// Create a copy of ExploreModel
 /// with the given fields replaced by the non-null parameter values.
@@ -549,16 +560,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExploreModel&&const DeepCollectionEquality().equals(other._fields, _fields)&&const DeepCollectionEquality().equals(other._trending, _trending)&&const DeepCollectionEquality().equals(other._mostSaved, _mostSaved)&&const DeepCollectionEquality().equals(other._newWriters, _newWriters)&&const DeepCollectionEquality().equals(other._featuredPaths, _featuredPaths));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExploreModel&&const DeepCollectionEquality().equals(other._fields, _fields)&&const DeepCollectionEquality().equals(other._trending, _trending)&&const DeepCollectionEquality().equals(other._mostSaved, _mostSaved)&&const DeepCollectionEquality().equals(other._newWriters, _newWriters)&&const DeepCollectionEquality().equals(other._featuredPaths, _featuredPaths)&&const DeepCollectionEquality().equals(other._featuredArticles, _featuredArticles));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_fields),const DeepCollectionEquality().hash(_trending),const DeepCollectionEquality().hash(_mostSaved),const DeepCollectionEquality().hash(_newWriters),const DeepCollectionEquality().hash(_featuredPaths));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_fields),const DeepCollectionEquality().hash(_trending),const DeepCollectionEquality().hash(_mostSaved),const DeepCollectionEquality().hash(_newWriters),const DeepCollectionEquality().hash(_featuredPaths),const DeepCollectionEquality().hash(_featuredArticles));
 
 @override
 String toString() {
-  return 'ExploreModel(fields: $fields, trending: $trending, mostSaved: $mostSaved, newWriters: $newWriters, featuredPaths: $featuredPaths)';
+  return 'ExploreModel(fields: $fields, trending: $trending, mostSaved: $mostSaved, newWriters: $newWriters, featuredPaths: $featuredPaths, featuredArticles: $featuredArticles)';
 }
 
 
@@ -569,7 +580,7 @@ abstract mixin class _$ExploreModelCopyWith<$Res> implements $ExploreModelCopyWi
   factory _$ExploreModelCopyWith(_ExploreModel value, $Res Function(_ExploreModel) _then) = __$ExploreModelCopyWithImpl;
 @override @useResult
 $Res call({
- List<FieldSummaryModel> fields, List<ArticleCardModel> trending, List<ArticleCardModel> mostSaved, List<UserSummaryModel> newWriters, List<PathCardModel> featuredPaths
+ List<FieldSummaryModel> fields, List<ArticleCardModel> trending, List<ArticleCardModel> mostSaved, List<UserSummaryModel> newWriters, List<PathCardModel> featuredPaths, List<ArticleCardModel> featuredArticles
 });
 
 
@@ -586,14 +597,15 @@ class __$ExploreModelCopyWithImpl<$Res>
 
 /// Create a copy of ExploreModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? fields = null,Object? trending = null,Object? mostSaved = null,Object? newWriters = null,Object? featuredPaths = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? fields = null,Object? trending = null,Object? mostSaved = null,Object? newWriters = null,Object? featuredPaths = null,Object? featuredArticles = null,}) {
   return _then(_ExploreModel(
 fields: null == fields ? _self._fields : fields // ignore: cast_nullable_to_non_nullable
 as List<FieldSummaryModel>,trending: null == trending ? _self._trending : trending // ignore: cast_nullable_to_non_nullable
 as List<ArticleCardModel>,mostSaved: null == mostSaved ? _self._mostSaved : mostSaved // ignore: cast_nullable_to_non_nullable
 as List<ArticleCardModel>,newWriters: null == newWriters ? _self._newWriters : newWriters // ignore: cast_nullable_to_non_nullable
 as List<UserSummaryModel>,featuredPaths: null == featuredPaths ? _self._featuredPaths : featuredPaths // ignore: cast_nullable_to_non_nullable
-as List<PathCardModel>,
+as List<PathCardModel>,featuredArticles: null == featuredArticles ? _self._featuredArticles : featuredArticles // ignore: cast_nullable_to_non_nullable
+as List<ArticleCardModel>,
   ));
 }
 

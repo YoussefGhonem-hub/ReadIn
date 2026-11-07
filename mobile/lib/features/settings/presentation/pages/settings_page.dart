@@ -6,6 +6,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
+import '../../../admin/presentation/widgets/admin_entry.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/cubit/linked_accounts_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
@@ -16,6 +17,7 @@ import '../../../mutes/presentation/pages/muted_page.dart';
 import '../../../notifications/presentation/pages/notification_settings_page.dart';
 import '../../../profile/presentation/cubit/privacy_cubit.dart';
 import '../../../profile/presentation/widgets/public_reading_stats_switch.dart';
+import '../../../support/presentation/pages/support_page.dart' show SupportEntryTile;
 import '../../../verification/presentation/cubit/verification_cubit.dart';
 import '../../../verification/presentation/widgets/verification_entry_tile.dart';
 import '../widgets/account_section.dart';
@@ -112,6 +114,8 @@ class _SettingsViewState extends State<SettingsView> {
         controller: _scroll,
         padding: const EdgeInsets.only(bottom: ReadInSpace.s6),
         children: [
+          // The admin console first, for holders of admin.access (F23); it replaces Moderation for them.
+          if (session.me?.isAdmin ?? false) const SettingsBlock(rows: [AdminConsoleEntryTile()]),
           SettingsBlock(title: l10n.appearance, rows: [choice(const ThemeSelector()), choice(const UiLanguageSelector())]),
           SettingsBlock(
             title: l10n.reading,
@@ -137,7 +141,11 @@ class _SettingsViewState extends State<SettingsView> {
               rows: [const PublicReadingStatsSwitch(), choice(const WhoCanMentionSelector())],
             ),
           if (session.isAuthenticated) SettingsBlock(title: l10n.settingsWriting, rows: const [VerificationEntryTile()]),
-          if (session.me?.isModerator ?? false) SettingsBlock(title: l10n.moderationTitle, rows: const [ModerationEntryTile()]),
+          // A moderator without the console (a staff role, later) keeps the queue here (F22).
+          if ((session.me?.isModerator ?? false) && !(session.me?.isAdmin ?? false))
+            SettingsBlock(title: l10n.moderationTitle, rows: const [ModerationEntryTile()]),
+          // Help & support (F35): new tickets and My tickets.
+          if (session.me?.canContactSupport ?? false) SettingsBlock(title: l10n.supportHelpTitle, rows: const [SupportEntryTile()]),
           SettingsBlock(
             key: _accountKey,
             title: l10n.account,

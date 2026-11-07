@@ -123,6 +123,17 @@ void main() {
     expect(find.byKey(const ValueKey('explore-see-all-paths')), findsNothing);
   });
 
+  // F23: the articles the SuperAdmin featured, above the rankings; none hides the section (as above).
+  testWidgets('featured articles show in their own section, all of them, without See all', (tester) async {
+    final repo = FakeExploreRepository(explore: ExploreSections(featuredArticles: exploreCards(count: 4), mostSaved: exploreCards(first: 10, count: 2)));
+    await pumpExplore(tester, repo);
+
+    expect(find.text(l10n.adminExploreFeatured), findsOneWidget);
+    expect(find.byKey(const ValueKey('explore-featured-art-1')), findsOneWidget);
+    expect(find.byType(ExploreArticleRow), findsNWidgets(6));
+    expect(find.text(l10n.exploreSeeAll), findsOneWidget, reason: 'only the ranking has See all');
+  });
+
   testWidgets('nothing at all: the empty state under the search bar', (tester) async {
     await pumpExplore(tester, FakeExploreRepository());
     expect(find.byKey(const ValueKey('search-entry')), findsOneWidget);

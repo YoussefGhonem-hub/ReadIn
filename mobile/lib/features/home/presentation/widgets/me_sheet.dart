@@ -10,6 +10,7 @@ import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../admin/presentation/admin_routes.dart';
 import '../../../auth/domain/entities/me.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
@@ -82,7 +83,14 @@ class MeSheet extends StatelessWidget {
         ),
       if (!me.isVerified)
         _Item(icon: Icons.verified_outlined, label: l10n.verificationTitle, onTap: () => _go(context, VerificationPage.path)),
-      if (me.isModerator)
+      // The admin console replaces Moderation for holders of admin.access (F23).
+      if (me.isAdmin)
+        _Item(
+          icon: Icons.admin_panel_settings_outlined,
+          label: l10n.adminConsoleTitle,
+          onTap: () => _go(context, AdminRoutes.home),
+        ),
+      if (me.isModerator && !me.isAdmin)
         _Item(icon: Icons.shield_outlined, label: l10n.moderationTitle, onTap: () => _go(context, ModerationRoutes.home)),
       const Divider(),
       const SizedBox(height: ReadInSpace.s3),

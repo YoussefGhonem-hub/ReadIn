@@ -80,4 +80,11 @@ class ArticleCubit extends Cubit<ArticleState> {
     if (article == null || isClosed) return;
     emit(state.copyWith(article: article.withModeration(moderation)));
   }
+
+  /// The SuperAdmin featured the article on Explore, or stopped featuring it, from the reader's menu (F23).
+  void setFeatured(bool featured) {
+    final article = state.article;
+    if (article == null || isClosed) return;
+    emit(state.copyWith(article: article.withFeatured(featured)));
+  }
 }

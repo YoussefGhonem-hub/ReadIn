@@ -59,7 +59,10 @@ class NotificationSettingsView extends StatelessWidget {
                   title: l10n.notificationSettingsTypesTitle,
                   note: _Hint(l10n.notificationSettingsTypesHint),
                   rows: [
-                    for (final type in NotificationType.configurable) _TypeModeTile(type: type, mode: state.modeOf(type)),
+                    for (final type in NotificationType.configurable)
+                      // Announcements and new tickets (F23, F35) only when the API lists them for this account.
+                      if (!NotificationType.listedWhenSent.contains(type) || state.settings!.types.containsKey(type))
+                        _TypeModeTile(type: type, mode: state.modeOf(type)),
                     const _SecurityAlertsTile(),
                   ],
                 ),

@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
+import '../../../admin/presentation/admin_routes.dart';
+import '../../../admin/presentation/widgets/admin_flows.dart';
 import '../../../article_pdf/presentation/cubit/article_pdf_cubit.dart';
 import '../../../article_pdf/presentation/widgets/article_pdf_widgets.dart';
 import '../../../auth/domain/entities/permissions.dart';
@@ -40,10 +43,17 @@ enum ArticleMenuItem {
   downloadPdf,
   report,
   hide,
-  unhide;
+  unhide,
 
-  /// Moderator tools (F22).
-  bool get isModeration => this == hide || this == unhide;
+  /// "Feature" / "Unfeature" on Explore (F23, `articles.feature`): the reader only, which knows the article's state.
+  feature,
+  unfeature,
+
+  /// "Open in console" (F23, `moderation.manage`): the article's page in the admin console.
+  openInConsole;
+
+  /// Moderator and admin tools (F22, F23).
+  bool get isModeration => this == hide || this == unhide || this == feature || this == unfeature || this == openInConsole;
 }
 
 /// What an article's menu offers the viewer, in the SPEC F28 order. Someone else's article: Show less, Follow author,
@@ -52,6 +62,8 @@ enum ArticleMenuItem {
 /// someone else's hidden article (a moderator reading it), which the API never prints for them. Moderators can also
 /// hide or unhide it (F22). Guests see the reader's items and get the sign-in prompt for every one of them, except Hide
 /// highlights. The reader ([highlights]) has "إخفاء الـ Highlights" right after Show less (F30), on your own article too.
+/// F23: holders of `articles.feature` get Feature or Unfeature in the reader ([featured]: the article's state, null
+/// where it isn't known or not allowed; a hidden article can only be unfeatured), and [console] adds "Open in console".
 List<ArticleMenuItem> articleMenuItems({
   required bool own,
   required bool moderator,
@@ -59,6 +71,8 @@ List<ArticleMenuItem> articleMenuItems({
   bool hasAuthor = true,
   bool pdf = false,
   bool highlights = false,
+  bool? featured,
+  bool console = false,
 }) =>
     [
       if (!own) ArticleMenuItem.showLess,
@@ -68,6 +82,9 @@ List<ArticleMenuItem> articleMenuItems({
       if (pdf && (own || !hidden)) ArticleMenuItem.downloadPdf,
       if (!own) ArticleMenuItem.report,
       if (moderator) hidden ? ArticleMenuItem.unhide : ArticleMenuItem.hide,
+      if (featured == true) ArticleMenuItem.unfeature,
+      if (featured == false && !hidden) ArticleMenuItem.feature,
+      if (console) ArticleMenuItem.openInConsole,
     ];
 
 /// The reader action bar's "⋯" (F22, F28). Hiding needs an [ModerationActionCubit] and the [ArticleCubit] above, and
@@ -83,6 +100,9 @@ class ArticleMenuButton extends StatelessWidget {
         hidden: article.isHidden,
         // The moderator still sees it, now with the banner and the note they gave.
         onModerated: context.read<ArticleCubit>().setModeration,
+        // F23: Feature / Unfeature need the article's state, which only the reader has.
+        featured: article.isFeatured,
+        onFeatured: context.read<ArticleCubit>().setFeatured,
       );
 }
 
@@ -92,11 +112,24 @@ class ArticleMenuButton extends StatelessWidget {
 /// moderation (null once visible again). With an [ArticlePdfCubit] above (the reader, not a post card), every article
 /// also has "تحميل PDF" (F33): the version on screen, "بنجهز الـ PDF…" and disabled while it is built.
 class ArticleMenuView extends StatelessWidget {
-  const ArticleMenuView({super.key, required this.card, required this.hidden, required this.onModerated});
+  const ArticleMenuView({
+    super.key,
+    required this.card,
+    required this.hidden,
+    required this.onModerated,
+    this.featured,
+    this.onFeatured,
+  });
 
   final ArticleCard card;
   final bool hidden;
   final ValueChanged<ArticleModeration?> onModerated;
+
+  /// F23: whether the article is featured on Explore (the reader knows; null on a post card, which offers neither).
+  final bool? featured;
+
+  /// F23: the article was featured (true) or stopped being featured (false).
+  final ValueChanged<bool>? onFeatured;
 
   Future<void> _onSelected(BuildContext context, ArticleMenuItem item) async {
     // Hide highlights works for guests too: their choice stays on the device (F30).
@@ -140,6 +173,11 @@ class ArticleMenuView extends StatelessWidget {
         }
       case ArticleMenuItem.unhide:
         if (await ModerationFlows.unhide(context, target)) onModerated(null);
+      case ArticleMenuItem.feature || ArticleMenuItem.unfeature:
+        final feature = item == ArticleMenuItem.feature;
+        if (await AdminFlows.setFeatured(context, articleId: card.id, featured: feature)) onFeatured?.call(feature);
+      case ArticleMenuItem.openInConsole:
+        await context.push<void>(AdminRoutes.article(card.id));
     }
   }
 
@@ -168,8 +206,12 @@ class ArticleMenuView extends StatelessWidget {
       hasAuthor: authorId != null,
       pdf: pdfBuilding != null,
       highlights: highlights,
+      // F23: Feature / Unfeature in the reader for `articles.feature`, "Open in console" for `moderation.manage`.
+      featured: onFeatured != null && (me?.canFeature ?? false) ? featured : null,
+      console: me?.isModerator ?? false,
     );
     if (items.isEmpty) return const SizedBox.shrink();
+    final firstTool = items.where((item) => item.isModeration).firstOrNull;
     return PopupMenuButton<ArticleMenuItem>(
       tooltip: l10n.articleMenu,
       icon: Icon(Icons.more_horiz_rounded, color: colors.textSecondary),
@@ -177,7 +219,7 @@ class ArticleMenuView extends StatelessWidget {
       itemBuilder: (context) => [
         for (final item in items) ...[
           // Moderator tools sit apart from the reader's items.
-          if (item.isModeration && item != items.first) const PopupMenuDivider(),
+          if (item == firstTool && item != items.first) const PopupMenuDivider(),
           PopupMenuItem(
             value: item,
             // A PDF being built: "بنجهز الـ PDF…", and another tap does nothing.
@@ -239,6 +281,9 @@ class _ArticleMenuLabel extends StatelessWidget {
       ArticleMenuItem.report => (Icons.flag_outlined, l10n.articleMenuReport),
       ArticleMenuItem.hide => (Icons.visibility_off_outlined, l10n.articleMenuHide),
       ArticleMenuItem.unhide => (Icons.visibility_outlined, l10n.articleMenuUnhide),
+      ArticleMenuItem.feature => (Icons.star_rounded, l10n.adminFeature),
+      ArticleMenuItem.unfeature => (Icons.star_outline_rounded, l10n.adminUnfeature),
+      ArticleMenuItem.openInConsole => (Icons.admin_panel_settings_outlined, l10n.adminOpenInConsole),
     };
     final color = switch (item) {
       ArticleMenuItem.report => colors.error,

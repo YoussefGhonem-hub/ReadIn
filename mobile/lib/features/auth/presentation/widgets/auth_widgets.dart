@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/config/app_links.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/l10n/failure_messages.dart';
 import '../../../../core/l10n/l10n_x.dart';
@@ -10,6 +10,8 @@ import '../../../../core/phone/phone_numbers.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/app_logo.dart';
+import '../../../support/presentation/cubit/support_cubits.dart' show SupportConfigCubit;
+import '../../../support/presentation/widgets/support_email.dart';
 
 /// Translated text for a form error code, or null.
 String? errorText(BuildContext context, String? code) => code == null ? null : localizeErrorCode(context.l10n, code);
@@ -206,13 +208,21 @@ class FailureBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final needsSupport = failure.code == FailureCodes.userSuspended || failure.code == FailureCodes.authRecoveryDisabled;
+    final suspended = failure.code == FailureCodes.userSuspended;
+    final needsSupport = suspended || failure.code == FailureCodes.authRecoveryDisabled;
+    final contact = TextButton(
+      onPressed: () => showContactSupportSheet(context, appeal: suspended),
+      child: Text(context.l10n.contactSupport),
+    );
     return FormBanner(
       message: localizeFailure(context.l10n, failure),
       action: action ??
-          (needsSupport
-              ? TextButton(onPressed: () => showContactSupportSheet(context), child: Text(context.l10n.contactSupport))
-              : null),
+          (!needsSupport
+              ? null
+              // A suspended member can't sign in to send a ticket: the support email is right here for an appeal (F35).
+              : suspended
+                  ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const SupportAppealNote(), contact])
+                  : contact),
     );
   }
 }
@@ -284,20 +294,28 @@ Future<bool?> showConfirmNumberDialog(BuildContext context, {required String pho
   );
 }
 
-/// "نسيت الـ PIN كمان؟" (SPEC §9.1): only an Admin can reset the password, through support.
-Future<void> showContactSupportSheet(BuildContext context) => showModalBottomSheet<void>(
+/// "نسيت الـ PIN كمان؟" (SPEC §9.1): only an Admin can reset the password, through support. [appeal]: a suspended
+/// member appeals by email (F35).
+Future<void> showContactSupportSheet(BuildContext context, {bool appeal = false}) => showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       useSafeArea: true,
-      builder: (_) => const ContactSupportSheet(),
+      builder: (_) => ContactSupportSheet(appeal: appeal),
     );
 
 class ContactSupportSheet extends StatelessWidget {
-  const ContactSupportSheet({super.key});
+  const ContactSupportSheet({super.key, this.appeal = false});
+
+  /// A suspension's appeal instead of a password reset (F35).
+  final bool appeal;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => SupportConfigScope(child: Builder(builder: _build));
+
+  Widget _build(BuildContext context) {
     final l10n = context.l10n;
+    // `Support:Email` from `GET /support/config` (F35), else the built-in address.
+    final email = supportEmailOf(context.select((SupportConfigCubit? c) => c?.state));
     return Padding(
       padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, 0, ReadInSpace.s5, ReadInSpace.s5),
       child: Column(
@@ -306,10 +324,13 @@ class ContactSupportSheet extends StatelessWidget {
         children: [
           Semantics(header: true, child: Text(l10n.supportTitle, style: context.textTheme.titleLarge)),
           const SizedBox(height: ReadInSpace.s3),
-          Text(l10n.supportBody, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
+          Text(
+            appeal ? l10n.supportAppealBody : l10n.supportBody,
+            style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary),
+          ),
           const SizedBox(height: ReadInSpace.s4),
           SelectableText(
-            SupportContact.email,
+            email,
             textDirection: TextDirection.ltr,
             textAlign: TextAlign.center,
             style: context.textTheme.titleMedium?.copyWith(fontFamily: ReadInFonts.latin),
@@ -318,14 +339,14 @@ class ContactSupportSheet extends StatelessWidget {
           FilledButton.icon(
             icon: const Icon(Icons.mail_outline_rounded),
             label: Text(l10n.supportEmailAction),
-            onPressed: () => launchUrl(Uri(scheme: 'mailto', path: SupportContact.email)),
+            onPressed: () => launchUrl(Uri(scheme: 'mailto', path: email)),
           ),
           const SizedBox(height: ReadInSpace.s2),
           OutlinedButton.icon(
             icon: const Icon(Icons.copy_rounded),
             label: Text(l10n.copyEmail),
             onPressed: () async {
-              await Clipboard.setData(const ClipboardData(text: SupportContact.email));
+              await Clipboard.setData(ClipboardData(text: email));
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.copied)));
               }

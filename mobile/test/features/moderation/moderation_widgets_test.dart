@@ -756,12 +756,16 @@ void main() {
       await tester.tap(find.widgetWithText(OutlinedButton, 'Suspend account'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('30 days'));
+      // Changed on purpose (F23): the console's form asks for a reason of 5–500 characters, so "Spam" is too short.
       await tester.enterText(find.byType(TextField), 'Spam');
+      await tester.pump();
+      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Suspend')).onPressed, isNull);
+      await tester.enterText(find.byType(TextField), 'Spam links');
       await tester.pump();
       await tester.tap(find.widgetWithText(FilledButton, 'Suspend'));
       await tester.pumpAndSettle();
 
-      verify(() => actions.run(const ModerationCommand(ModerationActionType.suspend, ModerationTargetRef.user('w-9'), note: 'Spam', durationDays: 30)))
+      verify(() => actions.run(const ModerationCommand(ModerationActionType.suspend, ModerationTargetRef.user('w-9'), note: 'Spam links', durationDays: 30)))
           .called(1);
     });
 

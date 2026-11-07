@@ -67,11 +67,13 @@ extension ModerationLabels on AppLocalizations {
         ModerationLogAction.userClearCategory => moderationLogUserClearCategory,
         ModerationLogAction.userClearLinks => moderationLogUserClearLinks,
         ModerationLogAction.userClearHeadline => moderationLogUserClearHeadline,
+        ModerationLogAction.userHideContent => adminLogUserHideContent,
+        ModerationLogAction.userUnhideContent => adminLogUserUnhideContent,
         ModerationLogAction.reportsDismiss => moderationLogReportsDismiss,
         ModerationLogAction.unknown => moderationLogOther,
       };
 
-  /// "1 day", "7 days", "30 days" or "Permanently".
+  /// "1 day", "3 days", "7 days", "30 days" or "Permanently".
   String suspensionLength(int? days) => days == null ? moderationPermanent : moderationDays(days);
 
   /// "Suspended until {date}" (local time) or "Permanently suspended".
@@ -102,6 +104,8 @@ IconData logActionIcon(ModerationLogAction action) => switch (action) {
       ModerationLogAction.userClearCategory => Icons.folder_off_outlined,
       ModerationLogAction.userClearLinks => Icons.link_off_rounded,
       ModerationLogAction.userClearHeadline => Icons.badge_outlined,
+      ModerationLogAction.userHideContent => Icons.hide_source_rounded,
+      ModerationLogAction.userUnhideContent => Icons.restore_rounded,
       ModerationLogAction.reportsDismiss => Icons.done_all_rounded,
       ModerationLogAction.unknown => Icons.shield_outlined,
     };

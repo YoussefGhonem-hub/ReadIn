@@ -41,6 +41,8 @@ abstract class ModerationActionRequest with _$ModerationActionRequest {
     int? durationDays,
     ModerationTargetRefModel? resolveReportsOf,
     String? categoryId,
+    // F23: `suspend` only, sent only when true (also hide all of the user's content).
+    bool? hideContent,
   }) = _ModerationActionRequest;
 
   factory ModerationActionRequest.fromJson(Map<String, dynamic> json) => _$ModerationActionRequestFromJson(json);
@@ -56,6 +58,7 @@ abstract class ModerationActionRequest with _$ModerationActionRequest {
           null => null,
         },
         categoryId: command.categoryId,
+        hideContent: command.hideContent ? true : null,
       );
 }
 

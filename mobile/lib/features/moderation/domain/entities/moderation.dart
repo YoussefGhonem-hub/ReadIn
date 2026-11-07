@@ -36,13 +36,22 @@ enum ModerationActionType {
 
   /// Removes the user's title (F14).
   clearHeadline,
+
+  /// Hides all of the user's articles and comments at once, flagged as hidden with the account (F23).
+  hideContent,
+
+  /// Brings back what [hideContent] hid and is still hidden (F23).
+  unhideContent,
   dismiss;
 
-  /// The wire name: `clear_category`, `clear_links`, `clear_headline`, otherwise [name].
+  /// The wire name: `clear_category`, `clear_links`, `clear_headline`, `hide_content`, `unhide_content`, otherwise
+  /// [name].
   String get wire => switch (this) {
         clearCategory => 'clear_category',
         clearLinks => 'clear_links',
         clearHeadline => 'clear_headline',
+        hideContent => 'hide_content',
+        unhideContent => 'unhide_content',
         _ => name,
       };
 }
@@ -60,6 +69,10 @@ enum ModerationLogAction {
   userClearCategory('user.clear_category'),
   userClearLinks('user.clear_links'),
   userClearHeadline('user.clear_headline'),
+
+  /// All of a user's content hidden at once, and brought back (F23).
+  userHideContent('user.hide_content'),
+  userUnhideContent('user.unhide_content'),
   reportsDismiss('reports.dismiss'),
 
   /// An action this app version doesn't know yet.
@@ -318,7 +331,15 @@ class ModerationNotice extends Equatable {
 
 /// A moderator's action (`POST /moderation/actions`).
 class ModerationCommand extends Equatable {
-  const ModerationCommand(this.action, this.target, {this.note, this.durationDays, this.resolveReportsOf, this.categoryId});
+  const ModerationCommand(
+    this.action,
+    this.target, {
+    this.note,
+    this.durationDays,
+    this.resolveReportsOf,
+    this.categoryId,
+    this.hideContent = false,
+  });
 
   final ModerationActionType action;
   final ModerationTargetRef target;
@@ -335,6 +356,9 @@ class ModerationCommand extends Equatable {
   /// `clear_category` only: which of the user's categories (F31).
   final String? categoryId;
 
+  /// `suspend` only (F23): also hide all of the user's articles and comments, in the same call.
+  final bool hideContent;
+
   @override
-  List<Object?> get props => [action, target, note, durationDays, resolveReportsOf, categoryId];
+  List<Object?> get props => [action, target, note, durationDays, resolveReportsOf, categoryId, hideContent];
 }

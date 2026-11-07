@@ -126,6 +126,8 @@ abstract class ProfileModel with _$ProfileModel {
     @Default(false) bool isMuted,
     // F28: the official @readin account, which can't be muted.
     @Default(false) bool isSystemAccount,
+    // F23: the account's state, for holders of `users.read` only (null for everyone else).
+    ProfileAdminModel? admin,
   }) = _ProfileModel;
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) => _$ProfileModelFromJson(json);
@@ -152,7 +154,24 @@ abstract class ProfileModel with _$ProfileModel {
         readingStatsVisible: readingStatsVisible,
         isMuted: isMuted,
         isSystemAccount: isSystemAccount,
+        admin: admin?.toEntity(),
       );
+}
+
+/// `ProfileDto.admin` (F23): `{ isSuspended, suspendedUntil, isStaff }`, for holders of `users.read`.
+@freezed
+abstract class ProfileAdminModel with _$ProfileAdminModel {
+  const ProfileAdminModel._();
+
+  const factory ProfileAdminModel({
+    @Default(false) bool isSuspended,
+    DateTime? suspendedUntil,
+    @Default(false) bool isStaff,
+  }) = _ProfileAdminModel;
+
+  factory ProfileAdminModel.fromJson(Map<String, dynamic> json) => _$ProfileAdminModelFromJson(json);
+
+  ProfileAdmin toEntity() => ProfileAdmin(isSuspended: isSuspended, suspendedUntil: suspendedUntil, isStaff: isStaff);
 }
 
 /// `PATCH /me` body, built by hand because a missing key and `null` mean different things:

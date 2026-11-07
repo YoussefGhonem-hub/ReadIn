@@ -50,6 +50,7 @@ _ModerationActionRequest _$ModerationActionRequestFromJson(
           json['resolveReportsOf'] as Map<String, dynamic>,
         ),
   categoryId: json['categoryId'] as String?,
+  hideContent: json['hideContent'] as bool?,
 );
 
 Map<String, dynamic> _$ModerationActionRequestToJson(
@@ -62,6 +63,7 @@ Map<String, dynamic> _$ModerationActionRequestToJson(
   'durationDays': ?instance.durationDays,
   'resolveReportsOf': ?instance.resolveReportsOf?.toJson(),
   'categoryId': ?instance.categoryId,
+  'hideContent': ?instance.hideContent,
 };
 
 _ModerationSummaryModel _$ModerationSummaryModelFromJson(

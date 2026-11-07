@@ -553,7 +553,8 @@ as String,
 /// @nodoc
 mixin _$ModerationActionRequest {
 
- String get action; String get targetType; String get targetId; String? get note; int? get durationDays; ModerationTargetRefModel? get resolveReportsOf; String? get categoryId;
+ String get action; String get targetType; String get targetId; String? get note; int? get durationDays; ModerationTargetRefModel? get resolveReportsOf; String? get categoryId;// F23: `suspend` only, sent only when true (also hide all of the user's content).
+ bool? get hideContent;
 /// Create a copy of ModerationActionRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -566,16 +567,16 @@ $ModerationActionRequestCopyWith<ModerationActionRequest> get copyWith => _$Mode
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ModerationActionRequest&&(identical(other.action, action) || other.action == action)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.note, note) || other.note == note)&&(identical(other.durationDays, durationDays) || other.durationDays == durationDays)&&(identical(other.resolveReportsOf, resolveReportsOf) || other.resolveReportsOf == resolveReportsOf)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ModerationActionRequest&&(identical(other.action, action) || other.action == action)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.note, note) || other.note == note)&&(identical(other.durationDays, durationDays) || other.durationDays == durationDays)&&(identical(other.resolveReportsOf, resolveReportsOf) || other.resolveReportsOf == resolveReportsOf)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.hideContent, hideContent) || other.hideContent == hideContent));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,action,targetType,targetId,note,durationDays,resolveReportsOf,categoryId);
+int get hashCode => Object.hash(runtimeType,action,targetType,targetId,note,durationDays,resolveReportsOf,categoryId,hideContent);
 
 @override
 String toString() {
-  return 'ModerationActionRequest(action: $action, targetType: $targetType, targetId: $targetId, note: $note, durationDays: $durationDays, resolveReportsOf: $resolveReportsOf, categoryId: $categoryId)';
+  return 'ModerationActionRequest(action: $action, targetType: $targetType, targetId: $targetId, note: $note, durationDays: $durationDays, resolveReportsOf: $resolveReportsOf, categoryId: $categoryId, hideContent: $hideContent)';
 }
 
 
@@ -586,7 +587,7 @@ abstract mixin class $ModerationActionRequestCopyWith<$Res>  {
   factory $ModerationActionRequestCopyWith(ModerationActionRequest value, $Res Function(ModerationActionRequest) _then) = _$ModerationActionRequestCopyWithImpl;
 @useResult
 $Res call({
- String action, String targetType, String targetId, String? note, int? durationDays, ModerationTargetRefModel? resolveReportsOf, String? categoryId
+ String action, String targetType, String targetId, String? note, int? durationDays, ModerationTargetRefModel? resolveReportsOf, String? categoryId, bool? hideContent
 });
 
 
@@ -603,7 +604,7 @@ class _$ModerationActionRequestCopyWithImpl<$Res>
 
 /// Create a copy of ModerationActionRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? action = null,Object? targetType = null,Object? targetId = null,Object? note = freezed,Object? durationDays = freezed,Object? resolveReportsOf = freezed,Object? categoryId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? action = null,Object? targetType = null,Object? targetId = null,Object? note = freezed,Object? durationDays = freezed,Object? resolveReportsOf = freezed,Object? categoryId = freezed,Object? hideContent = freezed,}) {
   return _then(_self.copyWith(
 action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
 as String,targetType: null == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
@@ -612,7 +613,8 @@ as String,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_
 as String?,durationDays: freezed == durationDays ? _self.durationDays : durationDays // ignore: cast_nullable_to_non_nullable
 as int?,resolveReportsOf: freezed == resolveReportsOf ? _self.resolveReportsOf : resolveReportsOf // ignore: cast_nullable_to_non_nullable
 as ModerationTargetRefModel?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,hideContent: freezed == hideContent ? _self.hideContent : hideContent // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 /// Create a copy of ModerationActionRequest
@@ -709,10 +711,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String action,  String targetType,  String targetId,  String? note,  int? durationDays,  ModerationTargetRefModel? resolveReportsOf,  String? categoryId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String action,  String targetType,  String targetId,  String? note,  int? durationDays,  ModerationTargetRefModel? resolveReportsOf,  String? categoryId,  bool? hideContent)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ModerationActionRequest() when $default != null:
-return $default(_that.action,_that.targetType,_that.targetId,_that.note,_that.durationDays,_that.resolveReportsOf,_that.categoryId);case _:
+return $default(_that.action,_that.targetType,_that.targetId,_that.note,_that.durationDays,_that.resolveReportsOf,_that.categoryId,_that.hideContent);case _:
   return orElse();
 
 }
@@ -730,10 +732,10 @@ return $default(_that.action,_that.targetType,_that.targetId,_that.note,_that.du
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String action,  String targetType,  String targetId,  String? note,  int? durationDays,  ModerationTargetRefModel? resolveReportsOf,  String? categoryId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String action,  String targetType,  String targetId,  String? note,  int? durationDays,  ModerationTargetRefModel? resolveReportsOf,  String? categoryId,  bool? hideContent)  $default,) {final _that = this;
 switch (_that) {
 case _ModerationActionRequest():
-return $default(_that.action,_that.targetType,_that.targetId,_that.note,_that.durationDays,_that.resolveReportsOf,_that.categoryId);case _:
+return $default(_that.action,_that.targetType,_that.targetId,_that.note,_that.durationDays,_that.resolveReportsOf,_that.categoryId,_that.hideContent);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -750,10 +752,10 @@ return $default(_that.action,_that.targetType,_that.targetId,_that.note,_that.du
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String action,  String targetType,  String targetId,  String? note,  int? durationDays,  ModerationTargetRefModel? resolveReportsOf,  String? categoryId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String action,  String targetType,  String targetId,  String? note,  int? durationDays,  ModerationTargetRefModel? resolveReportsOf,  String? categoryId,  bool? hideContent)?  $default,) {final _that = this;
 switch (_that) {
 case _ModerationActionRequest() when $default != null:
-return $default(_that.action,_that.targetType,_that.targetId,_that.note,_that.durationDays,_that.resolveReportsOf,_that.categoryId);case _:
+return $default(_that.action,_that.targetType,_that.targetId,_that.note,_that.durationDays,_that.resolveReportsOf,_that.categoryId,_that.hideContent);case _:
   return null;
 
 }
@@ -765,7 +767,7 @@ return $default(_that.action,_that.targetType,_that.targetId,_that.note,_that.du
 @JsonSerializable()
 
 class _ModerationActionRequest implements ModerationActionRequest {
-  const _ModerationActionRequest({required this.action, required this.targetType, required this.targetId, this.note, this.durationDays, this.resolveReportsOf, this.categoryId});
+  const _ModerationActionRequest({required this.action, required this.targetType, required this.targetId, this.note, this.durationDays, this.resolveReportsOf, this.categoryId, this.hideContent});
   factory _ModerationActionRequest.fromJson(Map<String, dynamic> json) => _$ModerationActionRequestFromJson(json);
 
 @override final  String action;
@@ -775,6 +777,8 @@ class _ModerationActionRequest implements ModerationActionRequest {
 @override final  int? durationDays;
 @override final  ModerationTargetRefModel? resolveReportsOf;
 @override final  String? categoryId;
+// F23: `suspend` only, sent only when true (also hide all of the user's content).
+@override final  bool? hideContent;
 
 /// Create a copy of ModerationActionRequest
 /// with the given fields replaced by the non-null parameter values.
@@ -789,16 +793,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ModerationActionRequest&&(identical(other.action, action) || other.action == action)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.note, note) || other.note == note)&&(identical(other.durationDays, durationDays) || other.durationDays == durationDays)&&(identical(other.resolveReportsOf, resolveReportsOf) || other.resolveReportsOf == resolveReportsOf)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ModerationActionRequest&&(identical(other.action, action) || other.action == action)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.targetId, targetId) || other.targetId == targetId)&&(identical(other.note, note) || other.note == note)&&(identical(other.durationDays, durationDays) || other.durationDays == durationDays)&&(identical(other.resolveReportsOf, resolveReportsOf) || other.resolveReportsOf == resolveReportsOf)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.hideContent, hideContent) || other.hideContent == hideContent));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,action,targetType,targetId,note,durationDays,resolveReportsOf,categoryId);
+int get hashCode => Object.hash(runtimeType,action,targetType,targetId,note,durationDays,resolveReportsOf,categoryId,hideContent);
 
 @override
 String toString() {
-  return 'ModerationActionRequest(action: $action, targetType: $targetType, targetId: $targetId, note: $note, durationDays: $durationDays, resolveReportsOf: $resolveReportsOf, categoryId: $categoryId)';
+  return 'ModerationActionRequest(action: $action, targetType: $targetType, targetId: $targetId, note: $note, durationDays: $durationDays, resolveReportsOf: $resolveReportsOf, categoryId: $categoryId, hideContent: $hideContent)';
 }
 
 
@@ -809,7 +813,7 @@ abstract mixin class _$ModerationActionRequestCopyWith<$Res> implements $Moderat
   factory _$ModerationActionRequestCopyWith(_ModerationActionRequest value, $Res Function(_ModerationActionRequest) _then) = __$ModerationActionRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String action, String targetType, String targetId, String? note, int? durationDays, ModerationTargetRefModel? resolveReportsOf, String? categoryId
+ String action, String targetType, String targetId, String? note, int? durationDays, ModerationTargetRefModel? resolveReportsOf, String? categoryId, bool? hideContent
 });
 
 
@@ -826,7 +830,7 @@ class __$ModerationActionRequestCopyWithImpl<$Res>
 
 /// Create a copy of ModerationActionRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? action = null,Object? targetType = null,Object? targetId = null,Object? note = freezed,Object? durationDays = freezed,Object? resolveReportsOf = freezed,Object? categoryId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? action = null,Object? targetType = null,Object? targetId = null,Object? note = freezed,Object? durationDays = freezed,Object? resolveReportsOf = freezed,Object? categoryId = freezed,Object? hideContent = freezed,}) {
   return _then(_ModerationActionRequest(
 action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
 as String,targetType: null == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
@@ -835,7 +839,8 @@ as String,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_
 as String?,durationDays: freezed == durationDays ? _self.durationDays : durationDays // ignore: cast_nullable_to_non_nullable
 as int?,resolveReportsOf: freezed == resolveReportsOf ? _self.resolveReportsOf : resolveReportsOf // ignore: cast_nullable_to_non_nullable
 as ModerationTargetRefModel?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,hideContent: freezed == hideContent ? _self.hideContent : hideContent // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 

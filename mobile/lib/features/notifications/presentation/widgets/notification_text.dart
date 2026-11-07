@@ -1,3 +1,4 @@
+import '../../../../core/bidi/bidi.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/entities/notification_settings.dart';
@@ -9,7 +10,9 @@ bool isActorNotification(NotificationType type) => switch (type) {
       NotificationType.commentReply ||
       NotificationType.mention ||
       NotificationType.followedWriterArticle ||
-      NotificationType.articleReposted =>
+      NotificationType.articleReposted ||
+      // A new ticket or a member's reply (F35): the member leads the row.
+      NotificationType.supportTicket =>
         true,
       _ => false,
     };
@@ -54,8 +57,34 @@ String notificationMessage(AppLocalizations l10n, AppNotification notification, 
     // A notice about an article means it was hidden; one without is a warning (F22).
     NotificationType.moderationNotice =>
       notification.article == null ? l10n.notifModerationWarning : l10n.notifModerationArticleHidden,
+    // An announcement's own title, in the UI language (F23); its body follows ([notificationDetail]).
+    NotificationType.announcement => switch (notification.title?.trim()) {
+        final title? when title.isNotEmpty => title,
+        _ => l10n.adminNotifAnnouncement,
+      },
+    // Support stays anonymous (F35); "#12 · subject" follows.
+    NotificationType.supportReply => notification.closed ? l10n.supportNotifClosed : l10n.supportNotifReply,
+    NotificationType.supportTicket => l10n.supportNotifTicket(actor),
     NotificationType.unknown => l10n.notifGeneric,
   };
+}
+
+/// The line under the sentence that isn't an article or a comment: an announcement's body (F23), or a ticket's
+/// "#12 · subject" (F35). Null for every other type.
+String? notificationDetail(AppNotification notification) {
+  switch (notification.type) {
+    case NotificationType.announcement:
+      final body = notification.body?.trim() ?? '';
+      return body.isEmpty ? null : body;
+    case NotificationType.supportReply || NotificationType.supportTicket:
+      final subject = notification.subject?.trim() ?? '';
+      final number = notification.ticketNumber;
+      if (number == null) return subject.isEmpty ? null : subject;
+      final tag = Bidi.ltrIsolate('#$number');
+      return subject.isEmpty ? tag : '$tag · $subject';
+    default:
+      return null;
+  }
 }
 
 String securityChangeMessage(AppLocalizations l10n, SecurityChange? change) => switch (change) {
@@ -81,6 +110,8 @@ String notificationTypeLabel(AppLocalizations l10n, NotificationType type) => sw
       NotificationType.dailyArticle => l10n.notificationTypeDailyArticle,
       NotificationType.streakReminder => l10n.notificationTypeStreakReminder,
       NotificationType.articleReposted => l10n.notificationTypeArticleReposted,
+      NotificationType.announcement => l10n.adminNotifTypeAnnouncement,
+      NotificationType.supportTicket => l10n.supportNotifTypeTicket,
       NotificationType.securityAlert => l10n.notificationSecurityAlerts,
       _ => l10n.notifications,
     };
@@ -89,6 +120,8 @@ String notificationTypeLabel(AppLocalizations l10n, NotificationType type) => sw
 String? notificationTypeHint(AppLocalizations l10n, NotificationType type) => switch (type) {
       NotificationType.mention => l10n.notificationTypeMentionHint,
       NotificationType.articleReposted => l10n.notificationTypeArticleRepostedHint,
+      NotificationType.announcement => l10n.adminNotifTypeAnnouncementHint,
+      NotificationType.supportTicket => l10n.supportNotifTypeTicketHint,
       _ => null,
     };
 

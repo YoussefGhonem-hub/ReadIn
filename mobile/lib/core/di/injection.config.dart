@@ -15,6 +15,26 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i558;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
+import '../../features/admin/data/datasources/admin_api.dart' as _i1031;
+import '../../features/admin/data/datasources/verification_proof_data_source.dart'
+    as _i32;
+import '../../features/admin/data/repositories/admin_repository_impl.dart'
+    as _i335;
+import '../../features/admin/domain/entities/admin_content.dart' as _i327;
+import '../../features/admin/domain/repositories/admin_repository.dart'
+    as _i583;
+import '../../features/admin/domain/usecases/admin_usecases.dart' as _i817;
+import '../../features/admin/presentation/cubit/admin_article_cubit.dart'
+    as _i518;
+import '../../features/admin/presentation/cubit/admin_dashboard_cubit.dart'
+    as _i122;
+import '../../features/admin/presentation/cubit/admin_lists.dart' as _i48;
+import '../../features/admin/presentation/cubit/admin_summary_cubit.dart'
+    as _i551;
+import '../../features/admin/presentation/cubit/admin_user_cubit.dart' as _i439;
+import '../../features/admin/presentation/cubit/verification_review_cubits.dart'
+    as _i161;
+import '../../features/admin/presentation/widgets/admin_filters.dart' as _i682;
 import '../../features/app_update/data/datasources/app_update_api.dart'
     as _i147;
 import '../../features/app_update/data/datasources/installed_app_source.dart'
@@ -345,6 +365,18 @@ import '../../features/settings/presentation/cubit/interests_cubit.dart'
     as _i280;
 import '../../features/settings/presentation/cubit/settings_cubit.dart'
     as _i792;
+import '../../features/support/data/datasources/support_api.dart' as _i917;
+import '../../features/support/data/datasources/support_attachment_data_source.dart'
+    as _i1019;
+import '../../features/support/data/datasources/support_device_source.dart'
+    as _i621;
+import '../../features/support/data/repositories/support_repository_impl.dart'
+    as _i387;
+import '../../features/support/domain/entities/support.dart' as _i909;
+import '../../features/support/domain/repositories/support_repository.dart'
+    as _i275;
+import '../../features/support/domain/usecases/support_usecases.dart' as _i425;
+import '../../features/support/presentation/cubit/support_cubits.dart' as _i22;
 import '../../features/tags/data/datasources/tags_api.dart' as _i94;
 import '../../features/tags/data/repositories/tags_repository_impl.dart'
     as _i160;
@@ -364,6 +396,7 @@ import '../../features/verification/data/datasources/verification_api.dart'
     as _i1061;
 import '../../features/verification/data/repositories/verification_repository_impl.dart'
     as _i306;
+import '../../features/verification/domain/entities/verification.dart' as _i332;
 import '../../features/verification/domain/repositories/verification_repository.dart'
     as _i1070;
 import '../../features/verification/domain/usecases/verification_usecases.dart'
@@ -479,6 +512,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i271.SecureStore>(),
       ),
     );
+    gh.lazySingleton<_i621.SupportDeviceSource>(
+      () => _i621.PlatformSupportDeviceSource(
+        gh<_i469.InstalledAppSource>(),
+        gh<_i1026.CurrentLocale>(),
+      ),
+    );
     await gh.singletonAsync<_i223.FirebaseStatus>(
       () => registerModule.firebase(gh<_i650.AppConfig>()),
       preResolve: true,
@@ -541,6 +580,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i894.RealtimeTokenApi>(
       () => _i894.RealtimeTokenApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i1031.AdminApi>(() => _i1031.AdminApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i462.ArticleApi>(() => _i462.ArticleApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i506.AccountApi>(() => _i506.AccountApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i494.CategoriesApi>(
@@ -584,6 +624,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i741.PreferencesApi>(
       () => _i741.PreferencesApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i917.SupportApi>(() => _i917.SupportApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i94.TagsApi>(() => _i94.TagsApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i421.TaxonomyApi>(
       () => _i421.TaxonomyApi(gh<_i361.Dio>()),
@@ -594,6 +635,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1070.TagsRepository>(
       () => _i160.TagsRepositoryImpl(gh<_i94.TagsApi>()),
     );
+    gh.lazySingleton<_i32.VerificationProofDataSource>(
+      () => _i32.VerificationProofDataSource(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i16.ArticlePdfDataSource>(
       () => _i16.ArticlePdfDataSource(gh<_i361.Dio>()),
     );
@@ -602,6 +646,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i695.QuoteCardDataSource>(
       () => _i695.QuoteCardDataSource(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i1019.SupportAttachmentDataSource>(
+      () => _i1019.SupportAttachmentDataSource(gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i123.RepostsRepository>(
       () => _i578.RepostsRepositoryImpl(gh<_i495.RepostsApi>()),
@@ -684,6 +731,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i563.NotificationsRepository>(
       () => _i201.NotificationsRepositoryImpl(gh<_i352.NotificationsApi>()),
     );
+    gh.lazySingleton<_i583.AdminRepository>(
+      () => _i335.AdminRepositoryImpl(
+        gh<_i1031.AdminApi>(),
+        gh<_i32.VerificationProofDataSource>(),
+      ),
+    );
     gh.lazySingleton<_i954.FeedRepository>(
       () => _i198.FeedRepositoryImpl(gh<_i931.FeedApi>()),
     );
@@ -730,6 +783,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i295.WithdrawVerificationRequest>(
       () => _i295.WithdrawVerificationRequest(
         gh<_i1070.VerificationRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i275.SupportRepository>(
+      () => _i387.SupportRepositoryImpl(
+        gh<_i917.SupportApi>(),
+        gh<_i1019.SupportAttachmentDataSource>(),
+        gh<_i221.ImageCompressor>(),
       ),
     );
     gh.lazySingleton<_i413.ArticleEditorRepository>(
@@ -1054,6 +1114,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i504.DownloadDocument>(
       () => _i504.DownloadDocument(gh<_i459.MediaRepository>()),
     );
+    gh.factory<_i425.CreateSupportTicket>(
+      () => _i425.CreateSupportTicket(
+        gh<_i275.SupportRepository>(),
+        gh<_i621.SupportDeviceSource>(),
+      ),
+    );
     gh.factory<_i835.AllPathsCubit>(
       () => _i835.AllPathsCubit(gh<_i924.GetPaths>()),
     );
@@ -1132,11 +1198,50 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i537.SetInterestFollowed>(
       () => _i537.SetInterestFollowed(gh<_i760.FollowRepository>()),
     );
+    gh.factory<_i682.AdminTaxonomyChoices>(
+      () => _i682.AdminTaxonomyChoices(
+        gh<_i172.GetFields>(),
+        gh<_i172.GetTopics>(),
+      ),
+    );
     gh.lazySingleton<_i822.PushReadReceipts>(
       () => _i896.NotificationPushReceipts(gh<_i864.MarkNotificationRead>()),
     );
     gh.factory<_i646.FeedCubit>(
       () => _i646.FeedCubit(gh<_i251.GetForYouFeed>()),
+    );
+    gh.factory<_i817.GetAdminSummary>(
+      () => _i817.GetAdminSummary(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.GetAdminDashboard>(
+      () => _i817.GetAdminDashboard(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.GetAdminUsers>(
+      () => _i817.GetAdminUsers(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.GetAdminUser>(
+      () => _i817.GetAdminUser(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.AdminUserCommands>(
+      () => _i817.AdminUserCommands(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.GetAdminArticles>(
+      () => _i817.GetAdminArticles(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.GetAdminArticle>(
+      () => _i817.GetAdminArticle(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.GetAdminComments>(
+      () => _i817.GetAdminComments(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.SetArticleFeatured>(
+      () => _i817.SetArticleFeatured(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.GetVerificationQueue>(
+      () => _i817.GetVerificationQueue(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i817.VerificationReview>(
+      () => _i817.VerificationReview(gh<_i583.AdminRepository>()),
     );
     gh.factoryParam<_i297.ProfileCategoriesCubit, String, dynamic>(
       (username, _) =>
@@ -1173,6 +1278,28 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i151.ModerationCaseCubit>(
       () => _i151.ModerationCaseCubit(gh<_i130.GetModerationCase>()),
     );
+    gh.lazySingleton<_i425.GetSupportConfig>(
+      () => _i425.GetSupportConfig(gh<_i275.SupportRepository>()),
+    );
+    gh.factory<_i425.GetMyTickets>(
+      () => _i425.GetMyTickets(gh<_i275.SupportRepository>()),
+    );
+    gh.factory<_i425.MyTicketCommands>(
+      () => _i425.MyTicketCommands(gh<_i275.SupportRepository>()),
+    );
+    gh.factory<_i425.LoadSupportAttachment>(
+      () => _i425.LoadSupportAttachment(gh<_i275.SupportRepository>()),
+    );
+    gh.factory<_i425.GetAdminTickets>(
+      () => _i425.GetAdminTickets(gh<_i275.SupportRepository>()),
+    );
+    gh.factory<_i425.AdminTicketCommands>(
+      () => _i425.AdminTicketCommands(gh<_i275.SupportRepository>()),
+    );
+    gh.factoryParam<_i48.AdminArticlesCubit, _i327.AdminArticleQuery?, dynamic>(
+      (query, _) =>
+          _i48.AdminArticlesCubit(gh<_i817.GetAdminArticles>(), query),
+    );
     gh.factory<_i297.CategoryPageCubit>(
       () => _i297.CategoryPageCubit(gh<_i772.GetCategoryPage>()),
     );
@@ -1187,6 +1314,19 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i297.MyCategoriesCubit(
         gh<_i772.GetMyCategories>(),
         gh<_i772.ManageCategories>(),
+      ),
+    );
+    gh.factoryParam<_i22.MyTicketsCubit, _i909.MyTicketsFilter, dynamic>(
+      (filter, _) => _i22.MyTicketsCubit(gh<_i425.GetMyTickets>(), filter),
+    );
+    gh.factoryParam<
+      _i161.VerificationQueueCubit,
+      _i332.VerificationRequestStatus,
+      dynamic
+    >(
+      (status, _) => _i161.VerificationQueueCubit(
+        gh<_i817.GetVerificationQueue>(),
+        status,
       ),
     );
     gh.lazySingleton<_i226.EngagementCubit>(
@@ -1216,11 +1356,31 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i822.PushReadReceipts>(),
       ),
     );
+    gh.factoryParam<_i439.AdminUserCubit, String, dynamic>(
+      (userId, _) => _i439.AdminUserCubit(
+        gh<_i817.GetAdminUser>(),
+        gh<_i817.AdminUserCommands>(),
+        userId,
+      ),
+    );
     gh.factoryParam<_i297.CategoryArticlesCubit, String, String>(
       (username, slug) => _i297.CategoryArticlesCubit(
         gh<_i772.GetCategoryArticles>(),
         username,
         slug,
+      ),
+    );
+    gh.factory<_i22.NewTicketCubit>(
+      () => _i22.NewTicketCubit(
+        gh<_i425.CreateSupportTicket>(),
+        gh<_i956.MediaPicker>(),
+      ),
+    );
+    gh.factoryParam<_i518.AdminArticleCubit, String, dynamic>(
+      (articleId, _) => _i518.AdminArticleCubit(
+        gh<_i817.GetAdminArticle>(),
+        gh<_i817.SetArticleFeatured>(),
+        articleId,
       ),
     );
     gh.factory<_i571.AttachmentsCubit>(
@@ -1249,6 +1409,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i413.EditorBackupStore>(),
       ),
     );
+    gh.factory<_i48.AdminUsersCubit>(
+      () => _i48.AdminUsersCubit(gh<_i817.GetAdminUsers>()),
+    );
     gh.factory<_i840.ArticleEditorCubit>(
       () => _i840.ArticleEditorCubit(
         gh<_i866.CreateArticle>(),
@@ -1267,11 +1430,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i772.SetArticleCategory>(),
       ),
     );
+    gh.factoryParam<_i22.AdminTicketCubit, String, dynamic>(
+      (ticketId, _) =>
+          _i22.AdminTicketCubit(gh<_i425.AdminTicketCommands>(), ticketId),
+    );
     gh.factory<_i807.OnboardingCubit>(
       () => _i807.OnboardingCubit(
         gh<_i172.GetFields>(),
         gh<_i172.GetTopics>(),
         gh<_i535.SaveInterests>(),
+      ),
+    );
+    gh.factoryParam<_i161.VerificationRequestCubit, String, dynamic>(
+      (requestId, _) => _i161.VerificationRequestCubit(
+        gh<_i817.VerificationReview>(),
+        requestId,
       ),
     );
     gh.lazySingleton<_i792.SettingsCubit>(
@@ -1306,9 +1479,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i509.FollowsCubit>(),
       ),
     );
+    gh.factory<_i122.AdminDashboardCubit>(
+      () => _i122.AdminDashboardCubit(gh<_i817.GetAdminDashboard>()),
+    );
     gh.factory<_i742.ExploreCubit>(
       () =>
           _i742.ExploreCubit(gh<_i248.GetExplore>(), gh<_i509.FollowsCubit>()),
+    );
+    gh.factoryParam<_i22.AdminTicketsCubit, _i909.AdminTicketQuery?, dynamic>(
+      (query, _) => _i22.AdminTicketsCubit(gh<_i425.GetAdminTickets>(), query),
+    );
+    gh.factory<_i48.AdminCommentsCubit>(
+      () => _i48.AdminCommentsCubit(gh<_i817.GetAdminComments>()),
+    );
+    gh.lazySingleton<_i551.AdminSummaryCubit>(
+      () => _i551.AdminSummaryCubit(gh<_i817.GetAdminSummary>()),
     );
     gh.lazySingleton<_i881.AccountDeviceData>(
       () => _i881.AccountDeviceData(
@@ -1316,6 +1501,16 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i811.GoogleSignInDataSource>(),
         gh<_i115.PhoneCountryMemory>(),
       ),
+    );
+    gh.lazySingleton<_i22.SupportAttachmentCache>(
+      () => _i22.SupportAttachmentCache(gh<_i425.LoadSupportAttachment>()),
+    );
+    gh.factoryParam<_i22.SupportTicketCubit, String, dynamic>(
+      (ticketId, _) =>
+          _i22.SupportTicketCubit(gh<_i425.MyTicketCommands>(), ticketId),
+    );
+    gh.factory<_i22.SupportConfigCubit>(
+      () => _i22.SupportConfigCubit(gh<_i425.GetSupportConfig>()),
     );
     gh.factory<_i382.SuggestedWritersCubit>(
       () => _i382.SuggestedWritersCubit(

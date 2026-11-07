@@ -59,16 +59,23 @@ _ExploreModel _$ExploreModelFromJson(Map<String, dynamic> json) =>
               ?.map((e) => PathCardModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <PathCardModel>[],
+      featuredArticles:
+          (json['featuredArticles'] as List<dynamic>?)
+              ?.map((e) => ArticleCardModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <ArticleCardModel>[],
     );
 
-Map<String, dynamic> _$ExploreModelToJson(_ExploreModel instance) =>
-    <String, dynamic>{
-      'fields': instance.fields.map((e) => e.toJson()).toList(),
-      'trending': instance.trending.map((e) => e.toJson()).toList(),
-      'mostSaved': instance.mostSaved.map((e) => e.toJson()).toList(),
-      'newWriters': instance.newWriters.map((e) => e.toJson()).toList(),
-      'featuredPaths': instance.featuredPaths.map((e) => e.toJson()).toList(),
-    };
+Map<String, dynamic> _$ExploreModelToJson(
+  _ExploreModel instance,
+) => <String, dynamic>{
+  'fields': instance.fields.map((e) => e.toJson()).toList(),
+  'trending': instance.trending.map((e) => e.toJson()).toList(),
+  'mostSaved': instance.mostSaved.map((e) => e.toJson()).toList(),
+  'newWriters': instance.newWriters.map((e) => e.toJson()).toList(),
+  'featuredPaths': instance.featuredPaths.map((e) => e.toJson()).toList(),
+  'featuredArticles': instance.featuredArticles.map((e) => e.toJson()).toList(),
+};
 
 _FieldPageTopicModel _$FieldPageTopicModelFromJson(Map<String, dynamic> json) =>
     _FieldPageTopicModel(

@@ -64,6 +64,7 @@ class UserProfile extends Equatable {
     this.readingStatsVisible = false,
     this.isMuted = false,
     this.isSystemAccount = false,
+    this.admin,
   });
 
   final String id;
@@ -108,6 +109,10 @@ class UserProfile extends Equatable {
   /// The official @readin account (F28): it can't be muted, so its "⋯" has no Mute.
   final bool isSystemAccount;
 
+  /// The account's state for holders of `users.read` (F23): the "⋯" offers "Unsuspend" while it is suspended, and no
+  /// Warn or Suspend for staff. Null for everyone else.
+  final ProfileAdmin? admin;
+
   /// The smallest variant at least [size] px wide (the header asks for 2× its size), else [avatarUrl].
   String? avatarFor(double size) {
     if (avatarVariants.isEmpty) return avatarUrl;
@@ -116,13 +121,13 @@ class UserProfile extends Equatable {
     return avatarVariants[width];
   }
 
-  UserProfile copyWith({ProfileStats? stats, bool? isFollowing}) => UserProfile(
+  UserProfile copyWith({ProfileStats? stats, bool? isFollowing, bool? isVerified, ProfileAdmin? admin}) => UserProfile(
         id: id,
         displayName: displayName,
         username: username,
         avatarUrl: avatarUrl,
         avatarVariants: avatarVariants,
-        isVerified: isVerified,
+        isVerified: isVerified ?? this.isVerified,
         headline: headline,
         bio: bio,
         links: links,
@@ -135,6 +140,7 @@ class UserProfile extends Equatable {
         readingStatsVisible: readingStatsVisible,
         isMuted: isMuted,
         isSystemAccount: isSystemAccount,
+        admin: admin ?? this.admin,
       );
 
   @override
@@ -157,7 +163,24 @@ class UserProfile extends Equatable {
         readingStatsVisible,
         isMuted,
         isSystemAccount,
+        admin,
       ];
+}
+
+/// `ProfileDto.admin` (F23): what holders of `users.read` see about the account.
+class ProfileAdmin extends Equatable {
+  const ProfileAdmin({this.isSuspended = false, this.suspendedUntil, this.isStaff = false});
+
+  final bool isSuspended;
+
+  /// While suspended: when it ends; null = permanently.
+  final DateTime? suspendedUntil;
+
+  /// An admin, a moderator or a system account: can't be warned, suspended or signed out.
+  final bool isStaff;
+
+  @override
+  List<Object?> get props => [isSuspended, suspendedUntil, isStaff];
 }
 
 /// What to do with the avatar on save (`PATCH /me`).

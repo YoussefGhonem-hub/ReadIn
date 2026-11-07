@@ -69,6 +69,13 @@ abstract class NotificationDataModel with _$NotificationDataModel {
     Object? securityChange,
     bool? approved,
     int? articleCount,
+    // F23 `announcement`: its title and body in the UI language.
+    String? title,
+    String? body,
+    // F35 `support_reply` / `support_ticket`: the ticket; `closed` when support closed it.
+    int? ticketNumber,
+    String? subject,
+    bool? closed,
   }) = _NotificationDataModel;
 
   factory NotificationDataModel.fromJson(Map<String, dynamic> json) => _$NotificationDataModelFromJson(json);
@@ -111,6 +118,11 @@ abstract class NotificationModel with _$NotificationModel {
         approved: data?.approved,
         articleCount: data?.articleCount,
         link: link,
+        title: data?.title,
+        body: data?.body,
+        ticketNumber: data?.ticketNumber,
+        subject: data?.subject,
+        closed: data?.closed ?? false,
       );
 }
 

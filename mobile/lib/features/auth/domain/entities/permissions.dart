@@ -20,6 +20,30 @@ abstract final class Permissions {
 
   /// Highlight sentences in articles and remove your highlights (every Member, F30).
   static const highlightsCreate = 'highlights.create';
+
+  /// The admin console and its dashboard (F23): the entry in Settings, the More sheet and the Me sheet.
+  static const adminAccess = 'admin.access';
+
+  /// The console's Users: list and open any account (F23); also suspended accounts' profiles.
+  static const usersRead = 'users.read';
+
+  /// See phone numbers: reveal one in the console (audited), search by number (F23).
+  static const usersReadPii = 'users.read.pii';
+
+  /// Reset an account's password (F23).
+  static const usersResetPassword = 'users.reset_password';
+
+  /// Feature articles on Explore (F23).
+  static const articlesFeature = 'articles.feature';
+
+  /// The verification queue and removing a Verified badge (F19, F23).
+  static const verificationManage = 'verification.manage';
+
+  /// Send and follow your own support tickets (every Member, F35).
+  static const supportCreate = 'support.create';
+
+  /// The console's ticket queue and the `support_ticket` notification (F35).
+  static const supportManage = 'support.manage';
 }
 
 extension MePermissions on Me {
@@ -34,4 +58,23 @@ extension MePermissions on Me {
 
   /// Gets the reader's Highlight toolbar (F30).
   bool get canHighlight => can(Permissions.highlightsCreate);
+
+  /// Sees the admin console's entry (F23). It replaces "Moderation" in Settings and the sheets; the queues are sections
+  /// of the console.
+  bool get isAdmin => can(Permissions.adminAccess);
+
+  /// Sends and follows support tickets (F35).
+  bool get canContactSupport => can(Permissions.supportCreate);
+
+  /// Answers support tickets in the console (F35).
+  bool get canManageSupport => can(Permissions.supportManage);
+
+  /// Reviews writer verification requests and removes badges (F19).
+  bool get canManageVerification => can(Permissions.verificationManage);
+
+  /// Opens accounts in the console (F23).
+  bool get canReadUsers => can(Permissions.usersRead);
+
+  /// Features articles on Explore (F23).
+  bool get canFeature => can(Permissions.articlesFeature);
 }

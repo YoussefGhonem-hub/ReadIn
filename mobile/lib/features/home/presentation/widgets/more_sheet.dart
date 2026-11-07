@@ -12,6 +12,8 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../admin/presentation/admin_routes.dart';
+import '../../../admin/presentation/widgets/admin_entry.dart';
 import '../../../auth/domain/entities/me.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
@@ -60,6 +62,9 @@ class MoreSheet extends StatelessWidget {
     final me = context.select((SessionCubit c) => c.state.isAuthenticated ? c.state.me : null);
     final tiles = <_Shortcut>[
       if (me != null) ...[
+        // The admin console first, for holders of admin.access (F23); it replaces Moderation for them.
+        if (me.isAdmin)
+          _Shortcut('admin', Icons.admin_panel_settings_outlined, l10n.adminConsoleTitle, _Tint.rose, AdminRoutes.home),
         _Shortcut('profile', Icons.person_outline_rounded, l10n.navProfile, _Tint.primary, '/profile', tab: true),
         _Shortcut('notifications', Icons.notifications_none_rounded, l10n.notifications, _Tint.amber, '/notifications'),
         _Shortcut('paths', Icons.route_outlined, l10n.pathsTabMine, _Tint.blue, PathRoutes.mine),
@@ -68,7 +73,7 @@ class MoreSheet extends StatelessWidget {
         _Shortcut('muted', Icons.volume_off_outlined, l10n.muteSettingsEntry, _Tint.neutral, MutedPage.path),
         if (!me.isVerified)
           _Shortcut('verification', Icons.verified_outlined, l10n.verificationTitle, _Tint.blue, VerificationPage.path),
-        if (me.isModerator)
+        if (me.isModerator && !me.isAdmin)
           _Shortcut('moderation', Icons.shield_outlined, l10n.moderationTitle, _Tint.rose, ModerationRoutes.home),
       ],
       _Shortcut('settings', Icons.settings_outlined, l10n.settings, _Tint.neutral, '/settings'),
@@ -443,6 +448,8 @@ class _ShortcutTile extends StatelessWidget {
     if (unread > 0) {
       icon = Badge(label: Text(unread > 9 ? '9+' : '$unread'), child: icon);
     }
+    // The console's badge: open reports + open tickets + pending verification (F23).
+    if (tile.id == 'admin') icon = AdminSummaryBadge(child: icon);
     return Material(
       color: colors.surface,
       shape: RoundedRectangleBorder(

@@ -71,6 +71,14 @@ class NotificationTile extends StatelessWidget {
                       const SizedBox(height: ReadInSpace.s1),
                       _Excerpt(text: excerpt),
                     ],
+                    // An announcement's body (F23), or a ticket's "#12 · subject" (F35), each in its own direction.
+                    if (notificationDetail(notification) case final detail?) ...[
+                      const SizedBox(height: 2),
+                      _OwnDirection(
+                        direction: Bidi.detect(detail) ?? Directionality.of(context),
+                        child: BidiText(detail, maxLines: 3, overflow: TextOverflow.ellipsis, style: secondary),
+                      ),
+                    ],
                     if (notification.type == NotificationType.securityAlert) ...[
                       const SizedBox(height: 2),
                       Text(l10n.notifSecurityHint, style: secondary),
@@ -267,6 +275,9 @@ class _Leading extends StatelessWidget {
         NotificationType.verificationResult => (Icons.verified_outlined, colors.calloutTip, colors.success),
         NotificationType.moderationNotice => (Icons.gavel_rounded, colors.calloutWarning, colors.calloutWarningAccent),
         NotificationType.articleReposted => (Icons.repeat_rounded, colors.primary, colors.onPrimary),
+        NotificationType.announcement => (Icons.campaign_outlined, colors.calloutInfo, colors.calloutInfoAccent),
+        NotificationType.supportReply => (Icons.support_agent_rounded, colors.calloutTip, colors.success),
+        NotificationType.supportTicket => (Icons.confirmation_number_outlined, colors.primary, colors.onPrimary),
         NotificationType.unknown => (Icons.notifications_none_rounded, colors.surfaceVariant, colors.textSecondary),
       };
 }

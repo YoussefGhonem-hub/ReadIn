@@ -5336,4 +5336,1229 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateRequiredAction => 'Update now';
+
+  @override
+  String get adminConsoleTitle => 'Admin console';
+
+  @override
+  String get adminConsoleEntryHint =>
+      'Dashboard, users, content and the queues';
+
+  @override
+  String adminWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items waiting',
+      one: '1 item waiting',
+      zero: 'Nothing waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminConfirm => 'OK';
+
+  @override
+  String get adminNoAccessTitle => 'This page is for the admin';
+
+  @override
+  String get adminNoAccessBody =>
+      'Your account doesn\'t have access to the admin console.';
+
+  @override
+  String get adminWebOnlyNote =>
+      'Taxonomy and tags, paths and featured, announcements, the audit log and the system page are on the web console.';
+
+  @override
+  String get adminSearchClear => 'Clear search';
+
+  @override
+  String get adminSectionDashboard => 'Dashboard';
+
+  @override
+  String get adminSectionDashboardHint =>
+      'Today\'s numbers, charts and top lists';
+
+  @override
+  String get adminSectionUsers => 'Users';
+
+  @override
+  String get adminSectionUsersHint => 'Find an account and act on it';
+
+  @override
+  String get adminSectionContent => 'Content';
+
+  @override
+  String get adminSectionContentHint => 'Articles and the latest comments';
+
+  @override
+  String get adminSectionReports => 'Reports';
+
+  @override
+  String get adminSectionReportsHint => 'The moderation queue';
+
+  @override
+  String get adminSectionTickets => 'Tickets';
+
+  @override
+  String get adminSectionTicketsHint => 'Help and support requests';
+
+  @override
+  String get adminSectionVerification => 'Verification';
+
+  @override
+  String get adminSectionVerificationHint => 'Writer verification requests';
+
+  @override
+  String get adminPeriodToday => 'Today';
+
+  @override
+  String get adminPeriodYesterday => 'Yesterday';
+
+  @override
+  String get adminPeriod7Days => '7 days';
+
+  @override
+  String get adminPeriod30Days => '30 days';
+
+  @override
+  String adminDashboardRange(String from, String to, String time) {
+    return '$from to $to · updated $time';
+  }
+
+  @override
+  String get adminDashboardActivity => 'Activity';
+
+  @override
+  String get adminDashboardNow => 'Right now';
+
+  @override
+  String get adminDashboardCharts => 'Last 30 days';
+
+  @override
+  String get adminCardArticlesPublished => 'Articles published';
+
+  @override
+  String get adminCardNewUsers => 'New users';
+
+  @override
+  String adminCardNewUsersSplit(String phone, String google, String apple) {
+    return 'Phone $phone · Google $google · Apple $apple';
+  }
+
+  @override
+  String get adminCardActiveReaders => 'Active readers';
+
+  @override
+  String get adminCardReads => 'Reads';
+
+  @override
+  String get adminCardComments => 'Comments';
+
+  @override
+  String get adminCardReactions => 'Reactions';
+
+  @override
+  String get adminCardReposts => 'Reposts';
+
+  @override
+  String get adminCardOpenReports => 'Open reports';
+
+  @override
+  String get adminCardOpenTickets => 'Open tickets';
+
+  @override
+  String get adminCardPendingVerifications => 'Pending verification';
+
+  @override
+  String get adminCardSuspendedNow => 'Suspended accounts';
+
+  @override
+  String adminChangeUp(String count) {
+    return '$count more than the previous period';
+  }
+
+  @override
+  String adminChangeDown(String count) {
+    return '$count fewer than the previous period';
+  }
+
+  @override
+  String get adminChangeSame => 'Same as the previous period';
+
+  @override
+  String adminChartCaption(String total, String peak) {
+    return '$total in all, at most $peak a day';
+  }
+
+  @override
+  String get adminTopArticles => 'Top articles';
+
+  @override
+  String get adminTopWriters => 'Top writers';
+
+  @override
+  String adminReads(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reads',
+      one: '1 read',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adminArticlesRead(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles read',
+      one: '1 article read',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminMissedSearches => 'Searches with no results';
+
+  @override
+  String get adminMissedSearchesHint =>
+      'What readers looked for and didn\'t find.';
+
+  @override
+  String adminSearchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: 'once',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminNothingInPeriod => 'Nothing in this period.';
+
+  @override
+  String get adminStreakRetention => 'Streak retention';
+
+  @override
+  String get adminStreakRetentionHint =>
+      'Last week\'s active readers who kept a reading streak of 3 days or more.';
+
+  @override
+  String adminStreakRetentionDetail(String kept, String cohort) {
+    return '$kept of $cohort readers';
+  }
+
+  @override
+  String get adminContentPipeline => 'Content pipeline';
+
+  @override
+  String get adminPipelineFolders => 'Article folders';
+
+  @override
+  String get adminPipelineSeeded => '@readin articles';
+
+  @override
+  String get adminPipelinePublished => 'Readable now';
+
+  @override
+  String get adminPipelineLastRun => 'Last seed run';
+
+  @override
+  String get adminSuspendCustom => 'Custom…';
+
+  @override
+  String get adminSuspendCustomLabel => 'Days (1–365)';
+
+  @override
+  String get adminSuspendCustomInvalid => 'Enter a number from 1 to 365.';
+
+  @override
+  String get adminSuspendReason => 'Reason';
+
+  @override
+  String get adminSuspendReasonHint => '5 to 500 characters.';
+
+  @override
+  String get adminSuspendHideContent =>
+      'Also hide all of their articles and comments';
+
+  @override
+  String get adminSuspendHideContentHint =>
+      'For spam accounts. You can restore them later.';
+
+  @override
+  String adminHideContentTitle(String name) {
+    return 'Hide all of $name\'s content?';
+  }
+
+  @override
+  String get adminHideContentBody =>
+      'All of their articles and comments are hidden from everyone, and their open reports are closed. You can restore them from their page in the console. They aren\'t notified.';
+
+  @override
+  String get adminContentHidden => 'Content hidden';
+
+  @override
+  String adminRestoreContentTitle(String name) {
+    return 'Restore $name\'s content?';
+  }
+
+  @override
+  String get adminRestoreContentBody =>
+      'The articles and comments hidden with the account become visible again. Anything hidden one by one stays hidden.';
+
+  @override
+  String get adminContentRestored => 'Content restored';
+
+  @override
+  String get adminLogUserHideContent => 'Hid all of a user\'s content';
+
+  @override
+  String get adminLogUserUnhideContent => 'Restored a user\'s content';
+
+  @override
+  String get adminUserTitle => 'User';
+
+  @override
+  String get adminUsersSearchHint => 'Name or @username';
+
+  @override
+  String get adminUsersSearchHintPii => 'Name, @username or phone number';
+
+  @override
+  String get adminUsersEmpty => 'No users match';
+
+  @override
+  String adminUsersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count users',
+      one: '1 user',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminSort => 'Sort';
+
+  @override
+  String get adminSortJoined => 'Newest';
+
+  @override
+  String get adminSortLastSeen => 'Last seen';
+
+  @override
+  String get adminSortFollowers => 'Most followers';
+
+  @override
+  String get adminSortOpenReports => 'Most open reports';
+
+  @override
+  String get adminFilterSuspended => 'Suspended';
+
+  @override
+  String get adminFilterVerified => 'Verified';
+
+  @override
+  String get adminFilterHasReports => 'Has reports';
+
+  @override
+  String get adminFilterHidden => 'Hidden';
+
+  @override
+  String get adminFilterVisible => 'Visible';
+
+  @override
+  String get adminFilterFeatured => 'Featured';
+
+  @override
+  String get adminFilterReported => 'Reported';
+
+  @override
+  String get adminSignInPhone => 'Phone';
+
+  @override
+  String get adminStatusActive => 'Active';
+
+  @override
+  String get adminSystemAccount => 'Official account';
+
+  @override
+  String get adminStaff => 'Staff';
+
+  @override
+  String adminJoined(String date) {
+    return 'Joined $date';
+  }
+
+  @override
+  String adminLastSeen(String time) {
+    return 'Seen $time';
+  }
+
+  @override
+  String get adminNeverSeen => 'Not seen yet';
+
+  @override
+  String adminOpenReports(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open reports',
+      one: '1 open report',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminPhone => 'Phone number';
+
+  @override
+  String get adminShowPhone => 'Show';
+
+  @override
+  String get adminCopy => 'Copy';
+
+  @override
+  String get adminOpenProfile => 'Open profile';
+
+  @override
+  String get adminOpenInConsole => 'Open in console';
+
+  @override
+  String get adminSuspend => 'Suspend…';
+
+  @override
+  String get adminHideContent => 'Hide all of their content';
+
+  @override
+  String adminRestoreContent(int count) {
+    return 'Restore their content ($count)';
+  }
+
+  @override
+  String get adminResetPassword => 'Reset password';
+
+  @override
+  String adminResetPasswordTitle(String name) {
+    return 'Reset $name\'s password?';
+  }
+
+  @override
+  String get adminResetPasswordBody =>
+      'A temporary password is made. They must change it, and set a recovery PIN, the next time they sign in.';
+
+  @override
+  String get adminTempPasswordTitle => 'Temporary password';
+
+  @override
+  String get adminTempPasswordBody =>
+      'It\'s shown only once. Send it to them in a safe way.';
+
+  @override
+  String get adminLogoutAll => 'Sign out of all devices';
+
+  @override
+  String adminLogoutAllTitle(String name) {
+    return 'Sign $name out of all devices?';
+  }
+
+  @override
+  String get adminLogoutAllBody =>
+      'Every session of this account ends now, and each device must sign in again. They aren\'t notified.';
+
+  @override
+  String get adminLoggedOut => 'Signed out of all devices';
+
+  @override
+  String get adminRemoveBadge => 'Remove verified badge';
+
+  @override
+  String adminRemoveBadgeTitle(String name) {
+    return 'Remove $name\'s verified badge?';
+  }
+
+  @override
+  String get adminRemoveBadgeBody =>
+      'The Verified badge leaves their name everywhere, and they can ask for verification again. They aren\'t notified.';
+
+  @override
+  String get adminBadgeRemoved => 'Badge removed';
+
+  @override
+  String get adminStats => 'Stats';
+
+  @override
+  String get adminStatArticles => 'Published articles';
+
+  @override
+  String get adminStatFollowers => 'Followers';
+
+  @override
+  String get adminStatFollowing => 'Following';
+
+  @override
+  String get adminStatTotalReads => 'Reads of their articles';
+
+  @override
+  String get adminStatDrafts => 'Drafts';
+
+  @override
+  String get adminStatComments => 'Comments';
+
+  @override
+  String get adminStatArticlesRead => 'Articles they read';
+
+  @override
+  String get adminStatStreak => 'Reading streak';
+
+  @override
+  String adminStreakValue(int current, int longest) {
+    return '$current now · longest $longest';
+  }
+
+  @override
+  String get adminAccess => 'Sign in';
+
+  @override
+  String get adminJoinedLabel => 'Joined';
+
+  @override
+  String get adminLastSeenLabel => 'Last seen';
+
+  @override
+  String get adminSignUpMethod => 'Signed up with';
+
+  @override
+  String get adminActiveSessions => 'Signed-in devices';
+
+  @override
+  String get adminHasRecoveryPin => 'Recovery PIN set';
+
+  @override
+  String get adminRecoveryDisabled => 'Recovery disabled';
+
+  @override
+  String get adminMustChangePassword => 'Must change the password';
+
+  @override
+  String get adminLockedOutUntil => 'Locked out until';
+
+  @override
+  String get adminUiLanguage => 'App language';
+
+  @override
+  String get adminRole => 'Role';
+
+  @override
+  String get adminYes => 'Yes';
+
+  @override
+  String get adminNo => 'No';
+
+  @override
+  String get adminNone => 'None.';
+
+  @override
+  String adminModerationHistory(int count) {
+    return 'Moderation history ($count)';
+  }
+
+  @override
+  String get adminWarnings => 'Warnings';
+
+  @override
+  String get adminSuspensions => 'Suspensions';
+
+  @override
+  String get adminHiddenArticles => 'Hidden articles';
+
+  @override
+  String get adminHiddenComments => 'Hidden comments';
+
+  @override
+  String get adminHiddenWithAccount => 'Hidden with the account';
+
+  @override
+  String adminReportsAgainst(int count) {
+    return 'Reports about them ($count)';
+  }
+
+  @override
+  String adminReportsFiled(int count) {
+    return 'Reports they filed ($count)';
+  }
+
+  @override
+  String adminVerificationHistory(int count) {
+    return 'Verification requests ($count)';
+  }
+
+  @override
+  String adminTicketsOfUser(int count) {
+    return 'Tickets ($count)';
+  }
+
+  @override
+  String adminAuditOfUser(int count) {
+    return 'Audit log ($count)';
+  }
+
+  @override
+  String get adminAuditPiiViewed => 'Viewed a phone number';
+
+  @override
+  String get adminAuditSessionsRevoked => 'Signed out of all devices';
+
+  @override
+  String get adminAuditPasswordReset => 'Reset a password';
+
+  @override
+  String get adminAuditVerificationApproved =>
+      'Approved a verification request';
+
+  @override
+  String get adminAuditVerificationRejected =>
+      'Rejected a verification request';
+
+  @override
+  String get adminAuditVerificationRemoved => 'Removed a verified badge';
+
+  @override
+  String get adminAuditArticleFeatured => 'Featured an article';
+
+  @override
+  String get adminAuditArticleUnfeatured => 'Unfeatured an article';
+
+  @override
+  String get adminContentArticles => 'Articles';
+
+  @override
+  String get adminContentComments => 'Latest comments';
+
+  @override
+  String get adminArticlesSearchHint => 'Search titles';
+
+  @override
+  String get adminArticlesEmpty => 'No articles match';
+
+  @override
+  String adminArticlesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '1 article',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adminPeriodRange(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String get adminClearPeriod => 'Clear the period';
+
+  @override
+  String get adminFeatured => 'Featured';
+
+  @override
+  String get adminArchived => 'Archived';
+
+  @override
+  String get adminCommentsEmpty => 'No comments';
+
+  @override
+  String get adminCommentMenu => 'Comment options';
+
+  @override
+  String get adminOpenComment => 'Open in the article';
+
+  @override
+  String get adminSeeReports => 'See the reports';
+
+  @override
+  String get adminReply => 'Reply';
+
+  @override
+  String get adminArticleTitle => 'Article';
+
+  @override
+  String get adminArticleField => 'Field';
+
+  @override
+  String get adminArticlePublished => 'Published';
+
+  @override
+  String get adminArticleReports => 'Reports';
+
+  @override
+  String get adminArticleHiddenAt => 'Hidden';
+
+  @override
+  String get adminArticleFeaturedAt => 'Featured';
+
+  @override
+  String get adminOpenWriter => 'Open the writer in the console';
+
+  @override
+  String get adminFeature => 'Feature';
+
+  @override
+  String get adminUnfeature => 'Unfeature';
+
+  @override
+  String get adminFeatureHint => 'Explore\'s featured articles';
+
+  @override
+  String get adminFeatureTitle => 'Feature this article?';
+
+  @override
+  String get adminFeatureBody =>
+      'It shows in Explore\'s featured articles, the most recently featured first.';
+
+  @override
+  String get adminUnfeatureTitle => 'Stop featuring this article?';
+
+  @override
+  String get adminUnfeatureBody => 'It leaves Explore\'s featured articles.';
+
+  @override
+  String get adminFeaturedDone => 'Article featured';
+
+  @override
+  String get adminUnfeaturedDone => 'No longer featured';
+
+  @override
+  String get adminVerificationPending => 'Pending';
+
+  @override
+  String get adminVerificationApproved => 'Approved';
+
+  @override
+  String get adminVerificationRejected => 'Rejected';
+
+  @override
+  String get adminVerificationTagPending => 'Pending';
+
+  @override
+  String get adminVerificationTagApproved => 'Approved';
+
+  @override
+  String get adminVerificationTagRejected => 'Rejected';
+
+  @override
+  String get adminVerificationEmptyPending => 'No requests waiting';
+
+  @override
+  String get adminVerificationEmpty => 'Nothing here';
+
+  @override
+  String adminVerificationSubmitted(String time) {
+    return 'Sent $time';
+  }
+
+  @override
+  String adminVerificationDecided(String time) {
+    return 'Decided $time';
+  }
+
+  @override
+  String get adminVerificationRequestTitle => 'Verification request';
+
+  @override
+  String get adminVerificationField => 'Field';
+
+  @override
+  String get adminVerificationJobTitle => 'Job title';
+
+  @override
+  String get adminVerificationSubmittedLabel => 'Sent';
+
+  @override
+  String get adminVerificationDecidedLabel => 'Decided';
+
+  @override
+  String get adminVerificationDecidedBy => 'Decided by';
+
+  @override
+  String get adminVerificationProofLink => 'Proof link';
+
+  @override
+  String adminVerificationSaveProof(String name) {
+    return 'Save the proof ($name)';
+  }
+
+  @override
+  String get adminVerificationNoProof => 'No proof file.';
+
+  @override
+  String get adminVerificationProofSaved => 'File saved';
+
+  @override
+  String get adminVerificationProofSaveFailed =>
+      'We couldn\'t save the file. Try again.';
+
+  @override
+  String get adminVerificationNote => 'Their note';
+
+  @override
+  String get adminVerificationReason => 'Reason';
+
+  @override
+  String get adminVerificationApprove => 'Approve';
+
+  @override
+  String adminVerificationApproveTitle(String name) {
+    return 'Approve $name\'s request?';
+  }
+
+  @override
+  String get adminVerificationApproveBody =>
+      'They get the Verified badge at once, with a notification.';
+
+  @override
+  String get adminVerificationApprovedDone => 'Request approved';
+
+  @override
+  String get adminVerificationReject => 'Reject';
+
+  @override
+  String get adminVerificationRejectTitle => 'Reject this request?';
+
+  @override
+  String get adminVerificationRejectBody =>
+      'They see your reason on their verification page and can ask again.';
+
+  @override
+  String get adminVerificationRejectedDone => 'Request rejected';
+
+  @override
+  String get adminNotifAnnouncement => 'News from the ReadIn team';
+
+  @override
+  String get adminNotifTypeAnnouncement => 'Announcements';
+
+  @override
+  String get adminNotifTypeAnnouncementHint => 'News from the ReadIn team';
+
+  @override
+  String get errAdminVerificationAlreadyDecided =>
+      'This request was already decided.';
+
+  @override
+  String get errAdminVerificationProofNotFound =>
+      'The proof file isn\'t there any more.';
+
+  @override
+  String get supportHelpTitle => 'Help & support';
+
+  @override
+  String get supportEntryHint => 'Report a problem or send a suggestion';
+
+  @override
+  String get supportEmailUs => 'Email support';
+
+  @override
+  String get supportEmailBody => 'You can also email us.';
+
+  @override
+  String get supportAppealLine => 'To appeal, email';
+
+  @override
+  String get supportAppealBody =>
+      'A suspended account can\'t sign in to send a ticket. To appeal, email our support team from your account\'s number or email, and tell us why the suspension should be lifted.';
+
+  @override
+  String get supportTabActive => 'Open';
+
+  @override
+  String get supportTabClosed => 'Closed';
+
+  @override
+  String get supportNewTicket => 'New ticket';
+
+  @override
+  String get supportEmptyActive => 'No open tickets';
+
+  @override
+  String get supportEmptyActiveBody =>
+      'Need help, or have an idea? Send us a ticket.';
+
+  @override
+  String get supportEmptyClosed => 'No closed tickets';
+
+  @override
+  String get supportCategoryLabel => 'What is it about?';
+
+  @override
+  String get supportCategoryRequired => 'Choose a category.';
+
+  @override
+  String get supportCategoryAppProblem => 'A problem in the app';
+
+  @override
+  String get supportCategoryAccount => 'Account and sign in';
+
+  @override
+  String get supportCategoryContent => 'Content or a report';
+
+  @override
+  String get supportCategoryVerification => 'Verification';
+
+  @override
+  String get supportCategorySuggestion => 'A suggestion';
+
+  @override
+  String get supportCategoryOther => 'Other';
+
+  @override
+  String get supportSubject => 'Subject';
+
+  @override
+  String get supportSubjectError => 'Write 5 to 120 characters.';
+
+  @override
+  String get supportMessage => 'Message';
+
+  @override
+  String get supportMessageHint => 'Tell us what happened, and how to see it.';
+
+  @override
+  String get supportMessageError => 'Write 10 to 2000 characters.';
+
+  @override
+  String get supportScreenshots => 'Screenshots (optional)';
+
+  @override
+  String get supportScreenshotsHint =>
+      'Up to 3 images, JPEG, PNG or WebP, 5 MB each at most.';
+
+  @override
+  String supportAddScreenshot(int count, int max) {
+    return 'Add a screenshot ($count/$max)';
+  }
+
+  @override
+  String get supportRemoveScreenshot => 'Remove screenshot';
+
+  @override
+  String get supportAttach => 'Add screenshots';
+
+  @override
+  String get supportDeviceNote =>
+      'To help us, we add your phone\'s system and version, the app\'s version and its language. Nothing that identifies your device.';
+
+  @override
+  String get supportSend => 'Send';
+
+  @override
+  String get supportSending => 'Sending…';
+
+  @override
+  String get supportStatusOpen => 'Open';
+
+  @override
+  String get supportStatusAnswered => 'Answered';
+
+  @override
+  String get supportStatusClosed => 'Closed';
+
+  @override
+  String get supportTeam => 'Support';
+
+  @override
+  String get supportYou => 'You';
+
+  @override
+  String get supportMember => 'Member';
+
+  @override
+  String get supportInternalNote => 'Internal note';
+
+  @override
+  String get supportTicketTitle => 'Ticket';
+
+  @override
+  String supportTicketNumber(String number) {
+    return 'Ticket $number';
+  }
+
+  @override
+  String get supportTicketMenu => 'Ticket options';
+
+  @override
+  String get supportCloseTicket => 'Close ticket';
+
+  @override
+  String get supportCloseTitle => 'Close this ticket?';
+
+  @override
+  String get supportCloseBody => 'You can reopen it within 30 days.';
+
+  @override
+  String get supportAdminCloseBody =>
+      'The member is told their ticket was closed. You can reopen it at any time.';
+
+  @override
+  String get supportClosed => 'Ticket closed';
+
+  @override
+  String get supportReopen => 'Reopen';
+
+  @override
+  String get supportReopened => 'Ticket reopened';
+
+  @override
+  String get supportClosedCanReopen =>
+      'This ticket is closed. You can reopen it within 30 days of closing.';
+
+  @override
+  String get supportClosedExpired =>
+      'This ticket was closed more than 30 days ago. Send a new ticket if you still need help.';
+
+  @override
+  String get supportOpenHint =>
+      'Waiting for support. We\'ll notify you when we reply.';
+
+  @override
+  String get supportReplyHint => 'Write a reply…';
+
+  @override
+  String get supportImageFailed => 'Couldn\'t load the image';
+
+  @override
+  String get supportOpenImage => 'Open image';
+
+  @override
+  String supportWaiting(String time) {
+    return 'Waiting · $time';
+  }
+
+  @override
+  String get supportSearchHint => 'Subject, member or #12';
+
+  @override
+  String supportTicketsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tickets',
+      one: '1 ticket',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get supportQueueEmptyOpen => 'No tickets waiting';
+
+  @override
+  String get supportQueueEmpty => 'No tickets here';
+
+  @override
+  String get supportChangeCategory => 'Change category';
+
+  @override
+  String get supportCategoryChanged => 'Category changed';
+
+  @override
+  String get supportReplyMode => 'Reply';
+
+  @override
+  String get supportNoteMode => 'Internal note';
+
+  @override
+  String get supportAdminReplyHint => 'Reply to the member…';
+
+  @override
+  String get supportNoteHint => 'A note only admins see…';
+
+  @override
+  String get supportAddNote => 'Add note';
+
+  @override
+  String get supportReopenToReply => 'Reopen the ticket to reply.';
+
+  @override
+  String get supportReplySent => 'Reply sent';
+
+  @override
+  String get supportNoteAdded => 'Note added';
+
+  @override
+  String supportClosedOn(String date, String by) {
+    return 'Closed $date by $by';
+  }
+
+  @override
+  String get supportClosedAuto => 'the system';
+
+  @override
+  String get supportDevice => 'Device';
+
+  @override
+  String get supportDevicePlatform => 'Platform';
+
+  @override
+  String get supportDeviceOs => 'System';
+
+  @override
+  String get supportDeviceApp => 'App version';
+
+  @override
+  String get supportDeviceLanguage => 'Language';
+
+  @override
+  String get supportDeviceScreen => 'Screen';
+
+  @override
+  String get supportDeviceSent => 'Sent';
+
+  @override
+  String supportMemberTickets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tickets',
+      one: '1 ticket',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get supportMemberModeration => 'Warnings and suspensions';
+
+  @override
+  String supportMemberReports(int count) {
+    return 'Their reports ($count)';
+  }
+
+  @override
+  String get supportNotifReply => 'Support replied to your ticket';
+
+  @override
+  String get supportNotifClosed => 'Your ticket was closed';
+
+  @override
+  String supportNotifTicket(String name) {
+    return 'New support message from $name';
+  }
+
+  @override
+  String get supportNotifTypeTicket => 'Support tickets';
+
+  @override
+  String get supportNotifTypeTicketHint => 'New tickets and members\' replies';
+
+  @override
+  String get supportAuditReplied => 'Replied to a ticket';
+
+  @override
+  String get supportAuditNoteAdded => 'Added an internal note';
+
+  @override
+  String get supportAuditClosed => 'Closed a ticket';
+
+  @override
+  String get supportAuditReopened => 'Reopened a ticket';
+
+  @override
+  String get supportAuditCategoryChanged => 'Changed a ticket\'s category';
+
+  @override
+  String get errSupportLimit =>
+      'You\'ve reached the ticket limit: 5 new tickets a day and 10 open at once.';
+
+  @override
+  String get errSupportLimitDaily =>
+      'You\'ve sent 5 tickets in the last 24 hours. Try again later.';
+
+  @override
+  String get errSupportLimitOpen =>
+      'You have 10 open tickets. Close one, or wait for a reply, before sending another.';
+
+  @override
+  String get errSupportTicketNotFound => 'Ticket not found.';
+
+  @override
+  String get errSupportAttachmentNotFound => 'Attachment not found.';
+
+  @override
+  String get errSupportTicketClosed =>
+      'This ticket is closed. Reopen it first.';
+
+  @override
+  String get errSupportReopenExpired =>
+      'This ticket was closed more than 30 days ago. Send a new one.';
+
+  @override
+  String get errSupportAttachmentInvalid =>
+      'Screenshots must be JPEG, PNG or WebP, up to 5 MB each.';
+
+  @override
+  String get errSupportTooManyAttachments => 'You can attach up to 3 images.';
+
+  @override
+  String get errSupportCategoryInvalid => 'Choose a category from the list.';
+
+  @override
+  String get adminExploreFeatured => 'Featured articles';
+
+  @override
+  String get adminFilterJoined => 'Joined…';
+
+  @override
+  String adminJoinedRange(String range) {
+    return 'Joined $range';
+  }
+
+  @override
+  String get adminFilterPublished => 'Published…';
+
+  @override
+  String get adminFilterField => 'Field…';
+
+  @override
+  String get adminFilterTopic => 'Topic…';
+
+  @override
+  String get adminChooseField => 'Choose a field';
+
+  @override
+  String get adminChooseTopic => 'Choose a topic';
+
+  @override
+  String get adminAllFields => 'All fields';
+
+  @override
+  String get adminAllTopics => 'All topics';
+
+  @override
+  String adminWriterChip(String name) {
+    return 'Writer: $name';
+  }
+
+  @override
+  String get adminWriterUnknown => 'one writer';
+
+  @override
+  String get adminTheirArticles => 'Their articles';
+
+  @override
+  String get adminRemoveFilter => 'Remove filter';
+
+  @override
+  String get adminSuspendedProfileHint =>
+      'Only admins can open this profile while the account is suspended.';
+
+  @override
+  String get adminNeverPublished => 'Never published';
 }
