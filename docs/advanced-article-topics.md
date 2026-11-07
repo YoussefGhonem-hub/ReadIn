@@ -1,7 +1,7 @@
-Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 392 articles are done, starting with the 40 Learning Roadmaps.
+Read CLAUDE.md, content/AUTHORING.md, and SPEC sections 14.3, 18 and 19 in docs/SPEC.md first. Do Part 1, then Part 2. Don't stop to ask for my approval or show me samples. Keep going until all 422 articles are done, starting with the 40 Learning Roadmaps.
 
 PART 1: AUTOMATIC SEEDING ON ANY NEW DATABASE
-Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 392 new ones.
+Goal: when the API starts against any new, empty database, in any environment including Production, it creates the schema and seeds everything with no manual command. That includes every article in content/articles: the existing 300 and the 422 new ones.
 
 1. Make Database:MigrateOnStartup and Seed:RunOnStartup true by default in every environment. Keep the manual `seed [--force]` command.
 2. Include the content/ folder in `dotnet publish` and in the container image, and make Content:RootPath default to it, so Production doesn't need the repo.
@@ -20,7 +20,7 @@ Goal: when the API starts against any new, empty database, in any environment in
 7. Update docs/setup/deployment.md, including the settings I must provide (such as Seed:SuperAdminPhone and Seed:SuperAdminPassword) and the health check allowance for a slow first start.
 
 PART 2: WRITE THE ARTICLES
-Write one article for every topic in docs/advanced-article-topics.md (392 topics). The Learning Roadmaps section comes first (see Process).
+Write one article for every topic in docs/advanced-article-topics.md (422 topics). The Learning Roadmaps section comes first (see Process).
 
 Two versions of every article:
 1. English (en.json): written entirely in English.
@@ -49,13 +49,20 @@ Article rules:
   - Structure: what the job really involves; then the stages from zero to senior in one `:::steps` block. Each stage says what to learn and why, what to postpone, one project to build, and how to know you're ready for the next stage. Then a books table (title, authors, edition and year, the stage it fits, free or paid), the common mistakes, how to show your work, and a "next on ReadIn" part that links the ReadIn articles and learning paths for each stage.
   - Books: name real books only. Check each title, author and edition on the publisher's page and link to that page, never to a pirated copy. Say when a book is old and which parts still hold, and point to the official free docs where a book has aged (for example angular.dev and react.dev). The books in each topic below are suggestions: drop one you can't verify, or replace it with a better or newer one. Book links don't count toward the 2–5 sources.
   - Give durations only as ranges that depend on hours per week. No salary figures, no job promises and no affiliate links. Name each certification with its official page, and say that exam codes change.
+  - Once a book has its own article in Book Summaries, the roadmaps that recommend it link to that summary.
+- Book Summaries topics: one article per book that explains its main ideas in your own words, so the reader knows what the book says, whether it's worth their time and where to start in it.
+  - Field: the book's closest field (for example `software-architecture`, `testing`, `devops-cloud`, `dotnet` or `frontend`), under a new `book-summaries` topic ("ملخصات كتب" / "Book Summaries"). General and computer science books go under `education` with the same topic. Tag every one `book-summary`. Use the book's own level: "beginner", "intermediate" or "advanced".
+  - Misconception: a common wrong belief about the book or its main idea, for example that Clean Code demands four-line functions, or that design patterns should be used wherever they fit.
+  - Structure: the book in one paragraph (authors, year, the edition you summarize and the problem it solves); its 5 to 8 key ideas, each with your own example (in code where that helps); what has aged and what critics dispute, with sources; who should read it and who can skip it; which chapters to read first; and the related ReadIn articles and roadmaps.
+  - Copyright: summarize in your own words. Quote at most two short sentences in the whole article, in quotation marks with the chapter. Don't copy the book's code, figures, tables or exercises, and don't summarize it chapter by chapter in a way that replaces reading it. Link only to the publisher's or the author's page, never to a pirated copy.
+  - Sources: the publisher's or author's page, plus 1 to 4 primary sources for the criticism and updates (the author's own later talks or posts count). Say when a newer edition exists.
 
 Images:
 - Don't create custom images, diagrams or SVGs. They would take too long.
 - Use only the standard cover from `node tools/content-covers/render.mjs --slug <slug>`, because validation requires cover.webp.
 
 Process:
-- Write all 392 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
+- Write all 422 articles in one continuous run, with no pause for my review. Use at most 3 agents at a time. Only you edit taxonomy.yaml.
 - Priority (user decision, 2026-11-07): write and seed the Learning Roadmaps section first, all 40, before any other section, starting with the full-stack .NET and Angular roadmap. They are the first four batches of 10: each batch is validated, committed, pushed and seeded before the next batch starts. If seeding is blocked, they still come first in the writing order.
 - For each article, run compose, validate and render.mjs. An article isn't done until validate passes, including the code and link checks.
 - Update any test or SPEC text that depends on the number 300 to the new total.
@@ -70,13 +77,14 @@ When everything is done, send me a final report in simple Egyptian Arabic: how m
 
 # Advanced Article Topics
 
-Topics for ReadIn articles. Most are advanced, written for readers who already have experience in the field; Learning Roadmaps, Everyday Health and Business and Commerce say otherwise. None of them repeats an existing article in `content/articles`.
+Topics for ReadIn articles. Most are advanced, written for readers who already have experience in the field; Learning Roadmaps, Book Summaries, Everyday Health and Business and Commerce say otherwise. None of them repeats an existing article in `content/articles`.
 
 ## Contents
 
 | Section | Topics |
 |---|---:|
 | [Learning Roadmaps](#learning-roadmaps) (written and seeded first) | 40 |
+| [Book Summaries](#book-summaries) | 30 |
 | [Databases](#databases) | 17 |
 | [Flutter and Dart](#flutter-and-dart) | 17 |
 | [DevOps](#devops) | 7 |
@@ -95,7 +103,7 @@ Topics for ReadIn articles. Most are advanced, written for readers who already h
 | [Everyday Health](#everyday-health) | 20 |
 | [Engineering](#engineering) | 30 |
 | [Business and Commerce](#business-and-commerce) | 40 |
-| **Total** | **392** |
+| **Total** | **422** |
 
 ## Learning Roadmaps
 
@@ -170,6 +178,58 @@ Topics for ReadIn articles. Most are advanced, written for readers who already h
 
 39. **QA and test automation engineer:** testing fundamentals and exploratory testing, test design, API testing, UI automation with Playwright, performance testing, and where QA fits in CI; the ISTQB Foundation exam. Books: *Lessons Learned in Software Testing* (Cem Kaner, James Bach, Bret Pettichord), *Explore It!* (Elisabeth Hendrickson), *Agile Testing* (Lisa Crispin, Janet Gregory), *Unit Testing Principles, Practices, and Patterns*, *xUnit Test Patterns* (Gerard Meszaros).
 40. **Embedded systems engineer:** C in depth, digital electronics, ARM Cortex-M microcontrollers, peripherals and drivers, RTOS, hardware debugging, and the automotive standards (AUTOSAR, MISRA C). Books: *C Programming: A Modern Approach* (K. N. King), *Making Embedded Systems* (Elecia White), *The Definitive Guide to ARM Cortex-M3 and Cortex-M4 Processors* (Joseph Yiu), *Mastering the FreeRTOS Real Time Kernel* (Richard Barry, free), *Test Driven Development for Embedded C* (James Grenning).
+
+## Book Summaries
+
+One article per book: its key ideas in our own words, what has aged, who should read it and where to start. The rules are under "Book Summaries topics" at the top of this file.
+
+### Writing Good Code
+
+1. ***The Pragmatic Programmer*** (David Thomas, Andrew Hunt; 20th anniversary edition, 2019): DRY as duplicated knowledge rather than duplicated lines, orthogonality, tracer bullets, broken windows, and what changed from the 1999 edition.
+2. ***Clean Code*** (Robert C. Martin, 2008): naming, functions, comments and error handling; which advice is widely accepted, which is disputed (very short functions, few comments), and where *A Philosophy of Software Design* disagrees.
+3. ***Code Complete*** (Steve McConnell; 2nd edition, 2004): construction as a craft: variables, routines, defensive programming and code quality, and which parts a 2004 book still gets right.
+4. ***Refactoring*** (Martin Fowler; 2nd edition, 2018): code smells, small safe steps behind tests, the most useful refactorings, and why the second edition moved its examples to JavaScript.
+5. ***A Philosophy of Software Design*** (John Ousterhout; 2nd edition, 2021): complexity, deep vs shallow modules, information hiding, and defining errors out of existence.
+6. ***Working Effectively with Legacy Code*** (Michael Feathers, 2004): legacy code as code without tests, seams, characterization tests, and breaking dependencies safely.
+7. ***Test-Driven Development: By Example*** (Kent Beck, 2002): red, green, refactor, small steps, and what TDD is and isn't for.
+8. ***Unit Testing Principles, Practices, and Patterns*** (Vladimir Khorikov, 2020): what makes a test valuable, the classical vs London schools, mocks only at the system's edges, and testing the domain without the database.
+
+### Design and Architecture
+
+9. ***Design Patterns*** (Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides, 1994): the patterns still worth knowing, the ones modern languages made unnecessary, and "favor composition over inheritance".
+10. ***Patterns of Enterprise Application Architecture*** (Martin Fowler, 2002): Transaction Script vs Domain Model, Active Record vs Data Mapper, Unit of Work, and where these live in today's ORMs.
+11. ***Domain-Driven Design*** (Eric Evans, 2003): ubiquitous language, bounded contexts, aggregates and strategic design, and why the strategic half matters more than the tactical one.
+12. ***Clean Architecture*** (Robert C. Martin, 2017): the dependency rule, boundaries and use cases, and where teams overdo it.
+13. ***Fundamentals of Software Architecture*** (Mark Richards, Neal Ford): architecture characteristics, the main styles and their trade-offs, and "everything is a trade-off".
+14. ***Building Microservices*** (Sam Newman; 2nd edition, 2021): service boundaries, data ownership, communication, deployment, and when not to use microservices at all.
+15. ***Designing Data-Intensive Applications*** (Martin Kleppmann, 2017; check for the 2nd edition with Chris Riccomini): reliability, scalability and maintainability; data models, storage engines, replication, partitioning, transactions, consistency, and batch and stream processing.
+16. ***Release It!*** (Michael T. Nygard; 2nd edition, 2018): stability antipatterns and patterns (timeouts, circuit breakers, bulkheads), and designing for production rather than for QA.
+
+### Delivery and Operations
+
+17. ***Continuous Delivery*** (Jez Humble, David Farley, 2010): the deployment pipeline, releasable software at every commit, and deploying vs releasing.
+18. ***Accelerate*** (Nicole Forsgren, Jez Humble, Gene Kim, 2018): the four key metrics, the research behind them, and the limits of that research.
+19. ***Site Reliability Engineering*** (Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy, 2016): SLOs, error budgets, toil, on-call and postmortems, and what a small team can take from Google's practices.
+
+### Languages
+
+20. ***Effective Java*** (Joshua Bloch; 3rd edition, 2018): the items that matter most (immutability, equals and hashCode, generics, lambdas and streams), and which apply to other languages too.
+21. ***C# in Depth*** (Jon Skeet; 4th edition, 2019): how C# evolved from version 2 to 7, with generics, LINQ, async and nullable types, and what a reader on today's C# should add.
+22. ***You Don't Know JS Yet*** (Kyle Simpson, 2020, free online): scope, closures and the parts of JavaScript people use without understanding; note which books of the second edition are finished.
+23. ***Effective TypeScript*** (Dan Vanderkam; 2nd edition, 2024): thinking in types as sets, inference, narrowing, `any` vs `unknown`, and designing types that make invalid states impossible.
+24. ***Fluent Python*** (Luciano Ramalho; 2nd edition, 2022): the data model, dunder methods, iterators and generators, concurrency, and writing Python that reads like Python.
+
+### Computer Science
+
+25. ***Code: The Hidden Language of Computer Hardware and Software*** (Charles Petzold; 2nd edition, 2022): from switches and logic gates to a working CPU and memory, for readers who never studied hardware.
+26. ***Structure and Interpretation of Computer Programs*** (Harold Abelson, Gerald Jay Sussman; 2nd edition, 1996, and the 2022 JavaScript edition): abstraction, recursion, higher-order functions and interpreters, and why people still recommend it.
+27. ***Introduction to Algorithms*** (Thomas Cormen, Charles Leiserson, Ronald Rivest, Clifford Stein; 4th edition, 2022): how to use a reference this large, the chapters a working developer needs, and lighter books to start with.
+28. ***Computer Systems: A Programmer's Perspective*** (Randal E. Bryant, David R. O'Hallaron; 3rd edition, 2015): data representation, machine code, the memory hierarchy, linking, processes and virtual memory, from a programmer's point of view.
+
+### Teams and Careers
+
+29. ***The Mythical Man-Month*** (Frederick P. Brooks Jr.; anniversary edition, 1995): Brooks's law, conceptual integrity, the second-system effect and "No Silver Bullet", and what still holds 50 years later.
+30. ***Cracking the Coding Interview*** (Gayle Laakmann McDowell; 6th edition, 2015): how technical interviews are run, the core data structures and algorithms they test, a study approach that builds skill rather than memorized answers, and the 2025 follow-up *Beyond Cracking the Coding Interview*.
 
 ## Databases
 
