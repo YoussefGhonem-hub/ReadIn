@@ -1571,7 +1571,7 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 
 | Phone | Display name | Roles | Recovery PIN | Environments |
 |---|---|---|:-:|---|
-| `+201229391155` | ReadIn (official account, `@readin`) | Member + Verified badge | — | All (cannot sign in, author of seeded articles; fixed id) |
+| `+201229391122` | ReadIn (official account, `@readin`) | Member + Verified badge | — | All (cannot sign in, author of seeded articles; fixed id) |
 | `+12025550101` | Super Admin | SuperAdmin | ✅ | Local |
 | `+12025550104` | .NET Writer | Member + Verified badge | ✅ | Local |
 | `+12025550105` | AI Writer | Member + Verified badge | ✅ | Local |
@@ -1580,7 +1580,7 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 | `+12025550119` | Reader 10 | Member | ❌ (tests the mandatory "set PIN" screen) | Local |
 | `+12025550120` | Suspended User | Member (suspended) | ❌ | Local |
 
-**Production SuperAdmin:** seeded from `Seed:SuperAdminPhone` + `Seed:SuperAdminPassword` with `MustChangePassword = true` and `MustSetRecoveryPin = true`.
+**Production SuperAdmin:** seeded from `Seed:SuperAdminPhone` + `Seed:SuperAdminPassword` with `MustChangePassword = true` and `MustSetRecoveryPin = true`. Locally `Seed:SuperAdminPhone`, when set, replaces `+12025550101`, and the SuperAdmin keeps the demo password and PIN. It can't be @readin's number.
 
 **Dev login panel (debug builds only):** lists the seed users with a PIN ✅/❌ indicator and signs in with one tap. It is compiled out / tree-shaken from production builds.
 

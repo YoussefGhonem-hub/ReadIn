@@ -40,7 +40,7 @@ internal sealed class SystemAccountsSeeder(
         OfficialBio,
         OfficialHeadline,
         string.Join(' ', OfficialLinks.Select(l => $"{l.Platform}={l.Url}|{l.Label}")),
-        options.Value.SuperAdminPhone ?? string.Empty,
+        SuperAdminPhone() ?? string.Empty,
         (options.Value.SuperAdminPassword is not null).ToString()));
 
     public async Task<bool> SeedAsync(CancellationToken cancellationToken)
@@ -56,6 +56,13 @@ internal sealed class SystemAccountsSeeder(
         official.Verify(clock.GetUtcNow().UtcDateTime); // the badge, not a role (SPEC §10.1)
 
         var phone = SuperAdminPhone();
+        if (phone == SystemUsers.OfficialPhone)
+            throw new InvalidOperationException("Seed:SuperAdminPhone is @readin's number; give the SuperAdmin another one.");
+
+        // Save @readin's number first: when it moves, the SuperAdmin may take the number it gave up, and the unique index
+        // on Users.PhoneNumber must never see one number on both rows.
+        await db.SaveChangesAsync(cancellationToken);
+
         var superAdmin = await SeedUserStore.UpsertByIdAsync(db, SystemUsers.SuperAdminId, () => User.CreateSeeded(
             phone, "Super Admin", "superadmin", SystemUsers.SuperAdminId, systemAccount: true), cancellationToken);
         if (phone is not null && superAdmin.PhoneNumber != phone) superAdmin.AssignSeedPhoneNumber(phone);

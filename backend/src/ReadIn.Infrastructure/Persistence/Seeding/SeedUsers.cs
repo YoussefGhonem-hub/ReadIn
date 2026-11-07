@@ -14,7 +14,10 @@ public sealed class SeedOptions
     /// <summary>Recovery PIN of the demo users that have one. Must pass the weak-PIN rules.</summary>
     public string? DemoPin { get; set; }
 
-    /// <summary>Production SuperAdmin's number (E.164). Locally the SuperAdmin is <see cref="SystemUsers.LocalSuperAdminPhone"/>.</summary>
+    /// <summary>
+    /// The SuperAdmin's number (E.164): required in production. Locally it is <see cref="SystemUsers.LocalSuperAdminPhone"/>
+    /// unless this is set, and the SuperAdmin keeps the demo password and PIN.
+    /// </summary>
     public string? SuperAdminPhone { get; set; }
 
     /// <summary>Production SuperAdmin's first password; it must be changed on first sign in, then a PIN set.</summary>
@@ -30,7 +33,8 @@ public static class SystemUsers
     public static readonly Guid EditorialId = new("0195f3a0-0000-7000-8000-00000000e001");
     public static readonly Guid SuperAdminId = new("0195f3a0-0000-7000-8000-00000000e002");
 
-    public const string OfficialPhone = "+201229391155";
+    /// <summary>@readin's number. +201229391155 is the owner's own, kept for the SuperAdmin (user, 2026-11-07).</summary>
+    public const string OfficialPhone = "+201229391122";
 
     /// <summary>Fictional range +1 202 555 01XX (SPEC §18.3).</summary>
     public const string LocalSuperAdminPhone = "+12025550101";
