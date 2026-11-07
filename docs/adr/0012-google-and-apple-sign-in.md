@@ -55,15 +55,28 @@ that doesn't verify anything Google or Apple don't already sign.
 - Deleting an account removes its Google/Apple identities with it, after revoking its Apple tokens, so they can sign up
   again at once ([0016](0016-immediate-account-deletion.md); this first said the phone number stayed reserved for 30 days).
   Apple sign in and link also send the `authorizationCode`, exchanged for a refresh token that is kept encrypted for that.
+- **The web's own Google button (user, 2026-11-07).** Google's rendered button can't take the form's look (its height,
+  corners and font are fixed, and in dark mode Chrome drew it on a white box), and Google Identity Services hands over an
+  ID token only through that button. So the web uses Google's **popup code flow** (`google.accounts.oauth2.initCodeClient`,
+  scopes `openid email profile`) behind its own button and sends `{ provider: "google", authorizationCode }` without an
+  ID token. The API trades the code at `https://oauth2.googleapis.com/token` (redirect URI `postmessage`) with the web
+  client's secret, `ExternalAuth:Google:ClientSecret` (secret store only, never in the repo), and checks the ID token it
+  gets like any other. The web client id is the first of `ExternalAuth:Google:ClientIds`. A code works once, and the
+  "not linked" sheet resends the same credential, so the token a code was traded for is kept in memory for ten minutes,
+  keyed by the code's SHA-256. `GET /auth/config` says `googleCodeSignIn: true` only when the secret is set; without it
+  the web keeps Google's button (drawn with `color-scheme: light`, which removes the white box). Apple always sends its
+  ID token; only Google may send a code instead.
 
 ## Consequences
 
 - One session system and one source of truth (SQL Server) for every sign-in method; Firebase stays limited to FCM and the
   Realtime Database (ADR 0008).
 - The API depends on Google and Apple key endpoints being reachable; keys are cached, and a failed fetch rejects the sign in
-  (`401 auth.external_invalid`) without affecting phone sign in.
+  (`401 auth.external_invalid`) without affecting phone sign in. The web's Google button also needs Google's token
+  endpoint: when it doesn't answer, the API returns `503 auth.external_unavailable`; a used, expired or foreign code is
+  `401 auth.external_invalid`, and a wrong secret is logged as an error.
 - Apple on Android needs a web-flow callback endpoint; until it exists, Apple is offered on iOS and the web only. The Apple
   REST "revoke tokens on account deletion" call (needs an Apple key and the authorization code) is a follow-up before
   App Store submission.
 - Tests: the real verifier is unit-tested with a local signing key; integration tests replace it with a fake that accepts
-  `subject|email` tokens.
+  `subject|email` tokens, and replace the code exchange with a fake that trades `code:{token}` for `{token}`.

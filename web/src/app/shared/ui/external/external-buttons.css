@@ -1,6 +1,22 @@
-/* The Sign in with Apple button (shared/ui/external/external-buttons.ts). Loaded by the component (unencapsulated)
+/* The Google and Apple buttons (shared/ui/external/external-buttons.ts). Loaded by the component (unencapsulated)
    instead of the global stylesheet, so it stays out of the initial bundle; same layer as styles/base.css. */
 @layer components {
+  /*
+   * Our own "Continue with Google" (with .rd-btn): the height, corners and border of the form's fields, so it sits in
+   * the form like them; Google's full-color "G" and its wording, as Google's branding guidelines ask.
+   */
+  .rd-google-btn {
+    border: 1px solid var(--rd-color-border);
+    background: var(--rd-color-surface);
+    color: var(--rd-color-text-primary);
+    gap: var(--rd-space-3);
+  }
+
+  .rd-google-btn:not(:disabled):hover {
+    border-color: var(--rd-color-text-secondary);
+    background: var(--rd-color-surface-variant);
+  }
+
   /*
    * Sign in with Apple: Apple's rules allow only a black or a white button, so these are the only literal colors outside
    * the design tokens (black on light surfaces, white on dark).
@@ -13,7 +29,7 @@
     min-height: 44px;
     padding: 0 var(--rd-space-4);
     border: 1px solid black;
-    border-radius: var(--rd-radius-sm);
+    border-radius: var(--rd-radius-md);
     background: black;
     color: white;
     font-family: -apple-system, BlinkMacSystemFont, var(--rd-font-ui);

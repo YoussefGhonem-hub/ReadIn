@@ -501,3 +501,23 @@ prints `<p>sandbox ok</p>` inside the page's HTML, or "No usable sandbox!".
     Chrome for Testing 156.0.8078.80 gave byte-identical images).
 
   `READIN_PDF_OUT=<folder>` writes the test PDFs and every page as PNG for a look.
+
+## 11. Google sign in on the web (client secret)
+
+The web's "Continue with Google" button gets a one-time code from Google, and the API trades it for the ID token with the
+web OAuth client's secret (ADR 0012). Without the secret the web falls back to Google's own button, so nothing breaks,
+but it looks like Google's, not ours.
+
+1. Google Cloud Console → APIs & Services → Credentials → the **Web client** whose id is the first of
+   `ExternalAuth:Google:ClientIds` in `appsettings.json`. Copy its **Client secret**. Its *Authorized JavaScript origins*
+   must list every site that shows the button (`https://readin.online`, `http://localhost:4200`). The code flow's popup
+   needs no redirect URI.
+2. Give it to the API from the host's secret store as `ExternalAuth__Google__ClientSecret`. On a development machine:
+
+   ```bash
+   dotnet user-secrets set "ExternalAuth:Google:ClientSecret" "<secret>" --project backend/src/ReadIn.Api
+   ```
+
+3. Restart the API. `GET /api/v1/auth/config` then answers `"googleCodeSignIn": true`, and the web shows its own button.
+   A wrong secret makes every web Google sign in fail with `auth.external_invalid`, and the API logs
+   "Google rejected our web client (invalid_client)".

@@ -23,7 +23,7 @@ public sealed class ExternalIdentityVerifierTests
     private static OidcExternalIdentityVerifier Verifier(string[]? appleClients = null) => new(
         new ExternalAuthOptions
         {
-            Google = new ExternalProviderOptions { ClientIds = [GoogleClient, "ios-client.apps.googleusercontent.com"] },
+            Google = new GoogleProviderOptions { ClientIds = [GoogleClient, "ios-client.apps.googleusercontent.com"] },
             Apple = new AppleProviderOptions { ClientIds = appleClients ?? [AppleClient] },
         },
         provider =>

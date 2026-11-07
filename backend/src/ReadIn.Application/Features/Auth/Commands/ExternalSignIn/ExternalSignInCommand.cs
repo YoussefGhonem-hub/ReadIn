@@ -13,7 +13,7 @@ namespace ReadIn.Application.Features.Auth.Commands.ExternalSignIn;
 /// <param name="DisplayName">Apple sends the name to the app only on the first authorization; used for new accounts.</param>
 public sealed record ExternalSignInCommand(
     string Provider,
-    string IdToken,
+    string? IdToken,
     string? Nonce = null,
     string? DisplayName = null,
     string? UiLanguage = null,

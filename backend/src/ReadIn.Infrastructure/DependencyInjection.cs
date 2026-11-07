@@ -56,6 +56,11 @@ public static class DependencyInjection
         services.PostConfigure<ExternalAuthOptions>(o =>
             o.Apple.PrivateKeyBase64 = string.IsNullOrWhiteSpace(o.Apple.PrivateKeyBase64) ? configuration["SIWA_KEY_BASE64"] : o.Apple.PrivateKeyBase64);
         services.AddSingleton<IExternalIdentityVerifier, OidcExternalIdentityVerifier>();
+        services.AddHttpClient<IGoogleCodeExchanger, GoogleCodeExchanger>(http =>
+        {
+            http.BaseAddress = new Uri("https://oauth2.googleapis.com/");
+            http.Timeout = TimeSpan.FromSeconds(10);
+        });
         services.AddHttpClient<IAppleTokenService, AppleTokenService>(http =>
         {
             http.BaseAddress = new Uri("https://appleid.apple.com/");

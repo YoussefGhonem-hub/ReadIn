@@ -10,7 +10,7 @@ namespace ReadIn.Application.Features.Auth.Commands.ExternalSignIn;
 
 internal sealed class ExternalSignInCommandHandler(
     IAppDbContext db,
-    IExternalIdentityVerifier externalIdentities,
+    ExternalCredentialVerifier externalIdentities,
     PasswordSignIn passwordSignIn,
     SessionIssuer sessions,
     AuditTrail audit,
@@ -20,7 +20,8 @@ internal sealed class ExternalSignInCommandHandler(
 {
     public async ValueTask<Result<AuthSessionDto>> Handle(ExternalSignInCommand command, CancellationToken cancellationToken)
     {
-        var verified = await externalIdentities.VerifyAsync(command.Provider, command.IdToken, command.Nonce, cancellationToken);
+        var verified = await externalIdentities.VerifyAsync(
+            command.Provider, command.IdToken, command.Nonce, command.AuthorizationCode, cancellationToken);
         if (verified.IsFailure) return verified.Error;
 
         var identity = verified.Value;

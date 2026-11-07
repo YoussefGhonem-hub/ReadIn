@@ -40,7 +40,7 @@ internal sealed class PasswordConfirmation(IAppDbContext db, IPasswordHasher pas
 /// identity linked to the account (the only option for accounts without a password). Needs
 /// <see cref="User.ExternalLogins"/> loaded.
 /// </summary>
-internal sealed class IdentityConfirmation(PasswordConfirmation passwords, IExternalIdentityVerifier externalIdentities)
+internal sealed class IdentityConfirmation(PasswordConfirmation passwords, ExternalCredentialVerifier externalIdentities)
 {
     public async Task<Error?> ConfirmAsync(User user, string? password, ExternalCredentialDto? external, CancellationToken ct)
     {
@@ -59,7 +59,7 @@ internal sealed class IdentityConfirmation(PasswordConfirmation passwords, IExte
         }
         if (external is null) return CredentialErrors.ConfirmationRequired;
 
-        var identity = await externalIdentities.VerifyAsync(external.Provider, external.IdToken, external.Nonce, ct);
+        var identity = await externalIdentities.VerifyAsync(external, ct);
         if (identity.IsFailure) return identity.Error;
         if (user.FindExternalLogin(identity.Value.Provider)?.Subject != identity.Value.Subject) return CredentialErrors.ExternalMismatch;
         return identity.Value;

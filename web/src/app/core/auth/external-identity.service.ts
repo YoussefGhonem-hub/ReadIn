@@ -43,6 +43,24 @@ export interface GoogleAccountsId {
   disableAutoSelect?(): void;
 }
 
+/** What Google's code flow answers: the one-time code, or an OAuth error (e.g. `access_denied`). */
+export interface GoogleCodeResponse {
+  code?: string;
+  error?: string;
+}
+
+/** The part of Google Identity Services' OAuth 2.0 library ReadIn uses (`google.accounts.oauth2`): the popup code flow. */
+export interface GoogleOAuth2 {
+  initCodeClient(config: {
+    client_id: string;
+    scope: string;
+    ux_mode: 'popup';
+    callback: (response: GoogleCodeResponse) => void;
+    /** The popup failed to open or the person closed it (`popup_failed_to_open`, `popup_closed`, `unknown`). */
+    error_callback?: (error: { type: string }) => void;
+  }): { requestCode(): void };
+}
+
 /** The parts of Sign in with Apple JS ReadIn uses (`AppleID.auth`). */
 export interface AppleIdAuth {
   init(config: { clientId: string; scope: string; redirectURI: string; usePopup: boolean; nonce?: string; state?: string }): void;
@@ -52,7 +70,10 @@ export interface AppleIdAuth {
   }>;
 }
 
-type ExternalWindow = Window & { google?: { accounts?: { id?: GoogleAccountsId } }; AppleID?: { auth?: AppleIdAuth } };
+type ExternalWindow = Window & {
+  google?: { accounts?: { id?: GoogleAccountsId; oauth2?: GoogleOAuth2 } };
+  AppleID?: { auth?: AppleIdAuth };
+};
 
 /** Brand names, the same in every UI language. */
 export const PROVIDER_NAMES: Record<ExternalProvider, string> = { google: 'Google', apple: 'Apple' };
@@ -66,7 +87,7 @@ export interface ExternalResult extends ExternalCredential {
 export function credentialOf(result: ExternalResult): ExternalCredential {
   return {
     provider: result.provider,
-    idToken: result.idToken,
+    ...(result.idToken ? { idToken: result.idToken } : {}),
     ...(result.nonce ? { nonce: result.nonce } : {}),
     ...(result.authorizationCode ? { authorizationCode: result.authorizationCode } : {}),
   };
@@ -89,8 +110,9 @@ export function appleDisplayName(name: { firstName?: string; lastName?: string }
 
 /**
  * Google and Apple sign in on the web (SPEC §9.1, ADR 0012). The provider SDKs are loaded lazily in the browser only
- * (never during SSR). They give an ID token that goes straight to the API; nothing is stored here. A provider is offered
- * only when the API lists it in `GET /auth/config` and this build has a client id for it.
+ * (never during SSR). They give an ID token (or, from our own Google button, Google's one-time code) that goes straight
+ * to the API; nothing is stored here. A provider is offered only when the API lists it in `GET /auth/config` and this
+ * build has a client id for it.
  */
 @Injectable({ providedIn: 'root' })
 export class ExternalIdentityService {
@@ -103,6 +125,11 @@ export class ExternalIdentityService {
   private apple: Promise<AppleIdAuth> | null = null;
   /** GIS has one global callback; it goes to the most recently rendered button that is still on the page. */
   private googleTargets: { host: HTMLElement; onCredential: (result: ExternalResult) => void }[] = [];
+  /** Google's code client, once its script is in. Kept so a click can open the popup without waiting (popup blockers). */
+  private googleCodeClient: { requestCode(): void } | null = null;
+  private googleCodeLoading: Promise<{ requestCode(): void }> | null = null;
+  /** The code flow has one callback; it answers the request that opened the popup. */
+  private googleCodePending: ((result: ExternalResult | null) => void) | null = null;
 
   /** Providers to show, in the order Google, Apple. */
   readonly providers = computed<ExternalProvider[]>(() => {
@@ -110,14 +137,42 @@ export class ExternalIdentityService {
     return (['google', 'apple'] as const).filter((p) => listed.has(p) && !!this.clientIds[p]);
   });
 
+  /** Our own "Continue with Google" button (Google's code flow) instead of Google's: the API can trade the code. */
+  readonly googleCodeSignIn = computed(() => !!this.config.config().googleCodeSignIn);
+
   /** Loads `GET /auth/config` (the providers come with it). */
   load(): Promise<void> {
     return this.config.load();
   }
 
   /**
-   * Renders Google's official button (its branding rules don't allow a custom one) into `host`. The credential (the ID
-   * token) goes to `onCredential`; closing the popup does nothing.
+   * Loads Google's script and makes the code client ahead of the click, so {@link signInWithGoogle} opens the popup
+   * inside the click itself (browsers block popups opened later). Safe to call again.
+   */
+  prepareGoogleCode(): Promise<void> {
+    if (!this.isBrowser || !this.clientIds.google) return Promise.resolve();
+    return this.loadGoogleCodeClient().then(() => undefined);
+  }
+
+  /**
+   * Our own Google button (ADR 0012): opens Google's account picker in a popup and resolves with Google's one-time code,
+   * which the API trades for the ID token. Resolves null when the person closes the popup or says no.
+   */
+  async signInWithGoogle(): Promise<ExternalResult | null> {
+    if (!this.isBrowser || !this.clientIds.google) return null;
+    // No await before requestCode() when the client is ready, so the popup opens within the click.
+    const client = this.googleCodeClient ?? (await this.loadGoogleCodeClient());
+    return new Promise<ExternalResult | null>((resolve) => {
+      this.googleCodePending?.(null); // an earlier popup that never answered
+      this.googleCodePending = resolve;
+      client.requestCode();
+    });
+  }
+
+  /**
+   * Renders Google's official button into `host`, for when the API can't trade a code (no web client secret): Google
+   * hands over the ID token only through its own button. The credential goes to `onCredential`; closing the popup does
+   * nothing.
    */
   async renderGoogleButton(
     host: HTMLElement,
@@ -190,6 +245,31 @@ export class ExternalIdentityService {
         throw error;
       });
     return this.google;
+  }
+
+  private loadGoogleCodeClient(): Promise<{ requestCode(): void }> {
+    this.googleCodeLoading ??= this.loadScript(GOOGLE_GSI_SRC, () => this.window().google?.accounts?.oauth2 ?? null)
+      .then((oauth2) => {
+        this.googleCodeClient = oauth2.initCodeClient({
+          client_id: this.clientIds.google,
+          scope: 'openid email profile',
+          ux_mode: 'popup',
+          callback: (response) => this.settleGoogleCode(response.code ? { provider: 'google', authorizationCode: response.code } : null),
+          error_callback: () => this.settleGoogleCode(null),
+        });
+        return this.googleCodeClient;
+      })
+      .catch((error: unknown) => {
+        this.googleCodeLoading = null; // blocked or offline: try again next time
+        throw error;
+      });
+    return this.googleCodeLoading;
+  }
+
+  private settleGoogleCode(result: ExternalResult | null): void {
+    const pending = this.googleCodePending;
+    this.googleCodePending = null;
+    pending?.(result);
   }
 
   private loadApple(): Promise<AppleIdAuth> {

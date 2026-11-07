@@ -61,6 +61,9 @@ public static class CredentialErrors
 
     public static readonly Error ExternalInvalid =
         Error.Unauthorized("auth.external_invalid", "This Google or Apple sign in could not be verified. Try again.");
+    /// <summary>Google's token endpoint didn't answer while the API traded the web button's code (SPEC §9.1).</summary>
+    public static readonly Error ExternalUnavailable =
+        Error.Unavailable("auth.external_unavailable", "Google sign in isn't available right now. Try again in a moment.");
     public static readonly Error ProviderDisabled =
         Error.Validation("auth.provider_disabled", "This sign-in method is not available.");
     /// <summary>No account has this identity: the client offers "create a new account" or "link my phone account".</summary>

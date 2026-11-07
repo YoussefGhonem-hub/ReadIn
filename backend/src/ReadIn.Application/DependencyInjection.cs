@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<SessionIssuer>();
         services.AddScoped<AuditTrail>();
         services.AddScoped<PasswordConfirmation>();
+        services.AddScoped<ExternalCredentialVerifier>();
         services.AddScoped<IdentityConfirmation>();
         services.AddScoped<AppleTokens>();
         services.AddScoped<PasswordSignIn>();

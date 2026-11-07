@@ -127,6 +127,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.Replace(ServiceDescriptor.Singleton<IExternalIdentityVerifier, FakeExternalIdentityVerifier>());
             services.Replace(ServiceDescriptor.Singleton<IRealtimePublisher>(Realtime));
             services.Replace(ServiceDescriptor.Singleton<IAppleTokenService, FakeAppleTokenService>());
+            services.Replace(ServiceDescriptor.Singleton<IGoogleCodeExchanger, FakeGoogleCodeExchanger>());
             services.Replace(ServiceDescriptor.Singleton<IRealtimeAccountData, FakeRealtimeAccountData>());
         });
     }

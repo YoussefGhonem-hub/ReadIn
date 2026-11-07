@@ -23,6 +23,10 @@ public sealed class ExternalAuthTests(ApiFactory api)
 
     private static object Apple(string idToken) => new { provider = "apple", idToken, nonce = FakeExternalIdentityVerifier.AppleNonce };
 
+    /// <summary>What the web's own Google button sends: Google's one-time code, no ID token (ADR 0012).</summary>
+    private static object GoogleCode(string idToken) =>
+        new { provider = "google", authorizationCode = FakeGoogleCodeExchanger.Prefix + idToken };
+
     /// <summary>A new Google-only account, signed in.</summary>
     private async Task<(HttpClient Client, JsonObject Session, string Subject)> GoogleAccountAsync()
     {
@@ -38,6 +42,60 @@ public sealed class ExternalAuthTests(ApiFactory api)
         var config = await api.GuestClient().GetFromJsonAsync<JsonObject>("/api/v1/auth/config", Ct);
 
         config!["externalProviders"]!.AsArray().Select(p => p!.GetValue<string>()).Should().Equal("google", "apple");
+        config["googleCodeSignIn"]!.GetValue<bool>().Should().BeTrue("the web client's secret is configured");
+    }
+
+    [Fact]
+    public async Task The_web_buttons_google_code_signs_up_signs_in_and_confirms()
+    {
+        var subject = NewSubject();
+        var email = $"{subject}@example.com";
+
+        var unknown = await ExternalAsync(GoogleCode($"{subject}|{email}"));
+        (await CodeOf(unknown)).Should().Be("auth.external_not_linked");
+
+        var created = await ApiFactory.ReadSessionAsync(await ExternalAsync(new
+        {
+            provider = "google", authorizationCode = $"{FakeGoogleCodeExchanger.Prefix}{subject}|{email}", createAccount = true,
+        }));
+        created["user"]!["email"]!.GetValue<string>().Should().Be(email);
+
+        var again = await ApiFactory.ReadSessionAsync(await ExternalAsync(GoogleCode(subject)));
+        again["user"]!["id"]!.GetValue<Guid>().Should().Be(created["user"]!["id"]!.GetValue<Guid>());
+
+        // Settings → link and Delete account confirm with the same kind of credential.
+        var user = await api.SignUpAsync();
+        var linkSubject = NewSubject();
+        var linked = await user.Client.PostAsJsonAsync(
+            "/api/v1/me/external-logins", new { credential = GoogleCode(linkSubject), password = ApiFactory.TestPassword }, Ct);
+        linked.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await linked.Content.ReadFromJsonAsync<JsonObject>(Ct))!["externalLogins"]![0]!["provider"]!.GetValue<string>().Should().Be("google");
+
+        var client = api.ClientWithToken(created["accessToken"]!.GetValue<string>());
+        var deleted = await client.SendAsync(
+            new HttpRequestMessage(HttpMethod.Delete, "/api/v1/me") { Content = JsonContent.Create(new { external = GoogleCode(subject) }) }, Ct);
+        deleted.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task A_code_is_only_taken_from_google_and_bad_or_unreachable_codes_fail()
+    {
+        var appleCodeOnly = await ExternalAsync(new { provider = "apple", authorizationCode = "code-1", nonce = FakeExternalIdentityVerifier.AppleNonce });
+        appleCodeOnly.StatusCode.Should().Be(HttpStatusCode.BadRequest, "Apple always sends its ID token");
+
+        var nothing = await ExternalAsync(new { provider = "google" });
+        nothing.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var rejected = await ExternalAsync(new { provider = "google", authorizationCode = "used-or-foreign" });
+        rejected.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await CodeOf(rejected)).Should().Be("auth.external_invalid");
+
+        var down = await ExternalAsync(new { provider = "google", authorizationCode = FakeGoogleCodeExchanger.Down });
+        down.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+        (await CodeOf(down)).Should().Be("auth.external_unavailable");
+
+        var badToken = await ExternalAsync(GoogleCode("invalid"));
+        (await CodeOf(badToken)).Should().Be("auth.external_invalid", "the traded ID token is checked like any other");
     }
 
     [Fact]

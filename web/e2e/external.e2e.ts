@@ -5,18 +5,26 @@ import { HIDE_APP_CHROME, VARIANTS, hasScreenshot, onApi, problem, reply, restor
 
 /**
  * Continue with Google / Apple (SPEC §9.2, F18, ADR 0012). Real Google tokens can't be minted here, so Google Identity
- * Services is replaced by a stub script that renders a plain button and hands the page a fake ID token; the mocked API
- * decides what that token means. The development build has a Google client id and no Apple Services ID, so Apple stays
+ * Services is replaced by a stub script that renders a plain button and hands the page a fake ID token (or, for our own
+ * button, a fake one-time code); the mocked API decides what it means. The development build has a Google client id and no Apple Services ID, so Apple stays
  * hidden even when the API lists it.
  */
 test.describe.configure({ timeout: 90_000 });
 
 const FIRST_RENDER_MS = 30_000;
 const GOOGLE_TOKEN = 'e2e-google-id-token';
+const GOOGLE_CODE = 'e2e-google-auth-code';
 
-/** Stands in for https://accounts.google.com/gsi/client (`google.accounts.id`). */
+/** Stands in for https://accounts.google.com/gsi/client (`google.accounts.id` and the code flow, `google.accounts.oauth2`). */
 const FAKE_GIS = `
-  window.google = { accounts: { id: {
+  window.google = { accounts: {
+  oauth2: {
+    initCodeClient(config) {
+      window.__gisCode = config;
+      return { requestCode() { window.__gisCodeRequests = (window.__gisCodeRequests || 0) + 1; config.callback({ code: '${GOOGLE_CODE}' }); } };
+    },
+  },
+  id: {
     initialize(config) { window.__gis = config; },
     renderButton(parent, options) {
       const button = document.createElement('button');
@@ -30,7 +38,14 @@ const FAKE_GIS = `
   } } };
 `;
 
-async function prepare(page: Page, context: Parameters<typeof useVariant>[0], baseURL: string, variant: (typeof VARIANTS)[number], providers: string[]) {
+async function prepare(
+  page: Page,
+  context: Parameters<typeof useVariant>[0],
+  baseURL: string,
+  variant: (typeof VARIANTS)[number],
+  providers: string[],
+  googleCodeSignIn = false,
+) {
   await useVariant(context, baseURL, variant);
   await context.addInitScript(() => localStorage.setItem('readin.phoneCountry', 'EG'));
   await page.clock.setFixedTime(new Date('2026-11-03T09:00:00'));
@@ -41,7 +56,12 @@ async function prepare(page: Page, context: Parameters<typeof useVariant>[0], ba
   });
   await page.route('https://appleid.cdn-apple.com/**', (route) => route.abort());
   await onApi(page, 'GET', '/auth/config', (route) =>
-    reply(route, 200, { pinLength: 4, password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true }, externalProviders: providers }),
+    reply(route, 200, {
+      pinLength: 4,
+      password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true },
+      externalProviders: providers,
+      googleCodeSignIn,
+    }),
   );
   return { gisLoads: () => gisLoads };
 }
@@ -90,6 +110,59 @@ for (const variant of VARIANTS) {
     await sheet.locator('[data-create]').click();
     await page.waitForURL('**/auth/complete-profile');
     expect(bodies[1]).toMatchObject({ provider: 'google', idToken: GOOGLE_TOKEN, createAccount: true });
+  });
+
+  test(`our own Google button sends Google's one-time code; not linked → create account resends it — ${suffix}`, async ({
+    page,
+    context,
+    baseURL,
+    request,
+  }) => {
+    const { gisLoads } = await prepare(page, context, baseURL!, variant, ['google'], true);
+    const bodies: any[] = [];
+    const created = await writerMe(request, variant, {
+      displayName: 'reader_q8w7e6r5t4',
+      username: 'reader_q8w7e6r5t4',
+      phoneNumber: null,
+      email: 'mona@gmail.com',
+      isProfileComplete: false,
+      onboardingCompleted: false,
+      hasPassword: false,
+      hasRecoveryPin: false,
+      externalLogins: [{ provider: 'google', email: 'mona@gmail.com', linkedAt: '2026-11-03T09:00:00Z' }],
+    });
+    await onApi(page, 'POST', '/auth/external', (route) => {
+      const body = route.request().postDataJSON();
+      bodies.push(body);
+      return body.createAccount ? reply(route, 200, sessionFor(created)) : reply(route, 404, problem(404, 'auth.external_not_linked'));
+    });
+
+    // Sign in: our button (the form's height, corners and border), not Google's; Google's script is loaded ahead of the click
+    await page.goto('/auth/sign-in');
+    const google = page.locator('button[data-google-code]');
+    await expect(google).toBeVisible({ timeout: FIRST_RENDER_MS });
+    await expect(google).toHaveText(lang === 'ar' ? 'المتابعة باستخدام Google' : 'Continue with Google');
+    await expect(page.locator('[data-fake-gis]')).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => !!(window as any).__gisCode)).toBe(true);
+    expect(gisLoads()).toBe(1);
+    const [signIn, button] = await Promise.all([page.locator('rd-submit-button button').boundingBox(), google.boundingBox()]);
+    expect(Math.round(button!.height)).toBe(Math.round(signIn!.height));
+    expect(Math.round(button!.width)).toBe(Math.round(signIn!.width)); // the whole form row, like "Sign in"
+    if (hasScreenshot(variant)) {
+      await expect(page.locator('rd-external-sign-in')).toHaveScreenshot(`google-code-button-${suffix}.png`, { stylePath: HIDE_APP_CHROME });
+    }
+
+    await google.click();
+    const sheet = page.locator('[data-not-linked]');
+    await expect(sheet).toBeVisible();
+    expect(bodies[0]).toMatchObject({ provider: 'google', authorizationCode: GOOGLE_CODE, uiLanguage: lang });
+    expect(bodies[0].idToken).toBeUndefined();
+    expect(await page.evaluate(() => (window as any).__gisCode.scope)).toBe('openid email profile');
+
+    // The API keeps the token it traded the code for, so the same code goes again
+    await sheet.locator('[data-create]').click();
+    await page.waitForURL('**/auth/complete-profile');
+    expect(bodies[1]).toMatchObject({ provider: 'google', authorizationCode: GOOGLE_CODE, createAccount: true });
   });
 
   test(`no providers → no buttons, no Google script — ${suffix}`, async ({ page, context, baseURL }) => {

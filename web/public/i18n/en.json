@@ -471,6 +471,7 @@
     },
     "external": {
       "google": "Continue with Google",
+      "googleSignIn": "Sign in with Google",
       "apple": "Continue with Apple",
       "unavailable": "{{provider}} sign in couldn't load. Check your connection or use your phone number.",
       "notLinked": {

@@ -132,17 +132,24 @@ export interface AuthConfigDto {
   password: { minLength: number; maxLength: number; requireLetter: boolean; requireDigit: boolean };
   /** Google/Apple sign in this server accepts; the other buttons stay hidden. */
   externalProviders: ExternalProvider[];
+  /**
+   * The API can trade a Google authorization code (its web client secret is configured), so the web shows its own
+   * "Continue with Google" button (Google's code flow); otherwise Google's button, which hands over the ID token.
+   */
+  googleCodeSignIn?: boolean;
 }
 
 /** A fresh ID token from Google Identity Services or Sign in with Apple. Never stored. */
 export interface ExternalCredential {
   provider: ExternalProvider;
-  idToken: string;
+  /** Missing only for Google's code flow (our own web button), which sends `authorizationCode` instead. */
+  idToken?: string;
   /** The RAW nonce (Apple): Apple was given its SHA-256 hex. */
   nonce?: string;
   /**
    * Apple's one-time `authorization.code`. The API exchanges it for a refresh token it can revoke when the account is
-   * deleted (Apple requires that), so it goes along with every Apple sign in, link and confirmation.
+   * deleted (Apple requires that), so it goes along with every Apple sign in, link and confirmation. Google: the one-time
+   * code from Google's code flow, sent instead of an ID token; the API trades it for one (ADR 0012).
    */
   authorizationCode?: string;
 }

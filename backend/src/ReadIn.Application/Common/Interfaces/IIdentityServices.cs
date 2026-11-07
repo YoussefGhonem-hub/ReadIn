@@ -80,6 +80,20 @@ public interface IExternalIdentityVerifier
 }
 
 /// <summary>
+/// Google's OAuth token endpoint. The web's own "Continue with Google" button uses Google's code flow, which hands the page
+/// a one-time authorization code instead of an ID token; the API trades it for the ID token with the web client's secret
+/// and then checks that token like any other (ADR 0012).
+/// </summary>
+public interface IGoogleCodeExchanger
+{
+    /// <summary>False until the web client's secret is configured; the web then shows Google's own button instead.</summary>
+    bool IsConfigured { get; }
+
+    /// <returns>The ID token, or a failure (an expired, reused or foreign code; Google unreachable).</returns>
+    Task<Result<string>> ExchangeAsync(string authorizationCode, CancellationToken ct);
+}
+
+/// <summary>
 /// Sign in with Apple REST API (SPEC F01): exchanges the one-time authorization code the app gets at sign in for a refresh
 /// token, and revokes tokens when the account is deleted or Apple is unlinked, as App Store guideline 5.1.1(v) requires.
 /// </summary>

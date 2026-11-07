@@ -2,7 +2,7 @@ import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { FakeApple, FakeGoogle, installProviderSdks } from '../../../testing/external-testing';
+import { FakeApple, FakeGoogle, FakeGoogleOAuth2, installProviderSdks } from '../../../testing/external-testing';
 import { API_BASE_URL } from '../api/api.config';
 import { EXTERNAL_CLIENT_IDS, ExternalIdentityService, appleDisplayName, createNonce, credentialOf } from './external-identity.service';
 
@@ -21,16 +21,24 @@ function setup(ids = { google: 'google-client', apple: 'apple-services-id' }, pl
   return { service: TestBed.inject(ExternalIdentityService), http: TestBed.inject(HttpTestingController) };
 }
 
-async function withConfig(http: HttpTestingController, service: ExternalIdentityService, providers: string[]): Promise<void> {
+async function withConfig(
+  http: HttpTestingController,
+  service: ExternalIdentityService,
+  providers: string[],
+  googleCodeSignIn?: boolean,
+): Promise<void> {
   const loading = service.load();
-  http
-    .expectOne(`${API}/auth/config`)
-    .flush({ pinLength: 4, password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true }, externalProviders: providers });
+  http.expectOne(`${API}/auth/config`).flush({
+    pinLength: 4,
+    password: { minLength: 8, maxLength: 128, requireLetter: true, requireDigit: true },
+    externalProviders: providers,
+    ...(googleCodeSignIn === undefined ? {} : { googleCodeSignIn }),
+  });
   await loading;
 }
 
 describe('ExternalIdentityService (ADR 0012)', () => {
-  let sdks: { google: FakeGoogle; apple: FakeApple; uninstall: () => void };
+  let sdks: { google: FakeGoogle; googleCode: FakeGoogleOAuth2; apple: FakeApple; uninstall: () => void };
 
   beforeEach(() => {
     TestBed.resetTestingModule();
@@ -95,6 +103,62 @@ describe('ExternalIdentityService (ADR 0012)', () => {
       await server.renderGoogleButton(document.createElement('div'), { theme: 'light', locale: 'en', width: 300 }, vi.fn());
       expect(sdks.google.renderButton).not.toHaveBeenCalled();
       expect(await server.signInWithApple()).toBeNull();
+    });
+  });
+
+  describe('Google code flow (our own button)', () => {
+    it('is used only when the API says it can trade the code', async () => {
+      const { service, http } = setup();
+      await withConfig(http, service, ['google']);
+      expect(service.googleCodeSignIn()).toBe(false);
+
+      TestBed.resetTestingModule();
+      const second = setup();
+      await withConfig(second.http, second.service, ['google'], true);
+      expect(second.service.googleCodeSignIn()).toBe(true);
+    });
+
+    it("opens Google's popup within the click once prepared and hands over the code, not an ID token", async () => {
+      const { service } = setup();
+      await service.prepareGoogleCode();
+      expect(sdks.googleCode.initCodeClient).toHaveBeenCalledWith(
+        expect.objectContaining({ client_id: 'google-client', scope: 'openid email profile', ux_mode: 'popup' }),
+      );
+
+      const result = service.signInWithGoogle();
+      expect(sdks.googleCode.requestCode).toHaveBeenCalledTimes(1); // synchronously, still inside the click
+      sdks.googleCode.answer({ code: 'code-1' });
+      expect(await result).toEqual({ provider: 'google', authorizationCode: 'code-1' });
+      expect(credentialOf((await result)!)).toEqual({ provider: 'google', authorizationCode: 'code-1' });
+      expect(sdks.googleCode.initCodeClient).toHaveBeenCalledTimes(1);
+    });
+
+    it('resolves null when the popup is closed, refused, or replaced by a second click', async () => {
+      const { service } = setup();
+      const closed = service.signInWithGoogle();
+      await vi.waitFor(() => expect(sdks.googleCode.requestCode).toHaveBeenCalled());
+      sdks.googleCode.close();
+      expect(await closed).toBeNull();
+
+      const refused = service.signInWithGoogle();
+      sdks.googleCode.answer({ error: 'access_denied' });
+      expect(await refused).toBeNull();
+
+      const first = service.signInWithGoogle();
+      const second = service.signInWithGoogle();
+      expect(await first).toBeNull();
+      sdks.googleCode.answer({ code: 'code-2' });
+      expect(await second).toEqual({ provider: 'google', authorizationCode: 'code-2' });
+    });
+
+    it('does nothing without a client id or on the server', async () => {
+      const { service } = setup({ google: '', apple: '' });
+      expect(await service.signInWithGoogle()).toBeNull();
+      await service.prepareGoogleCode();
+
+      TestBed.resetTestingModule();
+      expect(await setup(undefined, 'server').service.signInWithGoogle()).toBeNull();
+      expect(sdks.googleCode.initCodeClient).not.toHaveBeenCalled();
     });
   });
 

@@ -474,6 +474,7 @@
     },
     "external": {
       "google": "المتابعة باستخدام Google",
+      "googleSignIn": "تسجيل الدخول باستخدام Google",
       "apple": "المتابعة باستخدام Apple",
       "unavailable": "تعذّر تحميل تسجيل الدخول عبر {{provider}}. تحقّق من اتصالك بالإنترنت أو سجّل الدخول برقم هاتفك.",
       "notLinked": {

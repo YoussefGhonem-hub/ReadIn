@@ -21,7 +21,7 @@ public sealed class ExternalAuthOptions
     public const string Section = "ExternalAuth";
 
     /// <summary>The web client id (also the audience on Android, passed as <c>serverClientId</c>) and the iOS client id.</summary>
-    public ExternalProviderOptions Google { get; init; } = new();
+    public GoogleProviderOptions Google { get; init; } = new();
 
     /// <summary>The app's bundle id for native iOS sign in, and the Services ID for the web.</summary>
     public AppleProviderOptions Apple { get; init; } = new();
@@ -30,6 +30,20 @@ public sealed class ExternalAuthOptions
 public class ExternalProviderOptions
 {
     public string[] ClientIds { get; init; } = [];
+}
+
+/// <summary>
+/// The web's own "Continue with Google" button uses Google's code flow, and only the web client's secret can trade its
+/// code for an ID token (ADR 0012). The client ids are public; the secret is not (<c>ExternalAuth__Google__ClientSecret</c>,
+/// never in the repo). Without it the web shows Google's own button, which hands over the ID token directly.
+/// </summary>
+public sealed class GoogleProviderOptions : ExternalProviderOptions
+{
+    /// <summary>The web client's secret. The web client id is the first of <see cref="ExternalProviderOptions.ClientIds"/>.</summary>
+    public string? ClientSecret { get; set; }
+
+    /// <summary>The client the web's code belongs to: the first client id.</summary>
+    public string? WebClientId => ClientIds.FirstOrDefault(id => !string.IsNullOrWhiteSpace(id));
 }
 
 /// <summary>

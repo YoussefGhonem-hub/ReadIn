@@ -32,7 +32,7 @@ internal sealed class LinkExternalLoginCommandHandler(
     IAppDbContext db,
     ICurrentUser currentUser,
     IdentityConfirmation confirmation,
-    IExternalIdentityVerifier externalIdentities,
+    ExternalCredentialVerifier externalIdentities,
     AuditTrail audit,
     AppleTokens appleTokens,
     MeReader meReader,
@@ -47,7 +47,7 @@ internal sealed class LinkExternalLoginCommandHandler(
         if (await confirmation.ConfirmAsync(user, command.Password, command.External, cancellationToken) is { } error) return error;
 
         var credential = command.Credential;
-        var verified = await externalIdentities.VerifyAsync(credential.Provider, credential.IdToken, credential.Nonce, cancellationToken);
+        var verified = await externalIdentities.VerifyAsync(credential, cancellationToken);
         if (verified.IsFailure) return verified.Error;
 
         var identity = verified.Value;
