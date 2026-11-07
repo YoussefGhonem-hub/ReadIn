@@ -10,7 +10,7 @@ import { ModerationHeader, ModerationLogEntry } from './moderation-ui';
 
 export const LOG_PAGE_SIZE = 30;
 
-/** The moderation log (F22, SPEC §16), `/moderation/log`: every moderator action, newest first. Moderators only. */
+/** The moderation log (F22, SPEC §16), `/admin/reports/log`: every moderator action, newest first. Moderators only. */
 @Component({
   selector: 'rd-moderation-log-page',
   imports: [TranslocoPipe, EmptyState, ErrorState, ModerationHeader, ModerationLogEntry],

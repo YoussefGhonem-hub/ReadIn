@@ -7,7 +7,7 @@ import { PreferencesService } from '../core/auth/preferences.service';
 import { SessionStore } from '../core/auth/session.store';
 import { ErrorMessages } from '../core/i18n/error-messages';
 import { LanguageService } from '../core/i18n/language.service';
-import { ModerationSummaryStore } from '../core/moderation/moderation-summary.store';
+import { AdminSummaryStore } from '../core/admin/admin-summary.store';
 import { THEME_PREFERENCES, ThemePreference, ThemeService } from '../core/theme/theme.service';
 import { BdiText } from '../shared/directives/bdi-text';
 import { translatePlural } from '../shared/pipes/intl';
@@ -21,7 +21,7 @@ const THEME_ICONS: Record<ThemePreference, string> = { light: 'Sun', dark: 'Moon
 
 /**
  * The top bar's "Me" menu (its own chunk): who you are with "View profile", Settings, My articles, My paths, the
- * moderation and verification-request pages for accounts with those permissions, Appearance (Light / Dark / System)
+ * admin console with its badge for accounts with `admin.access` (F23), Appearance (Light / Dark / System)
  * and Sign out. A WAI-ARIA menu: the first item takes the focus, the arrows, Home and End move it, Escape and Tab close
  * the menu and give the focus back to the Me button. Picking a theme keeps the menu open.
  */
@@ -77,11 +77,11 @@ const THEME_ICONS: Record<ThemePreference, string> = { light: 'Sun', dark: 'Moon
         >
           <svg [lucideIcon]="item.icon" [size]="18" [class]="iconClass" aria-hidden="true"></svg>
           <span class="min-w-0 flex-1">{{ item.labelKey | transloco }}</span>
-          @if (item.id === 'moderation' && moderation.total() > 0) {
-            <span class="min-w-6 rounded-chip bg-error px-1.5 text-center text-xs font-semibold leading-5 text-on-error" aria-hidden="true" data-moderation-badge>{{
-              moderation.total() > 99 ? '99+' : moderation.total()
+          @if (item.id === 'admin' && admin.total() > 0) {
+            <span class="min-w-6 rounded-chip bg-error px-1.5 text-center text-xs font-semibold leading-5 text-on-error" aria-hidden="true" data-admin-badge>{{
+              admin.total() > 99 ? '99+' : admin.total()
             }}</span>
-            <span class="sr-only">{{ moderationLabel() }}</span>
+            <span class="sr-only">{{ adminLabel() }}</span>
           }
         </a>
       }
@@ -128,7 +128,8 @@ const THEME_ICONS: Record<ThemePreference, string> = { light: 'Sun', dark: 'Moon
 export class MeMenu {
   protected readonly session = inject(SessionStore);
   protected readonly theme = inject(ThemeService);
-  protected readonly moderation = inject(ModerationSummaryStore);
+  /** The admin console's badge (F23): open reports + open tickets + pending verification requests. */
+  protected readonly admin = inject(AdminSummaryStore);
   private readonly menuHost = inject(MeMenuHost);
   private readonly preferences = inject(PreferencesService);
   private readonly auth = inject(AuthService);
@@ -153,10 +154,12 @@ export class MeMenu {
   protected readonly verified = computed(() => this.session.me()?.isVerified ?? false);
   protected readonly profileLink = computed(() => profilePath(this.session.username()));
   protected readonly items = computed<NavItem[]>(() => ME_MENU.filter((item) => !item.permission || this.session.permissions().has(item.permission)));
-  protected readonly moderationLabel = computed(() => translatePlural(this.transloco, 'moderation.openBadge', this.moderation.total(), this.lang()));
+  protected readonly adminLabel = computed(() => translatePlural(this.transloco, 'admin.badge', this.admin.total(), this.lang()));
 
   constructor() {
     afterNextRender(() => this.menuItems()[0]?.focus());
+    // Opening the menu refreshes the console's badge (F23).
+    void this.admin.refresh();
   }
 
   protected picked(): void {

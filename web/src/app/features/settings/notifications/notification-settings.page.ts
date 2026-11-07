@@ -10,6 +10,7 @@ import { ConfigurableNotificationType, NotificationMode, NotificationSettingsDto
 import { NotificationsApi } from '../../../core/api/notifications.api';
 import { ErrorMessages } from '../../../core/i18n/error-messages';
 import { LanguageService } from '../../../core/i18n/language.service';
+import { SessionStore } from '../../../core/auth/session.store';
 import { PushService } from '../../../core/push/push.service';
 import { SegmentOption, Segmented } from '../../../shared/ui/segmented';
 import { ErrorState } from '../../../shared/ui/states';
@@ -30,7 +31,14 @@ export const CONFIGURABLE_TYPES: readonly ConfigurableNotificationType[] = [
   'reactions_milestone',
   // F29: someone reposted your article.
   'article_reposted',
+  // F23: announcements from the ReadIn team.
+  'announcement',
+  // F35: new tickets and members' replies, for holders of support.manage only (support_reply always comes).
+  'support_ticket',
 ];
+
+/** The types only some accounts get, with the permission that brings them. */
+export const TYPE_PERMISSIONS: Partial<Record<ConfigurableNotificationType, string>> = { support_ticket: 'support.manage' };
 const MODES: readonly NotificationMode[] = ['all', 'inApp', 'off'];
 /** Every configurable type defaults to `all` (a type the API leaves out has its default). */
 const DEFAULT_MODE: NotificationMode = 'all';
@@ -72,7 +80,7 @@ type Status = 'loading' | 'loaded' | 'error';
           <h2 id="notification-types" class="m-0 mb-1 text-base font-semibold">{{ 'settings.notifications.typesTitle' | transloco }}</h2>
           <p class="m-0 mb-2 text-sm text-text-secondary">{{ 'settings.notifications.modesHint' | transloco }}</p>
           <ul class="m-0 list-none divide-y divide-border p-0">
-            @for (type of types; track type) {
+            @for (type of types(); track type) {
               <li class="flex flex-wrap items-center gap-x-4 gap-y-2 py-3" [attr.data-notification-type]="type" [attr.data-mode]="modeOf(type)">
                 <div class="min-w-48 flex-1">
                   <div class="text-sm font-semibold" [id]="'notification-type-' + type">{{ 'settings.notifications.types.' + type + '.label' | transloco }}</div>
@@ -167,7 +175,9 @@ export class NotificationSettingsPage {
   private readonly transloco = inject(TranslocoService);
   private readonly lang = inject(LanguageService).lang;
 
-  protected readonly types = CONFIGURABLE_TYPES;
+  private readonly session = inject(SessionStore);
+  /** The types this account can set (F35: support tickets only with support.manage). */
+  protected readonly types = computed(() => CONFIGURABLE_TYPES.filter((type) => !TYPE_PERMISSIONS[type] || this.session.hasPermission(TYPE_PERMISSIONS[type]!)));
   protected readonly status = signal<Status>('loading');
   private readonly settings = signal<NotificationSettingsDto | null>(null);
   protected readonly savingType = signal<ConfigurableNotificationType | null>(null);

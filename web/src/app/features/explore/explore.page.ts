@@ -103,6 +103,23 @@ import { WriterRail } from './writer-rail';
           </section>
         }
 
+        <!-- F23: the articles an admin featured, when there are any. -->
+        @if (featuredArticles().length) {
+          <section class="rd-card p-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" aria-labelledby="explore-featured-articles" data-explore-featured-articles>
+            <div class="flex items-center gap-3 px-4 pt-2 lg:px-5">
+              <h2 id="explore-featured-articles" class="m-0 flex min-h-11 items-center gap-2 text-lg font-bold">
+                <svg lucideIcon="Sparkles" [size]="20" class="text-accent" aria-hidden="true"></svg>
+                {{ 'explore.featuredArticles' | transloco }}
+              </h2>
+            </div>
+            <div>
+              @for (article of featuredArticles(); track article.id) {
+                <rd-article-card class="px-4 lg:px-5" [article]="article" [withAttachments]="false" />
+              }
+            </div>
+          </section>
+        }
+
         <!-- A list card: the title row with "See all", then the rows. -->
         @if (trending().length) {
           <section class="rd-card p-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" aria-labelledby="explore-trending" data-explore-trending>
@@ -210,6 +227,7 @@ export class ExplorePage {
   private readonly mutes = inject(MuteStore);
   private readonly muteScope = inject(MUTE_SCOPE);
   /** The compact rows still shown: what you muted or marked "show less" in this session leaves (F28). */
+  protected readonly featuredArticles = computed(() => this.store.featuredArticles().filter((a) => !this.mutes.hides(a, this.muteScope)));
   protected readonly trending = computed(() => this.store.trending().filter((a) => !this.mutes.hides(a, this.muteScope)));
   protected readonly mostSaved = computed(() => this.store.mostSaved().filter((a) => !this.mutes.hides(a, this.muteScope)));
 

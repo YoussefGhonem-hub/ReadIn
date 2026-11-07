@@ -5,7 +5,7 @@ import { NavigationStart, Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 import { SessionStore } from '../core/auth/session.store';
-import { ModerationSummaryStore } from '../core/moderation/moderation-summary.store';
+import { AdminSummaryStore } from '../core/admin/admin-summary.store';
 import { appIconsReady } from '../shared/ui/app-icons';
 import { Avatar } from '../shared/ui/avatar';
 import { ShellIcon } from '../shared/ui/shell-icon';
@@ -98,13 +98,13 @@ export class MeButton implements MeMenuHost {
   readonly variant = input<'icon' | 'stacked'>('stacked');
 
   protected readonly session = inject(SessionStore);
-  /** Open reports (F22): a dot on Me for moderators; the count is in the menu. */
-  private readonly moderation = inject(ModerationSummaryStore);
+  /** The admin console's queues (F23): a dot on Me while something waits; the count is in the menu. */
+  private readonly admin = inject(AdminSummaryStore);
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  protected readonly attention = computed(() => this.moderation.canModerate() && this.moderation.total() > 0);
+  protected readonly attention = computed(() => this.admin.canAccess() && this.admin.total() > 0);
   protected readonly open = signal(false);
   /** The Me menu (layout/me-menu.ts), once its chunk arrived. */
   protected readonly meMenu = signal<Type<unknown> | null>(null);

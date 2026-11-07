@@ -103,6 +103,15 @@ describe('ExplorePage (F15)', () => {
     expect(root.querySelectorAll('[data-explore-most-saved] rd-article-card')).toHaveLength(3);
   });
 
+  // F23: articles an admin featured get their own section, only when there are any.
+  it('shows the featured articles when the API sends some, and nothing without them', async () => {
+    const { root, $ } = await render({ ...EXPLORE, featuredArticles: cards('featured', 2) });
+    expect([...root.querySelectorAll('[data-explore-featured-articles] rd-article-card h3')].map((h) => text(h))).toEqual(['featured 1', 'featured 2']);
+    expect(text($('#explore-featured-articles'))).toBe('مقالات مميزة');
+    const without = await render({ ...EXPLORE, featuredArticles: [] });
+    expect(without.$('[data-explore-featured-articles]')).toBeNull();
+  });
+
   it('says so when every section is empty', async () => {
     const { $ } = await render({ fields: [], trending: [], mostSaved: [], newWriters: [], featuredPaths: [] });
     expect(text($('[data-explore-empty] h3'))).toBe('لا يوجد ما تستكشفه بعد');

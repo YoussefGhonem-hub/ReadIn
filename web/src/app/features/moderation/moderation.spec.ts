@@ -3,7 +3,6 @@ import { HttpTestingController, TestRequest } from '@angular/common/http/testing
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { testMe } from '../../../testing/auth-testing';
 import { TEST_API, flushMicrotasks, problem, setupSocialTesting } from '../../../testing/social-testing';
-import { routes } from '../../app.routes';
 import {
   ModerationActionDto,
   ModerationCaseDto,
@@ -17,6 +16,7 @@ import { SessionStore } from '../../core/auth/session.store';
 import { ModerationCasePage } from './moderation-case.page';
 import { ModerationLogPage } from './moderation-log.page';
 import { ModerationQueuePage } from './moderation-queue.page';
+import adminRoutes from '../admin/admin.routes';
 import moderationRoutes from './moderation.routes';
 
 const MODERATOR = ['articles.read', 'reports.create', 'moderation.manage', 'users.suspend'];
@@ -137,7 +137,7 @@ describe('Moderation (F22)', () => {
 
       const cards = t.$$('[data-case]');
       expect(cards.map((c) => c.getAttribute('data-case'))).toEqual(['article:a1', 'comment:c1', 'user:u9']);
-      expect(cards[0].getAttribute('href')).toBe('/moderation/article/a1');
+      expect(cards[0].getAttribute('href')).toBe('/admin/reports/article/a1');
       expect(cards[0].querySelector('[data-target-title]')!.textContent).toContain('How sleep turns reading into memory');
       expect(cards[0].querySelector('[data-report-count]')!.textContent!.trim()).toBe('3 بلاغات');
       expect([...cards[0].querySelectorAll('[data-reason-count]')].map((r) => r.textContent!.replace(/\s+/g, ' ').trim())).toEqual(['معلومات خاطئة 2', 'أخرى 1']);
@@ -163,9 +163,9 @@ describe('Moderation (F22)', () => {
       expect(t.$('[data-case]')!.textContent).toContain('أُغلق');
 
       // Switching tabs keeps the type filter.
-      expect(t.$('[data-moderation-tab="dismissed"]')!.getAttribute('href')).toBe('/moderation?status=dismissed&type=comment');
-      expect(t.$('[data-moderation-tab="open"]')!.getAttribute('href')).toBe('/moderation?type=comment');
-      expect(t.$('[data-moderation-tab="log"]')!.getAttribute('href')).toBe('/moderation/log');
+      expect(t.$('[data-moderation-tab="dismissed"]')!.getAttribute('href')).toBe('/admin/reports?status=dismissed&type=comment');
+      expect(t.$('[data-moderation-tab="open"]')!.getAttribute('href')).toBe('/admin/reports?type=comment');
+      expect(t.$('[data-moderation-tab="log"]')!.getAttribute('href')).toBe('/admin/reports/log');
 
       t.fixture.componentRef.setInput('status', 'dismissed');
       t.fixture.componentRef.setInput('type', 'bogus');
@@ -182,7 +182,7 @@ describe('Moderation (F22)', () => {
       expect(t.$('[data-queue-empty]')!.textContent).toContain('لا توجد بلاغات مفتوحة');
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       t.$('[data-type-chip="user"]')!.click();
-      expect(navigate).toHaveBeenCalledWith(['/moderation'], { queryParams: { status: null, type: 'user' }, replaceUrl: true });
+      expect(navigate).toHaveBeenCalledWith(['/admin/reports'], { queryParams: { status: null, type: 'user' }, replaceUrl: true });
     });
 
     it('loads more with the cursor, without duplicates; a failed page can be retried', async () => {
@@ -250,7 +250,7 @@ describe('Moderation (F22)', () => {
       expect(t.$('[data-case-status]')!.textContent!.trim()).toBe('مفتوح');
       expect(t.$('[data-case-link]')!.getAttribute('href')).toBe('/en/a/sleep-and-memory');
       expect(t.$('[data-case-link]')!.textContent).toContain('فتح المقال');
-      expect(t.$('[data-case-back]')!.getAttribute('href')).toBe('/moderation');
+      expect(t.$('[data-case-back]')!.getAttribute('href')).toBe('/admin/reports');
 
       const reports = t.$$('[data-report]');
       expect(reports).toHaveLength(2);
@@ -549,7 +549,7 @@ describe('Moderation (F22)', () => {
       expect(entries[0].textContent).toContain('أوقف حسابًا');
       expect(entries[0].textContent).toContain('حتى');
       expect(entries[0].textContent).toContain('أغلق بلاغًا واحدًا');
-      expect(entries[0].querySelector('[data-log-target]')!.getAttribute('href')).toBe('/moderation/user/u9');
+      expect(entries[0].querySelector('[data-log-target]')!.getAttribute('href')).toBe('/admin/reports/user/u9');
       expect(entries[1].textContent).toContain('مشرف محذوف');
       expect(entries[1].textContent).toContain('نهائيًا');
       expect(entries[1].querySelector('[data-log-note]')).toBeNull();
@@ -577,9 +577,9 @@ describe('Moderation (F22)', () => {
   });
 
   describe('route', () => {
+    // F23: the queue is the console's Reports section; `/moderation` redirects there (app.routes.spec.ts).
     function moderationRoute() {
-      const shell = routes.find((r) => r.path === '' && r.children)!;
-      return shell.children!.find((r) => r.path === 'moderation')!;
+      return adminRoutes[0].children!.find((r) => r.path === 'reports')!;
     }
 
     async function guard(me: ReturnType<typeof testMe> | null): Promise<string | true> {
@@ -588,14 +588,14 @@ describe('Moderation (F22)', () => {
       ({ http, session } = setupSocialTesting({ guest: !me, providers: [{ provide: AuthService, useValue: { whenReady: async () => me } }] }));
       if (me) session.setMe(me);
       const canActivate = moderationRoute().canActivate![0] as (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => Promise<boolean | UrlTree>;
-      const result = await TestBed.runInInjectionContext(() => canActivate({} as ActivatedRouteSnapshot, { url: '/moderation' } as RouterStateSnapshot));
+      const result = await TestBed.runInInjectionContext(() => canActivate({} as ActivatedRouteSnapshot, { url: '/admin/reports' } as RouterStateSnapshot));
       return result === true ? true : TestBed.inject(Router).serializeUrl(result as UrlTree);
     }
 
     it('needs moderation.manage: members go home, guests to sign in; the queue, log and cases are lazy', async () => {
       expect(await guard(testMe({ permissions: MODERATOR }))).toBe(true);
       expect(await guard(testMe({ permissions: ['articles.read'] }))).toBe('/');
-      expect(await guard(null)).toBe('/auth/sign-in?returnUrl=%2Fmoderation');
+      expect(await guard(null)).toBe('/auth/sign-in?returnUrl=%2Fadmin%2Freports');
       expect(moderationRoute().loadChildren).toBeDefined();
       expect(moderationRoutes.map((r) => r.path)).toEqual(['', 'log', ':type/:id']);
     });

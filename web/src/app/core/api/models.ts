@@ -451,6 +451,8 @@ export interface ArticleDetailsDto extends ArticleCardDto {
    * `/@{author.username}/c/{slug}`. Null: none. Missing from an API older than F31.
    */
   category?: WriterCategoryRefDto | null;
+  /** F23: featured by an admin (the "⋯" offers Feature / Unfeature). Missing from an API older than F23. */
+  isFeatured?: boolean;
 }
 
 // ── Writer categories (F31) ─────────────────────────────────
@@ -723,7 +725,10 @@ export type ModerationAction =
   // F14: remove all of a user's social links / their title (any user, note optional, no notice to the user).
   | 'clear_links'
   | 'clear_headline'
-  | 'dismiss';
+  | 'dismiss'
+  // F23: hide every article and comment of a user (no notice), and bring back what that hid.
+  | 'hide_content'
+  | 'unhide_content';
 
 /**
  * `POST /moderation/actions` → 204 (permission `moderation.manage`; suspend / unsuspend also `users.suspend`).
@@ -745,6 +750,8 @@ export interface ModerationActionRequest {
    * slug. `404 category.not_found` when it isn't theirs.
    */
   categoryId?: string;
+  /** F23, `suspend` only: also hide all of the user's articles and comments (`hide_content`), in the same call. */
+  hideContent?: boolean;
 }
 
 /** `GET /moderation/summary`: targets with open reports (the nav badge). */
@@ -824,7 +831,10 @@ export type ModerationLogAction =
   // F14: a moderator removed the user's links (`targetLabel`: the removed URLs) or title (`targetLabel`: the old title).
   | 'user.clear_links'
   | 'user.clear_headline'
-  | 'reports.dismiss';
+  | 'reports.dismiss'
+  // F23: every article and comment of the user hidden with the account, and restored.
+  | 'user.hide_content'
+  | 'user.unhide_content';
 
 export interface ModerationActionDto {
   id: string;
@@ -935,6 +945,11 @@ export interface ProfileDto {
    * an API older than F28.
    */
   isSystemAccount?: boolean;
+  /**
+   * F23: the account's state, for holders of `users.read` only (null for everyone else; missing from an older API).
+   * `isStaff`: an admin, a moderator or a system account, so it can't be suspended or warned.
+   */
+  admin?: { isSuspended: boolean; suspendedUntil: string | null; isStaff: boolean } | null;
 }
 
 // ── Writing (F05) ───────────────────────────────────────────
@@ -1190,6 +1205,8 @@ export interface ExploreDto {
   newWriters: UserSummaryDto[];
   /** ≤ 6, featured order. */
   featuredPaths: PathCardDto[];
+  /** F23: ≤ 6 featured articles, the most recently featured first; `[]` hides the section. Missing from an older API. */
+  featuredArticles?: ArticleCardDto[];
 }
 
 /** A field tile on Explore; opens `/f/{slug}`. */
@@ -1563,7 +1580,13 @@ export type NotificationType =
   | 'verification_result'
   | 'moderation_notice'
   /** F29: someone reposted your article (aggregated per article: actor = the latest reposter, `actorCount`, `article`). */
-  | 'article_reposted';
+  | 'article_reposted'
+  /** F23: an announcement from the ReadIn team (`data.title`, `data.body`); it can be turned off. */
+  | 'announcement'
+  /** F35: support replied to your ticket or closed it (`data.closed`); always comes. */
+  | 'support_reply'
+  /** F35: a new ticket or a member's reply, for holders of `support.manage` (actor = the member). */
+  | 'support_ticket';
 
 /** What changed on the account (`security_alert`); the API's `SecurityChange`, camelCase. */
 export type SecurityChange =
@@ -1605,7 +1628,23 @@ export interface NotificationDto {
    * @readin account's `followed_writer_article`, one entry per day holding that many new articles (≥ 1; `article` is
    * the newest; with 2 or more `link` is `readin://u/readin`).
    */
-  data: { threshold?: number; streakDays?: number; securityChange?: SecurityChange; approved?: boolean; articleCount?: number };
+  data: {
+    threshold?: number;
+    streakDays?: number;
+    securityChange?: SecurityChange;
+    approved?: boolean;
+    articleCount?: number;
+    /** F23 `announcement`: its id, title and body in the UI language. */
+    announcementId?: string;
+    title?: string;
+    body?: string;
+    /** F35 `support_reply` / `support_ticket`. */
+    ticketId?: string;
+    ticketNumber?: number;
+    subject?: string;
+    /** F35 `support_reply`: support closed the ticket. */
+    closed?: boolean;
+  };
   /** `readin://…`, the same deep links as pushes. */
   link: string;
 }
@@ -1714,4 +1753,541 @@ export interface ProblemDetails {
   errors?: Record<string, string[]>;
   /** `user.suspended` (F22): when the suspension ends (ISO, UTC), or null when it is permanent. */
   suspendedUntil?: string | null;
+}
+
+// ── Admin console (F23) ─────────────────────────────────────
+
+/** Offset pages of the admin tables (§17.1): `?page=&pageSize=` (1-based; pageSize 1–100, default 50). */
+export interface PagedList<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  /** ceil(totalCount / pageSize); 0 when empty. */
+  totalPages: number;
+}
+
+/** `GET /admin/summary`: the console entry's badge. A count is null without the permission of its queue. */
+export interface AdminSummaryDto {
+  openReports: number | null;
+  openTickets: number | null;
+  pendingVerifications: number | null;
+  /** The badge: the sum of the three that aren't null. */
+  total: number;
+}
+
+export type AdminPeriod = 'today' | 'yesterday' | '7d' | '30d';
+export const ADMIN_PERIODS: readonly AdminPeriod[] = ['today', 'yesterday', '7d', '30d'];
+
+export interface DashboardValueDto {
+  value: number;
+  /** The previous period of the same length; change = value - previous. */
+  previous: number;
+}
+
+export interface DashboardCardsDto {
+  articlesPublished: DashboardValueDto;
+  newUsers: DashboardValueDto & { phone: number; google: number; apple: number };
+  activeReaders: DashboardValueDto;
+  reads: DashboardValueDto;
+  comments: DashboardValueDto;
+  reactions: DashboardValueDto;
+  reposts: DashboardValueDto;
+  openReports: number | null;
+  openTickets: number | null;
+  pendingVerifications: number | null;
+  suspendedNow: number;
+}
+
+/** One day of the 30-day charts; `date` is "YYYY-MM-DD" in `Admin:TimeZone`. */
+export interface DashboardDayDto {
+  date: string;
+  newUsers: number;
+  activeReaders: number;
+  articlesPublished: number;
+}
+
+export interface DashboardArticleDto {
+  id: string;
+  slug: string;
+  title: string;
+  language: ArticleLanguage;
+  author: AuthorDto | null;
+  field: FieldRefDto;
+  publishedAt: string;
+  reads: number;
+}
+
+export interface DashboardWriterDto {
+  writer: AuthorDto;
+  reads: number;
+  articles: number;
+}
+
+/** A search with no results (§22): render `query` with `dir="auto"`. */
+export interface DashboardMissedSearchDto {
+  query: string;
+  language: 'ar' | 'en';
+  count: number;
+}
+
+export interface ContentPipelineDto {
+  folders: number;
+  seeded: number;
+  published: number;
+  lastSeedRunAt: string | null;
+}
+
+/** `GET /admin/dashboard?period=`. */
+export interface AdminDashboardDto {
+  period: AdminPeriod;
+  timeZone: string;
+  from: string;
+  to: string;
+  /** The window as local dates, both included: Content's `from` / `to`. */
+  fromDate: string;
+  toDate: string;
+  generatedAt: string;
+  cards: DashboardCardsDto;
+  /** The last 30 local days up to today, oldest first. */
+  charts: DashboardDayDto[];
+  topArticles: DashboardArticleDto[];
+  topWriters: DashboardWriterDto[];
+  missedSearches: DashboardMissedSearchDto[];
+  streakRetention: { cohort: number; kept: number; rate: number | null };
+  contentPipeline: ContentPipelineDto;
+}
+
+/** `phone` = phone number + password. */
+export type SignInMethod = 'phone' | 'google' | 'apple';
+export const SIGN_IN_METHODS: readonly SignInMethod[] = ['phone', 'google', 'apple'];
+
+/** A row of `GET /admin/users`. */
+export interface AdminUserRowDto {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+  isVerified: boolean;
+  isSystemAccount: boolean;
+  /** Display only. */
+  roles: string[];
+  signInMethods: SignInMethod[];
+  /** "+20***1234"; null without a phone number. */
+  phoneMasked: string | null;
+  joinedAt: string;
+  /** To the hour; null = not seen since F23 shipped. */
+  lastSeenAt: string | null;
+  publishedArticles: number;
+  followers: number;
+  status: 'active' | 'suspended';
+  /** Suspended: when it ends, null = permanently. */
+  suspendedUntil: string | null;
+  openReports: number;
+}
+
+/** A report in a user's page (against them, or filed by them). */
+export interface AdminUserReportDto {
+  id: string;
+  targetType: ModerationTargetType;
+  targetId: string;
+  targetLabel: string | null;
+  reason: ReportReason;
+  details: string | null;
+  status: ReportStatus;
+  createdAt: string;
+  reporter: UserSummaryDto | null;
+}
+
+/** What the caller may do to this account now (permissions + protected accounts). */
+export interface AdminUserActionsDto {
+  canSuspend: boolean;
+  canWarn: boolean;
+  canLogoutAll: boolean;
+  canResetPassword: boolean;
+  canRemoveBadge: boolean;
+  canClearProfile: boolean;
+  canRestoreContent: boolean;
+  canRevealPhone: boolean;
+}
+
+/** `GET /admin/users/{id}`: a user's page. A section is null without its permission. */
+export interface AdminUserDto extends AdminUserRowDto {
+  headline: string | null;
+  bio: string | null;
+  links: ProfileLinkDto[];
+  uiLanguage: UiLanguage;
+  signUpMethod: SignInMethod | null;
+  isStaff: boolean;
+  stats: {
+    drafts: number;
+    comments: number;
+    following: number;
+    totalReads: number;
+    articlesRead: number;
+    currentStreak: number;
+    longestStreak: number;
+  };
+  access: {
+    activeSessions: number;
+    hasRecoveryPin: boolean;
+    recoveryDisabled: boolean;
+    mustChangePassword: boolean;
+    mustSetRecoveryPin: boolean;
+    lockedOutUntil: string | null;
+  };
+  actions: AdminUserActionsDto;
+  moderation: {
+    warnings: number;
+    suspensions: number;
+    hiddenArticles: number;
+    hiddenComments: number;
+    hiddenWithAccount: number;
+    history: ModerationActionDto[];
+    historyTotal: number;
+  } | null;
+  reports: { against: AdminUserReportDto[]; againstTotal: number; filed: AdminUserReportDto[]; filedTotal: number } | null;
+  verification: { items: AdminVerificationRequestDto[]; total: number } | null;
+  tickets: { items: AdminTicketRowDto[]; total: number } | null;
+  audit: { items: AuditEntryDto[]; total: number } | null;
+}
+
+/** `GET /admin/articles`, `GET /admin/articles/{id}`. */
+export interface AdminArticleRowDto {
+  id: string;
+  slug: string;
+  status: 'published' | 'archived';
+  title: string;
+  language: ArticleLanguage;
+  author: AuthorDto | null;
+  field: FieldRefDto;
+  topic: FieldRefDto | null;
+  /** Null: an archived article that was never published (as built). */
+  publishedAt: string | null;
+  readCount: number;
+  reactionCount: number;
+  commentCount: number;
+  hiddenAt: string | null;
+  featuredAt: string | null;
+  openReports: number;
+  /** Any status: > 0 → the F22 case exists. */
+  reportCount: number;
+}
+
+/** `GET /admin/comments` ("Latest comments"). Render `body` with `dir="auto"`. */
+export interface AdminCommentRowDto {
+  id: string;
+  body: string;
+  author: AuthorDto | null;
+  article: { id: string; slug: string; title: string; language: ArticleLanguage };
+  parentId: string | null;
+  createdAt: string;
+  editedAt: string | null;
+  hiddenAt: string | null;
+  likeCount: number;
+  replyCount: number;
+  openReports: number;
+  reportCount: number;
+}
+
+export interface AdminTopicDto {
+  id: string;
+  fieldId: string;
+  slug: string;
+  nameAr: string;
+  nameEn: string;
+  sortOrder: number;
+  isEnabled: boolean;
+  inTaxonomyFile: boolean;
+  customizedAt: string | null;
+  articleCount: number;
+}
+
+export interface AdminFieldDto {
+  id: string;
+  slug: string;
+  nameAr: string;
+  nameEn: string;
+  icon: string;
+  color: string;
+  sortOrder: number;
+  isSensitive: boolean;
+  requiresSources: boolean;
+  isEnabled: boolean;
+  inTaxonomyFile: boolean;
+  customizedAt: string | null;
+  articleCount: number;
+  topics: AdminTopicDto[];
+}
+
+/** `GET /admin/fields`: every field (disabled too) with its topics, and the icons and colors clients can draw. */
+export interface AdminTaxonomyDto {
+  fields: AdminFieldDto[];
+  icons: string[];
+  colors: string[];
+}
+
+export interface CreateFieldRequest {
+  slug: string;
+  nameAr: string;
+  nameEn: string;
+  icon: string;
+  color: string;
+  isSensitive: boolean;
+  requiresSources: boolean;
+  isEnabled: boolean;
+}
+export type UpdateFieldRequest = Omit<CreateFieldRequest, 'slug'>;
+export interface CreateTopicRequest {
+  fieldId: string;
+  slug: string;
+  nameAr: string;
+  nameEn: string;
+  isEnabled: boolean;
+}
+export type UpdateTopicRequest = Omit<CreateTopicRequest, 'fieldId' | 'slug'>;
+
+export interface AdminTagDto {
+  id: string;
+  slug: string;
+  name: string;
+  articleCount: number;
+  /** Every article that carries it, hidden ones too: what a merge moves. */
+  taggedCount: number;
+  isHidden: boolean;
+  isSystem: boolean;
+  createdAt: string;
+  createdBy: { id: string; username: string } | null;
+  emptySince: string | null;
+  aliases: string[];
+}
+
+/** `POST` / `PUT /admin/paths…` (F09). */
+export interface UpsertPathRequest {
+  slug: string;
+  fieldId: string;
+  titleAr: string;
+  titleEn: string;
+  descriptionAr?: string | null;
+  descriptionEn?: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+}
+
+/** `GET /admin/paths` (F09, F23). */
+export interface AdminPathDto {
+  id: string;
+  slug: string;
+  fieldId: string;
+  titleAr: string;
+  titleEn: string;
+  descriptionAr: string | null;
+  descriptionEn: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+  isEditorial: boolean;
+  articleIds: string[];
+  enrollmentCount: number;
+  isFeatured?: boolean;
+  featuredOrder?: number | null;
+}
+
+export type AnnouncementAudience = { type: 'all' } | { type: 'field'; fieldId: string } | { type: 'language'; language: ArticleLanguage };
+
+export interface AnnouncementRequest {
+  titleAr: string;
+  titleEn: string;
+  bodyAr: string;
+  bodyEn: string;
+  link: { type: 'article' | 'path'; id: string } | null;
+  audience: AnnouncementAudience;
+}
+
+export interface AnnouncementPreviewDto {
+  recipientCount: number;
+  pushCount: number;
+  canSend: boolean;
+  nextAllowedAt: string | null;
+}
+
+export interface AnnouncementDto {
+  id: string;
+  titleAr: string;
+  titleEn: string;
+  bodyAr: string;
+  bodyEn: string;
+  link: { type: 'article' | 'path'; id: string; slug: string; title: string } | null;
+  audience: { type: 'all' | 'field' | 'language'; field: { id: string; slug: string; name: string } | null; language: ArticleLanguage | null };
+  status: 'sending' | 'sent';
+  recipientCount: number;
+  sentBy: { id: string; username: string } | null;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export interface AnnouncementsDto {
+  canSend: boolean;
+  nextAllowedAt: string | null;
+  items: AnnouncementDto[];
+}
+
+export interface AuditUserDto {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+export type AuditTargetType = 'user' | 'article' | 'comment' | 'field' | 'topic' | 'tag' | 'path' | 'announcement' | 'ticket';
+
+/** `GET /admin/audit`: `AuditLogs` and `ModerationActions`, newest first. */
+export interface AuditEntryDto {
+  id: string;
+  source: 'audit' | 'moderation';
+  action: string;
+  actor: AuditUserDto | null;
+  targetUser: AuditUserDto | null;
+  target: { type: AuditTargetType; id: string; label: string | null } | null;
+  /** Render with `dir="auto"`. */
+  details: string | null;
+  ip: string | null;
+  createdAt: string;
+}
+
+export interface PlatformUpdatePolicyDto {
+  minimumVersion: string | null;
+  storeUrl: string | null;
+}
+
+export interface AdminJobStatusDto {
+  id: string;
+  /** Its cron expression; empty for a job that ran but isn't registered any more (as built). */
+  schedule: string;
+  lastRunAt: string | null;
+  lastSucceeded: boolean | null;
+  lastDurationMs: number | null;
+  lastError: string | null;
+  runs24h: number;
+  failures24h: number;
+}
+
+/** `GET /admin/system`. */
+export interface AdminSystemDto {
+  api: { version: string; startedAt: string; environment: string };
+  updatePolicy: { ios: PlatformUpdatePolicyDto; android: PlatformUpdatePolicyDto };
+  database: { reachable: boolean; latencyMs: number | null };
+  firebase: { messagingConfigured: boolean; realtimeConfigured: boolean; realtimeReachable: boolean | null };
+  jobs: AdminJobStatusDto[];
+  push: { sent: number; failed: number; invalidTokens: number; since: string };
+  storage: { uploadsBytes: number; uploadsFiles: number; privateBytes: number; privateFiles: number; measuredAt: string };
+}
+
+// ── Help & support (F35) ────────────────────────────────────
+
+export type SupportCategory = 'app_problem' | 'account' | 'content' | 'verification' | 'suggestion' | 'other';
+export const SUPPORT_CATEGORIES: readonly SupportCategory[] = ['app_problem', 'account', 'content', 'verification', 'suggestion', 'other'];
+export type SupportStatus = 'open' | 'answered' | 'closed';
+export const SUPPORT_STATUSES: readonly SupportStatus[] = ['open', 'answered', 'closed'];
+
+/** `GET /support/config` 🌐. */
+export interface SupportConfigDto {
+  /** Null when not set: hide it. */
+  email: string | null;
+  categories: SupportCategory[];
+  maxAttachments: number;
+  maxAttachmentBytes: number;
+  attachmentTypes: string[];
+}
+
+export interface SupportDeviceDto {
+  platform: 'ios' | 'android' | 'web' | null;
+  osVersion: string | null;
+  appVersion: string | null;
+  language: UiLanguage | null;
+  screen: string | null;
+}
+
+/** Read with the session (`GET /support/attachments/{id}`); never cached, never a public URL. */
+export interface SupportAttachmentDto {
+  id: string;
+  contentType: 'image/jpeg' | 'image/png' | 'image/webp';
+  sizeBytes: number;
+}
+
+export interface SupportMessageDto {
+  id: string;
+  /** True: «فريق الدعم» / "Support" (no admin name). */
+  fromSupport: boolean;
+  /** Render with `dir="auto"`. */
+  body: string;
+  attachments: SupportAttachmentDto[];
+  createdAt: string;
+}
+
+/** My tickets. */
+export interface SupportTicketSummaryDto {
+  id: string;
+  number: number;
+  category: SupportCategory;
+  subject: string;
+  status: SupportStatus;
+  createdAt: string;
+  updatedAt: string;
+  lastMessage: { fromSupport: boolean; excerpt: string; createdAt: string };
+  closedAt: string | null;
+  /** Closed less than 30 days ago. */
+  canReopen: boolean;
+}
+
+export interface SupportTicketDto extends SupportTicketSummaryDto {
+  device: SupportDeviceDto;
+  /** Oldest first; never internal notes. */
+  messages: SupportMessageDto[];
+}
+
+/** `POST /support/tickets` (multipart). Device details are optional text (decision 10). */
+export interface NewSupportTicket {
+  category: SupportCategory;
+  subject: string;
+  message: string;
+  screenshots: File[];
+  device: Partial<SupportDeviceDto>;
+}
+
+/** `GET /admin/support/tickets`. */
+export interface AdminTicketRowDto {
+  id: string;
+  number: number;
+  category: SupportCategory;
+  subject: string;
+  status: SupportStatus;
+  user: AuthorDto;
+  createdAt: string;
+  /** Open: the member's last message; null otherwise. */
+  waitingSince: string | null;
+  lastMessage: { fromSupport: boolean; isInternalNote: boolean; excerpt: string; createdAt: string };
+  closedAt: string | null;
+}
+
+export interface AdminSupportMessageDto extends SupportMessageDto {
+  isInternalNote: boolean;
+  author: { id: string; displayName: string; username: string } | null;
+}
+
+/** `GET /admin/support/tickets/{id}`. */
+export interface AdminTicketDto extends AdminTicketRowDto {
+  device: SupportDeviceDto;
+  /** Oldest first, internal notes included. */
+  messages: AdminSupportMessageDto[];
+  closedBy: 'member' | 'support' | 'auto' | null;
+  member: {
+    status: 'active' | 'suspended';
+    suspendedUntil: string | null;
+    joinedAt: string;
+    signInMethods: SignInMethod[];
+    ticketCount: number;
+  };
+  reportsFiled: { items: AdminUserReportDto[]; total: number } | null;
+  reportsAgainst: number | null;
+  moderation: ModerationActionDto[] | null;
 }

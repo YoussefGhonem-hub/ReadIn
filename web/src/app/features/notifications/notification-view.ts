@@ -5,7 +5,16 @@ import { pushLinkToPath } from '../../core/push/push-message';
 import { translatePlural } from '../../shared/pipes/intl';
 
 /** Types whose text starts with who did it: "X (and N others) …". */
-const ACTOR_TYPES = new Set<NotificationType>(['new_follower', 'article_comment', 'comment_reply', 'mention', 'followed_writer_article', 'article_reposted']);
+const ACTOR_TYPES = new Set<NotificationType>([
+  'new_follower',
+  'article_comment',
+  'comment_reply',
+  'mention',
+  'followed_writer_article',
+  'article_reposted',
+  // F35: "New support message from {name}" (the member), for holders of support.manage.
+  'support_ticket',
+]);
 
 const SECURITY_CHANGES = new Set<SecurityChange>([
   'passwordChanged',
@@ -77,6 +86,12 @@ function plainText(n: NotificationDto, key: string, transloco: TranslocoService,
       return transloco.translate(`${key}.${verificationOutcome(n)}`, {}, lang);
     case 'daily_article':
       return transloco.translate(key, {}, lang);
+    // F23: the announcement's own title, in the UI language (the API sends it).
+    case 'announcement':
+      return n.data?.title?.trim() || transloco.translate(key, {}, lang);
+    // F35: support replied, or closed the ticket.
+    case 'support_reply':
+      return transloco.translate(`${key}.${n.data?.closed ? 'closed' : 'replied'}`, {}, lang);
     default:
       return transloco.translate('notifications.text.other', {}, lang);
   }
@@ -118,8 +133,32 @@ export function notificationIcon(n: NotificationDto): string {
       return verificationOutcome(n) === 'rejected' ? 'BadgeX' : 'BadgeCheck';
     case 'moderation_notice':
       return n.article ? 'EyeOff' : 'TriangleAlert';
+    case 'announcement':
+      return 'Megaphone';
+    case 'support_reply':
+    case 'support_ticket':
+      return 'LifeBuoy';
     default:
       return 'Bell';
+  }
+}
+
+/**
+ * The row's second line for the F23/F35 types: an announcement's body, a ticket's "#12 · subject"; null for the others.
+ */
+export function notificationDetail(n: Pick<NotificationDto, 'type' | 'data'>): string | null {
+  switch (n.type) {
+    case 'announcement':
+      return n.data?.body?.trim() || null;
+    case 'support_reply':
+    case 'support_ticket': {
+      const subject = n.data?.subject?.trim();
+      const number = positive(n.data?.ticketNumber);
+      if (!subject && !number) return null;
+      return [number ? `#${number}` : null, subject].filter(Boolean).join(' · ');
+    }
+    default:
+      return null;
   }
 }
 

@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { testMe } from '../../testing/auth-testing';
 import { setupSocialTesting } from '../../testing/social-testing';
-import { ModerationSummaryStore } from '../core/moderation/moderation-summary.store';
+import { AdminSummaryStore } from '../core/admin/admin-summary.store';
 import { NotificationBadge } from '../core/notifications/notification-badge';
 import { TopBar } from './top-bar';
 
@@ -28,17 +28,20 @@ async function meTrigger(fixture: { detectChanges(): void; nativeElement: HTMLEl
 
 describe('TopBar', () => {
   const count = signal(0);
-  const moderationTotal = signal(0);
+  const adminTotal = signal(0);
 
   function render(options: { guest?: boolean; permissions?: string[] } = {}) {
     TestBed.resetTestingModule();
     count.set(0);
-    moderationTotal.set(0);
+    adminTotal.set(0);
     const { session } = setupSocialTesting({
       guest: options.guest,
       providers: [
         { provide: NotificationBadge, useValue: { count } },
-        { provide: ModerationSummaryStore, useValue: { total: moderationTotal, canModerate: signal((options.permissions ?? []).includes('moderation.manage')) } },
+        {
+          provide: AdminSummaryStore,
+          useValue: { total: adminTotal, canAccess: signal((options.permissions ?? []).includes('admin.access')), refresh: () => Promise.resolve() },
+        },
         provideRouter([
           { path: 'explore', component: Blank },
           { path: 'paths', component: Blank },
@@ -165,11 +168,12 @@ describe('TopBar', () => {
     expect(root.querySelector('[data-me-menu-panel]')).toBeNull();
   });
 
-  it('moderators see a dot on Me while reports are open (the count is in the menu)', async () => {
-    const { fixture, root } = render({ permissions: ['articles.read', 'moderation.manage'] });
+  // F23: the dot follows the admin console's badge (open reports + open tickets + pending verification requests).
+  it('admins see a dot on Me while something waits in the console (the count is in the menu)', async () => {
+    const { fixture, root } = render({ permissions: ['articles.read', 'admin.access', 'moderation.manage'] });
     await meTrigger(fixture, 'stacked');
     expect(root.querySelector('[data-me-attention]')).toBeNull();
-    moderationTotal.set(4);
+    adminTotal.set(4);
     fixture.detectChanges();
     expect(root.querySelectorAll('[data-me-attention]').length).toBe(2);
   });

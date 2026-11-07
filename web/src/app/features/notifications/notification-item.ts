@@ -9,7 +9,7 @@ import { BdiText } from '../../shared/directives/bdi-text';
 import { detectDir } from '../../shared/directives/bidi';
 import { RelativeTimePipe } from '../../shared/pipes/format.pipes';
 import { Avatar } from '../../shared/ui/avatar';
-import { isActorType, notificationIcon, notificationText, verificationOutcome } from './notification-view';
+import { isActorType, notificationDetail, notificationIcon, notificationText, verificationOutcome } from './notification-view';
 
 /**
  * One row of the notification center (F17): who (avatar with the type's icon, "Deleted user" for a gone account) or the
@@ -54,6 +54,10 @@ import { isActorType, notificationIcon, notificationText, verificationOutcome } 
             <rd-bdi-text [text]="comment.excerpt" />
           </span>
         }
+        @if (detail(); as line) {
+          <!-- An announcement's text, or a ticket's "#12 · subject" (F23, F35): mixed text in its own direction. -->
+          <span class="mt-0.5 line-clamp-2 block text-sm text-text-secondary" dir="auto" data-notification-detail>{{ line }}</span>
+        }
         @if (n.type === 'security_alert') {
           <span class="mt-0.5 block text-sm text-text-secondary">{{ 'notifications.text.security_alert.hint' | transloco }}</span>
         }
@@ -95,6 +99,7 @@ export class NotificationItem {
   /** A rejected verification request (F19): "Open it to see why". */
   protected readonly rejected = computed(() => this.notification().type === 'verification_result' && verificationOutcome(this.notification()) === 'rejected');
   protected readonly icon = computed(() => notificationIcon(this.notification()));
+  protected readonly detail = computed(() => notificationDetail(this.notification()));
   protected readonly text = computed(() => notificationText(this.notification(), this.transloco, this.lang()));
   protected readonly titleDir = computed(() => (this.notification().article?.language === 'ar-EG' ? 'rtl' : 'ltr'));
   /** From the excerpt's first strong character: `dir="auto"` would skip the inner `rd-bdi-text`, which has its own `dir`. */
@@ -103,6 +108,7 @@ export class NotificationItem {
     switch (this.notification().type) {
       case 'streak_reminder':
       case 'daily_article':
+      case 'announcement':
         return 'bg-accent-container text-text-primary';
       case 'security_alert':
       case 'moderation_notice':

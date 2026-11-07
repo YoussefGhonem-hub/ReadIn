@@ -50,7 +50,10 @@ describe('NotificationSettingsPage (F17)', () => {
 
   it('lists every configurable type with its mode (a type the API leaves out is "All")', async () => {
     const { root, typeRow } = await render(settings({ types: { mention: 'off', daily_article: 'inApp' } }));
-    expect([...root.querySelectorAll('[data-notification-type]')].map((e) => e.getAttribute('data-notification-type'))).toEqual([...CONFIGURABLE_TYPES]);
+    // F35: support tickets only for holders of support.manage, so a member's list leaves them out.
+    expect([...root.querySelectorAll('[data-notification-type]')].map((e) => e.getAttribute('data-notification-type'))).toEqual(
+      CONFIGURABLE_TYPES.filter((type) => type !== 'support_ticket'),
+    );
     expect(typeRow('mention').getAttribute('data-mode')).toBe('off');
     expect(typeRow('daily_article').getAttribute('data-mode')).toBe('inApp');
     expect(typeRow('new_follower').getAttribute('data-mode')).toBe('all');
@@ -58,9 +61,10 @@ describe('NotificationSettingsPage (F17)', () => {
     // Mentions cover comments and articles.
     expect(typeRow('mention').textContent).toContain('عندما يشير إليك أحد في تعليق أو مقال');
     expect(TestBed.inject(TranslocoService).translate('settings.notifications.types.mention.hint', {}, 'en')).toBe('When someone mentions you in a comment or an article');
-    // F29: reposts are the 9th configurable type, listed last.
-    expect(CONFIGURABLE_TYPES).toHaveLength(9);
-    expect(CONFIGURABLE_TYPES.at(-1)).toBe('article_reposted');
+    // F29: reposts are the 9th configurable type; F23 and F35 add announcements and support tickets after it.
+    expect(CONFIGURABLE_TYPES).toHaveLength(11);
+    expect(CONFIGURABLE_TYPES.slice(-3)).toEqual(['article_reposted', 'announcement', 'support_ticket']);
+    expect(typeRow('announcement').textContent).toContain('الإعلانات');
     expect(typeRow('article_reposted').getAttribute('data-mode')).toBe('all');
     expect(typeRow('article_reposted').textContent).toContain('إعادة النشر');
     expect(typeRow('article_reposted').textContent).toContain('عندما يعيد أحد نشر مقالك');
@@ -165,6 +169,7 @@ describe('NotificationSettingsPage (F17)', () => {
     http.expectOne(URL).flush(settings());
     await flushMicrotasks();
     fixture.detectChanges();
-    expect(root.querySelectorAll('[data-notification-type]')).toHaveLength(CONFIGURABLE_TYPES.length);
+    // A member doesn't get support tickets (F35: support.manage only).
+    expect(root.querySelectorAll('[data-notification-type]')).toHaveLength(CONFIGURABLE_TYPES.length - 1);
   });
 });

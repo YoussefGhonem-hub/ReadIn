@@ -80,7 +80,9 @@
       "required": "Required",
       "max_length": "Too long.",
       "length": "Check this field.",
-      "url": "Enter a full link that starts with https://"
+      "url": "Enter a full link that starts with https://",
+      "slug": "Use lowercase English letters, digits and hyphens.",
+      "invalid": "This value isn't valid."
     },
     "request": {
       "invalid": "The request is invalid.",
@@ -137,17 +139,23 @@
       "permanent": "This account is suspended permanently. Contact support."
     },
     "field": {
-      "not_found": "This field doesn't exist."
+      "not_found": "This field doesn't exist.",
+      "slug_taken": "Another field uses this slug.",
+      "icon_invalid": "Choose an icon from the list.",
+      "color_invalid": "Choose a color from the list."
     },
     "topic": {
       "not_found": "Topic not found.",
-      "not_in_field": "The topic doesn't belong to this field."
+      "not_in_field": "The topic doesn't belong to this field.",
+      "slug_taken": "Another topic in this field uses this slug."
     },
     "tag": {
       "not_found": "Tag not found.",
       "invalid": "A tag has 2–30 characters: letters, digits, spaces and - _ . + # only.",
       "limit": "You've created a lot of new tags today. Pick existing tags, or try again later.",
-      "hidden": "This tag isn't available. Choose another one."
+      "hidden": "This tag isn't available. Choose another one.",
+      "name_taken": "Another tag already has this name. If they're the same, merge them.",
+      "merge_self": "A tag can't be merged into itself."
     },
     "search": {
       "query_invalid": "Type 1–100 characters, with at least one letter or digit.",
@@ -323,7 +331,8 @@
       "not_found": "This path doesn't exist.",
       "slug_taken": "Another path already uses this slug.",
       "editorial": "This path is managed in the content files and can't be changed here.",
-      "items_invalid": "The path's articles aren't valid: 1–100 published articles, no repeats."
+      "items_invalid": "The path's articles aren't valid: 1–100 published articles, no repeats.",
+      "featured_invalid": "Choose up to 20 different existing paths."
     },
     "notification": {
       "not_found": "This notification no longer exists.",
@@ -349,6 +358,24 @@
       "limit": "You can have at most 50 categories.",
       "name_taken": "You already have a category with this name.",
       "name_invalid": "A category name has 1–40 characters, with at least one letter or digit."
+    },
+    "announcement": {
+      "limit": "An announcement was already sent today. You can send one a day.",
+      "no_recipients": "This announcement has no recipients.",
+      "link_invalid": "The link must point to a published article or path."
+    },
+    "admin": {
+      "order_invalid": "The list must hold every item exactly once."
+    },
+    "support": {
+      "limit": "You've reached the ticket limit: 5 new tickets a day and 10 open at once.",
+      "ticket_not_found": "Ticket not found.",
+      "attachment_not_found": "Attachment not found.",
+      "ticket_closed": "This ticket is closed. Reopen it first.",
+      "reopen_expired": "This ticket was closed more than 30 days ago. Send a new one.",
+      "attachment_invalid": "Screenshots must be JPEG, PNG or WebP, up to 5 MB each.",
+      "too_many_attachments": "You can attach up to 3 images.",
+      "category_invalid": "Choose a category from the list."
     }
   },
   "auth": {
@@ -842,7 +869,10 @@
       "label": "Article options",
       "report": "Report article",
       "hide": "Hide article",
-      "unhide": "Unhide article"
+      "unhide": "Unhide article",
+      "feature": "Feature",
+      "unfeature": "Unfeature",
+      "openInConsole": "Open in console"
     },
     "hiddenBanner": {
       "title": "Hidden by moderators",
@@ -983,6 +1013,14 @@
         "article_reposted": {
           "label": "Reposts",
           "hint": "When someone reposts your article"
+        },
+        "announcement": {
+          "label": "Announcements",
+          "hint": "News from the ReadIn team"
+        },
+        "support_ticket": {
+          "label": "Support tickets",
+          "hint": "New tickets and members' replies"
         }
       },
       "alwaysOn": "Security alerts and moderation notices can't be turned off, and security alerts arrive even during quiet hours.",
@@ -1650,7 +1688,8 @@
       },
       "emptyBody": "Check back soon, or browse the fields on Explore.",
       "loadError": "We couldn't load these articles."
-    }
+    },
+    "featuredArticles": "Featured articles"
   },
   "fields": {
     "page": {
@@ -1842,7 +1881,10 @@
       "label": "Account options",
       "report": "Report user",
       "warn": "Warn",
-      "suspend": "Suspend account"
+      "suspend": "Suspend account",
+      "unsuspend": "Lift suspension",
+      "removeBadge": "Remove verified badge",
+      "openInConsole": "Open in console"
     }
   },
   "categories": {
@@ -2277,8 +2319,12 @@
         "clear_category": "Category name cleared",
         "clear_links": "Links cleared",
         "clear_headline": "Title cleared",
-        "dismiss": "Reports dismissed"
-      }
+        "dismiss": "Reports dismissed",
+        "hide_content": "Their content is hidden",
+        "unhide_content": "Their content is back"
+      },
+      "hideContent": "Hide all their content",
+      "unhideContent": "Restore their content"
     },
     "sheet": {
       "title": {
@@ -2293,7 +2339,9 @@
         "clearHeadline": "Clear {{name}}'s title?",
         "dismiss": "Dismiss these reports?",
         "unhideArticle": "Unhide this article?",
-        "unhideComment": "Unhide this comment?"
+        "unhideComment": "Unhide this comment?",
+        "hideContent": "Hide all of {{name}}'s content?",
+        "unhideContent": "Restore {{name}}'s content?"
       },
       "body": {
         "hideArticle": "It disappears from every list and from search; only its author and moderators can open it. The author gets a notice with your note.",
@@ -2307,7 +2355,9 @@
         "clearHeadline": "The title under their name is removed everywhere. The open reports are resolved, and the user isn't notified.",
         "dismiss": "The open reports are closed without changing the content.",
         "unhideArticle": "Readers can see it everywhere again.",
-        "unhideComment": "Everyone can see it again."
+        "unhideComment": "Everyone can see it again.",
+        "hideContent": "Every article and comment of theirs is hidden, and its open reports are resolved. They aren't notified. You can restore it later.",
+        "unhideContent": "What was hidden with the account comes back. Content hidden one by one stays hidden."
       },
       "note": "Note",
       "noteOptional": "Note (optional)",
@@ -2316,10 +2366,17 @@
       "duration": "Duration",
       "durations": {
         "1": "1 day",
+        "3": "3 days",
         "7": "7 days",
         "30": "30 days",
-        "permanent": "Permanent"
-      }
+        "permanent": "Permanent",
+        "custom": "Custom"
+      },
+      "customDays": "Days",
+      "customDaysHint": "1–365",
+      "reasonHint": "A reason of 5–500 characters. The account owner sees it.",
+      "hideContent": "Also hide all of their articles and comments",
+      "hideContentHint": "For spam accounts. You can restore it later."
     },
     "notice": {
       "warning": "You've received a warning from the moderators",
@@ -2344,7 +2401,9 @@
         "user.clear_category": "cleared a category name",
         "user.clear_links": "cleared a user's links",
         "user.clear_headline": "cleared a user's title",
-        "reports.dismiss": "dismissed reports"
+        "reports.dismiss": "dismissed reports",
+        "user.hide_content": "hid all of a user's content",
+        "user.unhide_content": "restored a user's content"
       },
       "until": "until {{date}}",
       "permanent": "permanently",
@@ -2460,7 +2519,19 @@
         "articleHidden": "The moderators hid your article",
         "warning": "You received a warning from the moderators"
       },
-      "other": "You have a new notification"
+      "other": "You have a new notification",
+      "announcement": "News from the ReadIn team",
+      "support_reply": {
+        "replied": "Support replied to your ticket",
+        "closed": "Your ticket was closed"
+      },
+      "support_ticket": {
+        "single": "New support message from {{name}}",
+        "group": {
+          "one": "New support messages from {{name}} and 1 other",
+          "other": "New support messages from {{name}} and {{count}} others"
+        }
+      }
     }
   },
   "verification": {
@@ -2735,5 +2806,733 @@
     "error": "We couldn't load the people you follow.",
     "suggested": "Writers you might like",
     "suggestedHint": "Based on your interests"
+  },
+  "admin": {
+    "title": "Admin console",
+    "settingsRow": "The dashboard, users, content, reports, tickets and the other sections",
+    "badge": {
+      "zero": "Nothing waiting",
+      "one": "1 item waiting",
+      "other": "{{count}} items waiting"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "content": "Content",
+      "reports": "Reports",
+      "tickets": "Tickets",
+      "verification": "Verification",
+      "taxonomy": "Taxonomy & tags",
+      "paths": "Paths & featured",
+      "announcements": "Announcements",
+      "audit": "Audit log",
+      "system": "System"
+    },
+    "loadError": "We couldn't load this. Try again.",
+    "emptyFilters": "Try other filters or another search.",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "search": "Search",
+    "sortBy": "Sort by",
+    "ascending": "Oldest or smallest first",
+    "descending": "Newest or largest first",
+    "clear": "Clear",
+    "change": "Change",
+    "edit": "Edit",
+    "delete": "Delete",
+    "remove": "Remove",
+    "refresh": "Refresh",
+    "copy": "Copy",
+    "copied": "Copied",
+    "saved": "Saved",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "confirm": {
+      "ok": "OK"
+    },
+    "pager": {
+      "label": "Pages",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} of {{pages}}",
+      "results": {
+        "zero": "No results",
+        "one": "1 result",
+        "other": "{{count}} results"
+      }
+    },
+    "signIn": {
+      "phone": "Phone",
+      "google": "Google",
+      "apple": "Apple"
+    },
+    "picker": {
+      "label": "Add an article",
+      "placeholder": "Search articles by title"
+    },
+    "dashboard": {
+      "period": "Period",
+      "periods": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "7d": "7 days",
+        "30d": "30 days"
+      },
+      "subtitle": "{{from}} to {{to}} · {{zone}}",
+      "numbers": "The numbers for the period",
+      "queues": "Waiting now",
+      "vsPrevious": "vs the previous period",
+      "now": "Right now",
+      "cards": {
+        "articlesPublished": "Articles published",
+        "newUsers": "New users",
+        "activeReaders": "Active readers",
+        "reads": "Reads",
+        "comments": "Comments",
+        "reactions": "Reactions",
+        "reposts": "Reposts",
+        "suspendedNow": "Accounts suspended",
+        "openReports": "Open reports",
+        "openTickets": "Open tickets",
+        "pendingVerifications": "Pending verification requests"
+      },
+      "last30": "Last 30 days",
+      "charts": {
+        "newUsers": "New users",
+        "activeReaders": "Active readers",
+        "articlesPublished": "Articles published"
+      },
+      "topArticles": "Top articles",
+      "topWriters": "Top writers",
+      "reads": {
+        "one": "1 read",
+        "other": "{{count}} reads"
+      },
+      "articlesRead": {
+        "one": "1 article read",
+        "other": "{{count}} articles read"
+      },
+      "noReads": "No reads in this period.",
+      "missedSearches": "Searches with no results",
+      "missedSearchesHint": "What readers looked for and ReadIn doesn't have yet.",
+      "noMissedSearches": "Every search found something.",
+      "retention": "Streak retention",
+      "retentionHint": "Last week's active readers who kept a streak of 3 days or more.",
+      "retentionOf": "{{kept}} of {{cohort}} readers",
+      "retentionEmpty": "Nobody read last week.",
+      "pipeline": "Content pipeline",
+      "pipelineFolders": "Article folders",
+      "pipelineSeeded": "Seeded under @readin",
+      "pipelinePublished": "Readers can open",
+      "pipelineLastRun": "Last seed run"
+    },
+    "users": {
+      "subtitle": "Every account. Phone numbers stay masked.",
+      "search": "Search users",
+      "searchPlaceholder": "Name, @username or phone number",
+      "status": "Status",
+      "statuses": {
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "verified": "Verified",
+      "method": "Sign-in method",
+      "joinedFrom": "Joined from",
+      "joinedTo": "Joined to",
+      "hasReports": "Has open reports",
+      "sorts": {
+        "joined": "Joined",
+        "lastSeen": "Last seen",
+        "followers": "Followers",
+        "openReports": "Open reports"
+      },
+      "columns": {
+        "user": "User",
+        "signIn": "Sign-in methods",
+        "joined": "Joined",
+        "lastSeen": "Last seen",
+        "articles": "Articles",
+        "followers": "Followers",
+        "status": "Status",
+        "reports": "Open reports"
+      },
+      "system": "Official account",
+      "neverSeen": "Not seen yet",
+      "suspendedUntil": "Suspended until {{date}}",
+      "suspendedPermanently": "Suspended permanently",
+      "empty": "No users found",
+      "back": "All users",
+      "notFound": "This user doesn't exist or deleted their account.",
+      "signUpMethod": "Signed up with",
+      "phone": "Phone number",
+      "showPhone": "Show",
+      "uiLanguage": "App language",
+      "actions": "Actions",
+      "noActions": "There's nothing you can do to this account.",
+      "protected": "Admins, moderators and the official account can't be suspended, warned or signed out.",
+      "theirArticles": "Their articles",
+      "auditAbout": "Audit entries about them",
+      "auditBy": "Their actions in the audit log",
+      "stats": "Activity",
+      "statLabels": {
+        "articles": "Published articles",
+        "drafts": "Drafts",
+        "comments": "Comments",
+        "followers": "Followers",
+        "following": "Following",
+        "totalReads": "Reads of their articles",
+        "articlesRead": "Articles read",
+        "currentStreak": "Current streak",
+        "longestStreak": "Longest streak"
+      },
+      "access": "Sign-in and security",
+      "sessions": "Signed-in devices",
+      "recoveryPin": "Recovery PIN",
+      "recoveryDisabled": "recovery is turned off",
+      "pending": "Waiting for them",
+      "mustChangePassword": "Change the temporary password.",
+      "mustSetPin": "Set a recovery PIN.",
+      "lockedOut": "Locked out until",
+      "moderation": "Moderation history",
+      "moderationCounts": "Warnings: {{warnings}} · Suspensions: {{suspensions}} · Hidden articles: {{articles}} · Hidden comments: {{comments}}",
+      "hiddenWithAccount": "{{count}} hidden with the account",
+      "noHistory": "No moderation actions yet.",
+      "newest": "The newest {{shown}} of {{total}}",
+      "reportsAgainst": "Reports against them",
+      "reportsFiled": "Reports they filed",
+      "verification": "Verification requests",
+      "tickets": "Support tickets",
+      "audit": "Audit entries about them",
+      "none": "None.",
+      "deletedTarget": "Deleted",
+      "resetPassword": "Reset password",
+      "logoutAll": "Sign out of all devices",
+      "done": {
+        "logoutAll": "Every session ended"
+      },
+      "confirm": {
+        "resetPassword": {
+          "title": "Reset {{name}}'s password?",
+          "body": "They get a temporary password, which you'll see once. On their next sign in they must change it and set a recovery PIN."
+        },
+        "logoutAll": {
+          "title": "Sign {{name}} out of all devices?",
+          "body": "Every session ends at once; they can sign in again. They aren't notified."
+        },
+        "removeBadge": {
+          "title": "Remove {{name}}'s badge?",
+          "body": "The ✓ badge disappears from next to their name everywhere. They can ask to be verified again, and they aren't notified."
+        }
+      },
+      "tempPasswordTitle": "Temporary password",
+      "tempPasswordBody": "Give it to the account owner privately. It isn't shown again."
+    },
+    "content": {
+      "subtitle": "Published and archived articles, and the latest comments.",
+      "tabs": "Content",
+      "tab": {
+        "articles": "Articles",
+        "comments": "Latest comments"
+      },
+      "search": "Search titles",
+      "from": "From",
+      "to": "To",
+      "field": "Field",
+      "topic": "Topic",
+      "writer": "Writer",
+      "status": "Status",
+      "statuses": {
+        "published": "Published",
+        "archived": "Archived"
+      },
+      "hidden": "Hidden",
+      "featured": "Featured",
+      "reported": "Reported",
+      "sorts": {
+        "published": "Newest first",
+        "featured": "Recently featured"
+      },
+      "columns": {
+        "article": "Article",
+        "published": "Published",
+        "reads": "Reads",
+        "reactions": "Reactions",
+        "comments": "Comments",
+        "state": "State"
+      },
+      "hiddenTag": "Hidden",
+      "featuredTag": "Featured",
+      "openReports": "Open reports: {{count}}",
+      "emptyArticles": "No articles found",
+      "emptyComments": "No comments",
+      "commentFilter": "Show comments",
+      "commentHidden": {
+        "all": "All",
+        "false": "Visible",
+        "true": "Hidden"
+      },
+      "reply": "Reply",
+      "back": "All content",
+      "notFound": "This article doesn't exist, is a draft or was deleted.",
+      "open": "Open the article",
+      "hiddenAt": "Hidden",
+      "featuredAt": "Featured",
+      "reports": "Reports",
+      "reportsOf": "{{open}} open of {{total}}",
+      "feature": "Feature",
+      "unfeature": "Unfeature",
+      "featuredDone": "Article featured",
+      "unfeaturedDone": "Article no longer featured",
+      "confirmFeature": {
+        "title": "Feature this article?",
+        "body": "It shows in Explore's featured articles while readers can open it."
+      },
+      "confirmUnfeature": {
+        "title": "Unfeature this article?",
+        "body": "It leaves Explore's featured articles."
+      },
+      "neverPublished": "Never published"
+    },
+    "taxonomy": {
+      "subtitle": "Fields, their topics and tags.",
+      "tab": {
+        "fields": "Fields & topics",
+        "tags": "Tags"
+      },
+      "fieldsHint": "Slugs never change. Nothing is deleted: disable a field or topic instead.",
+      "addField": "Add a field",
+      "editField": "Edit the field",
+      "addTopic": "Add a topic",
+      "editTopic": "Edit the topic",
+      "articles": {
+        "zero": "No articles",
+        "one": "1 article",
+        "other": "{{count}} articles"
+      },
+      "topicsCount": {
+        "zero": "No topics",
+        "one": "1 topic",
+        "other": "{{count}} topics"
+      },
+      "disabled": "Disabled",
+      "sensitive": "Sensitive",
+      "requiresSources": "Sources required",
+      "fromFile": "From the content file",
+      "fromFileHint": "Listed in content/taxonomy.yaml: it can be renamed and disabled, never deleted.",
+      "customized": "Edited here",
+      "customizedHint": "Changed in the console, so the content file no longer changes it.",
+      "noFields": "No fields yet",
+      "noTopics": "No topics yet.",
+      "slug": "Slug",
+      "slugHint": "Lowercase English letters, digits and hyphens (2–64). It can't be changed later.",
+      "slugFixed": "The slug can't be changed.",
+      "nameAr": "Arabic name",
+      "nameEn": "English name",
+      "icon": "Icon",
+      "color": "Color",
+      "sensitiveLabel": "Sensitive (health content: the reader shows a disclaimer)",
+      "requiresSourcesLabel": "Articles need at least one source",
+      "enabledLabel": "Enabled (shown to readers)",
+      "disableField": {
+        "title": "Disable this field?",
+        "body": {
+          "zero": "It leaves feeds, Explore, search and the editor. It has no articles readers can see.",
+          "one": "It leaves feeds, Explore, search and the editor, with its 1 article. It comes back when you enable it.",
+          "other": "It leaves feeds, Explore, search and the editor, with its {{count}} articles. They come back when you enable it."
+        }
+      },
+      "disableTopic": {
+        "title": "Disable this topic?",
+        "body": {
+          "zero": "It leaves topic lists, the editor, onboarding and search.",
+          "one": "It leaves topic lists, the editor, onboarding and search. Its 1 article stays in its field.",
+          "other": "It leaves topic lists, the editor, onboarding and search. Its {{count}} articles stay in their field."
+        }
+      }
+    },
+    "tags": {
+      "search": "Name, slug or old name",
+      "status": "Visibility",
+      "statuses": {
+        "all": "All",
+        "visible": "Visible",
+        "hidden": "Hidden"
+      },
+      "origin": "Origin",
+      "origins": {
+        "all": "All",
+        "system": "System",
+        "user": "Writers"
+      },
+      "sorts": {
+        "articles": "Most articles",
+        "name": "Name",
+        "newest": "Newest"
+      },
+      "columns": {
+        "tag": "Tag",
+        "articles": "Articles",
+        "created": "Created",
+        "state": "State"
+      },
+      "aliases": "Also",
+      "hidden": "Hidden",
+      "system": "System",
+      "emptySince": "Empty since {{date}}",
+      "emptyHint": "A writers' tag with no published article is deleted after 30 days.",
+      "empty": "No tags found",
+      "rename": "Rename",
+      "merge": "Merge",
+      "hide": "Hide",
+      "unhide": "Unhide",
+      "renameTitle": "Rename {{name}}",
+      "renameBody": "The link stays the same, and the old name keeps leading to this tag.",
+      "newName": "New name",
+      "mergeInto": "Merge into {{name}}",
+      "mergeTitle": "Merge {{name}}",
+      "mergeBody": {
+        "zero": "It's deleted and its name leads to the other tag. This can't be undone.",
+        "one": "Its 1 article moves to the other tag, and its name leads there. This can't be undone.",
+        "other": "Its {{count}} articles move to the other tag, and its name leads there. This can't be undone."
+      },
+      "mergeSearch": "Merge into",
+      "merged": "{{from}} merged into {{to}}",
+      "renamed": "Tag renamed",
+      "hideTitle": "Hide {{name}}?",
+      "hideBody": "It isn't suggested and its page is gone; it stays on its articles, so unhiding brings it back.",
+      "hiddenDone": "Tag hidden",
+      "unhiddenDone": "Tag visible again"
+    },
+    "paths": {
+      "subtitle": "Learning paths and what Explore features.",
+      "title": "Learning paths",
+      "add": "New path",
+      "edit": "Edit the path",
+      "itemsCount": {
+        "zero": "No articles",
+        "one": "1 article",
+        "other": "{{count}} articles"
+      },
+      "enrolled": {
+        "zero": "No one enrolled",
+        "one": "1 enrolled",
+        "other": "{{count}} enrolled"
+      },
+      "published": "Published",
+      "unpublished": "Not published",
+      "editorial": "Editorial",
+      "editorialHint": "Managed in content/taxonomy.yaml: read only here.",
+      "featuredAt": "Featured #{{order}}",
+      "articles": "Articles",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "empty": "No paths yet",
+      "featuredTitle": "Featured paths",
+      "featuredHint": "The paths Explore features, in this order (up to {{max}}). An unpublished path shows once it's published.",
+      "noFeatured": "No featured paths.",
+      "addFeatured": "Add a path…",
+      "featuredArticles": "Featured articles",
+      "featuredArticlesHint": "The most recently featured first. Feature an article from its ⋯ menu or its page in Content.",
+      "allFeatured": "See all in Content",
+      "noFeaturedArticles": "No featured articles.",
+      "slugHint": "Lowercase English letters, digits and hyphens (3–100).",
+      "pickField": "Choose a field",
+      "titleAr": "Arabic title",
+      "titleEn": "English title",
+      "descriptionAr": "Arabic description (optional)",
+      "descriptionEn": "English description (optional)",
+      "sortOrder": "Order",
+      "publishedLabel": "Published",
+      "itemsTitle": "The articles of {{title}}",
+      "noItems": "No articles yet.",
+      "deleteTitle": "Delete {{title}}?",
+      "deleteBody": "The path and its enrollments are deleted. Reading history stays."
+    },
+    "announcements": {
+      "subtitle": "A notification and a push to everyone, or to the readers of a field or a language. One a day.",
+      "limit": "An announcement was already sent today.",
+      "nextAt": "The next one can go {{time}}.",
+      "new": "New announcement",
+      "arabic": "Arabic",
+      "english": "English",
+      "titleAr": "Title (up to 60 characters)",
+      "titleEn": "Title (up to 60 characters)",
+      "bodyAr": "Text (up to 180 characters)",
+      "bodyEn": "Text (up to 180 characters)",
+      "audience": "Who gets it",
+      "audiences": {
+        "all": "Everyone",
+        "field": "Readers of a field",
+        "language": "Readers of a language"
+      },
+      "link": "Opens",
+      "links": {
+        "none": "The notifications",
+        "article": "An article",
+        "path": "A path"
+      },
+      "pickPath": "Choose a path",
+      "preview": "Preview",
+      "previewFirst": "Preview it before sending.",
+      "test": "Send me a test",
+      "testSent": "The test is on its way to you",
+      "send": "Send",
+      "reach": {
+        "zero": "No one would get it now.",
+        "one": "It reaches 1 account now ({{push}} by push).",
+        "other": "It reaches {{count}} accounts now ({{push}} by push)."
+      },
+      "confirmTitle": "Send this announcement?",
+      "sent": "Sending the announcement",
+      "history": "Sent announcements",
+      "empty": "No announcements yet",
+      "statuses": {
+        "sending": "Sending",
+        "sent": "Sent"
+      },
+      "recipients": {
+        "zero": "No recipients",
+        "one": "1 recipient",
+        "other": "{{count}} recipients"
+      },
+      "toField": "Readers of {{name}}",
+      "toLanguage": "{{language}} readers"
+    },
+    "audit": {
+      "subtitle": "Every audited action and the moderation log, newest first.",
+      "action": "Action code or prefix",
+      "source": "Source",
+      "sources": {
+        "audit": "Audit",
+        "moderation": "Moderation"
+      },
+      "prefixes": "Quick filters",
+      "byActor": "By",
+      "aboutTarget": "About",
+      "empty": "No entries",
+      "system": "ReadIn",
+      "targets": {
+        "user": "User",
+        "article": "Article",
+        "comment": "Comment",
+        "field": "Field",
+        "topic": "Topic",
+        "tag": "Tag",
+        "path": "Path",
+        "announcement": "Announcement",
+        "ticket": "Ticket"
+      },
+      "actions": {
+        "admin.pii_viewed": "Viewed a phone number",
+        "admin.sessions_revoked": "Signed out of all devices",
+        "admin.password_reset": "Reset a password",
+        "admin.verification_removed": "Removed a Verified badge",
+        "moderation.content_hidden": "Hid all of the user's content",
+        "moderation.content_restored": "Restored the user's content",
+        "admin.article_featured": "Featured an article",
+        "admin.article_unfeatured": "Unfeatured an article",
+        "admin.featured_paths_set": "Changed the featured paths",
+        "admin.field_created": "Added a field",
+        "admin.field_updated": "Edited a field",
+        "admin.fields_reordered": "Reordered the fields",
+        "admin.topic_created": "Added a topic",
+        "admin.topic_updated": "Edited a topic",
+        "admin.topics_reordered": "Reordered the topics",
+        "admin.tag_renamed": "Renamed a tag",
+        "admin.tag_merged": "Merged tags",
+        "admin.tag_hidden": "Hid a tag",
+        "admin.tag_unhidden": "Unhid a tag",
+        "admin.path_created": "Created a path",
+        "admin.path_updated": "Edited a path",
+        "admin.path_items_set": "Set a path's articles",
+        "admin.path_deleted": "Deleted a path",
+        "admin.announcement_sent": "Sent an announcement",
+        "admin.announcement_tested": "Sent a test announcement",
+        "admin.counters_rebuilt": "Rebuilt the counters",
+        "admin.ticket_replied": "Replied to a ticket",
+        "admin.ticket_note_added": "Added an internal note",
+        "admin.ticket_closed": "Closed a ticket",
+        "admin.ticket_reopened": "Reopened a ticket",
+        "admin.ticket_category_changed": "Changed a ticket's category"
+      }
+    },
+    "system": {
+      "subtitle": "Read only. Settings change in the configuration.",
+      "api": "API",
+      "version": "Version",
+      "started": "Started",
+      "environment": "Environment",
+      "health": "Services",
+      "database": "Database",
+      "messaging": "Push (FCM)",
+      "realtime": "Realtime Database",
+      "reachable": "reachable",
+      "unreachable": "not reachable",
+      "configured": "configured",
+      "notConfigured": "not configured",
+      "updatePolicy": "App update policy",
+      "noMinimum": "No minimum",
+      "store": "Store page",
+      "push": "Push in the last 24 hours",
+      "pushSent": "Sent",
+      "pushFailed": "Failed",
+      "invalidTokens": "Invalid tokens removed",
+      "storage": "Storage",
+      "uploads": "Uploads",
+      "private": "Private store",
+      "files": {
+        "zero": "no files",
+        "one": "1 file",
+        "other": "{{count}} files"
+      },
+      "measured": "Measured {{time}}",
+      "jobs": "Background jobs",
+      "job": "Job",
+      "lastRun": "Last run",
+      "duration": "Took",
+      "runs24h": "Runs (24 h)",
+      "failures24h": "Failures (24 h)",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "never": "Never",
+      "counters": "Live counters",
+      "countersHint": "Rebuild the realtime counters of every article from the database.",
+      "rebuild": "Rebuild counters",
+      "rebuildTitle": "Rebuild the counters?",
+      "rebuildBody": "Every article's live counters are written again from the database. It can take a minute.",
+      "rebuilt": "Counters rebuilt",
+      "unregistered": "No longer scheduled"
+    },
+    "tickets": {
+      "subtitle": "Members' tickets: the longest waiting first.",
+      "tabs": "Ticket status",
+      "search": "Search tickets",
+      "searchPlaceholder": "Subject, member or #12",
+      "note": "Internal note",
+      "waiting": "Waiting {{time}}",
+      "closedAt": "Closed {{time}}",
+      "empty": {
+        "open": "No open tickets",
+        "answered": "No answered tickets",
+        "closed": "No closed tickets"
+      },
+      "back": "All tickets",
+      "closedBy": {
+        "member": "Closed by the member",
+        "support": "Closed by support",
+        "auto": "Closed automatically"
+      },
+      "writeAs": "Write",
+      "replyMode": "Reply to the member",
+      "noteMode": "Internal note",
+      "replyPlaceholder": "Write a reply. The member sees it as from Support.",
+      "notePlaceholder": "Only admins see internal notes.",
+      "replyHint": "The ticket becomes Answered and the member is notified.",
+      "noteHint": "Nobody is notified, and the status doesn't change.",
+      "sendReply": "Send the reply",
+      "addNote": "Add the note",
+      "replied": "Reply sent",
+      "noteAdded": "Note added",
+      "member": "The member",
+      "device": "Device",
+      "platform": "Platform",
+      "os": "System",
+      "appVersion": "App version",
+      "screen": "Sent from",
+      "closeTitle": "Close this ticket?",
+      "closeBody": "The member is told that it was closed. You can reopen it any time.",
+      "done": {
+        "open": "Ticket reopened",
+        "closed": "Ticket closed",
+        "category": "Category changed"
+      }
+    }
+  },
+  "support": {
+    "title": "Help & support",
+    "settingsRow": "Send a ticket, or follow your tickets",
+    "intro": "Something isn't working, or you have a question or a suggestion? Send us a ticket and we'll reply here and by notification.",
+    "emailLabel": "Or write to",
+    "appeal": "To appeal the suspension, write to",
+    "guest": "Sign in to send a ticket and follow our replies.",
+    "signIn": "Sign in to send a ticket",
+    "newTicket": "New ticket",
+    "myTickets": "My tickets",
+    "categories": {
+      "app_problem": "A problem in the app",
+      "account": "Account and sign in",
+      "content": "Content or a report",
+      "verification": "Verification",
+      "suggestion": "A suggestion",
+      "other": "Something else"
+    },
+    "statuses": {
+      "open": "Open",
+      "answered": "Answered",
+      "closed": "Closed"
+    },
+    "form": {
+      "category": "Category",
+      "pickCategory": "Choose a category",
+      "subject": "Subject",
+      "subjectHint": "{{min}}–{{max}} characters",
+      "message": "Message",
+      "messagePlaceholder": "Describe what happened and what you expected.",
+      "messageHint": "{{min}}–{{max}} characters",
+      "deviceNote": "Your browser, system and app language are added to help us. No device identifier is sent.",
+      "send": "Send the ticket",
+      "sent": "Ticket #{{number}} sent"
+    },
+    "limit": {
+      "daily": "You can send 5 new tickets a day. Try again tomorrow, or reply on an open ticket.",
+      "open": "You have 10 open tickets. Close one, or reply on it, before sending a new one."
+    },
+    "addScreenshots": "Add screenshots",
+    "screenshotsHint": "Up to {{count}} images, JPEG, PNG or WebP, {{size}} MB each.",
+    "removeScreenshot": "Remove {{name}}",
+    "tooManyScreenshots": {
+      "one": "You can attach 1 image.",
+      "other": "You can attach up to {{count}} images."
+    },
+    "screenshotProblem": {
+      "type": "{{name}} isn't a JPEG, PNG or WebP image.",
+      "size": "{{name}} is larger than 5 MB.",
+      "empty": "{{name}} is empty."
+    },
+    "screenshotAlt": "Screenshot {{n}}",
+    "screenshotFailed": "Couldn't load",
+    "tabsLabel": "Ticket status",
+    "tabs": {
+      "all": "All",
+      "active": "Active",
+      "closed": "Closed"
+    },
+    "empty": {
+      "all": "No tickets yet",
+      "active": "No active tickets",
+      "closed": "No closed tickets"
+    },
+    "emptyBody": "Tickets you send show up here.",
+    "loadError": "We couldn't load your tickets. Try again.",
+    "more": "Show more",
+    "fromSupport": "Support",
+    "fromYou": "You",
+    "supportTeam": "Support",
+    "you": "You",
+    "opened": "Sent on {{date}}",
+    "closedOn": "closed on {{date}}",
+    "conversation": "The conversation",
+    "reply": "Your reply",
+    "replyPlaceholder": "Write a reply…",
+    "send": "Send",
+    "close": "Close the ticket",
+    "closeTitle": "Close this ticket?",
+    "closeBody": "You can reopen it within 30 days.",
+    "closed": "Ticket closed",
+    "reopen": "Reopen",
+    "reopened": "Ticket reopened",
+    "closedCanReopen": "This ticket is closed. Reopen it to write again.",
+    "closedExpired": "This ticket was closed more than 30 days ago. Send a new one."
   }
 }

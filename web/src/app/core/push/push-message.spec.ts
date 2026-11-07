@@ -102,4 +102,11 @@ describe('push messages', () => {
       },
     );
   });
+
+  // F35: a support reply opens the member's ticket; a new ticket opens the console's.
+  it('maps the support deep links (F35) and paths (F23 announcements)', () => {
+    expect(pushLinkToPath('readin://support/0a1b', ORIGIN, 'ar')).toBe('/support/tickets/0a1b');
+    expect(pushLinkToPath('readin://admin/support/0a1b', ORIGIN, 'ar')).toBe('/admin/tickets/0a1b');
+    expect(pushLinkToPath('readin://paths/dotnet-basics', ORIGIN, 'ar')).toBe('/paths/dotnet-basics');
+  });
 });

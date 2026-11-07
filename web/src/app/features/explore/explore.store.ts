@@ -28,6 +28,8 @@ export class ExploreStore {
   readonly mostSaved = computed(() => (this.data()?.mostSaved ?? []).slice(0, EXPLORE_PREVIEW_SIZE));
   readonly newWriters = computed(() => this.data()?.newWriters ?? []);
   readonly featuredPaths = computed(() => this.data()?.featuredPaths ?? []);
+  /** F23: the articles an admin featured (≤ 6, most recently featured first); `[]` or missing hides the section. */
+  readonly featuredArticles = computed(() => this.data()?.featuredArticles ?? []);
   /** Every section is empty (a new install): the page says so instead of showing nothing. */
   readonly isEmpty = computed(() => {
     const data = this.data();
@@ -65,7 +67,7 @@ export class ExploreStore {
   }
 
   private show(data: ExploreDto): void {
-    this.social.absorb([...data.trending, ...data.mostSaved]);
+    this.social.absorb([...(data.featuredArticles ?? []), ...data.trending, ...data.mostSaved]);
     this.data.set(data);
   }
 }

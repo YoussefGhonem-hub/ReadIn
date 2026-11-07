@@ -12,8 +12,7 @@ export type NavId =
   | 'settings'
   | 'myArticles'
   | 'myPaths'
-  | 'moderation'
-  | 'verificationRequests';
+  | 'admin';
 
 export interface NavItem {
   id: NavId;
@@ -40,14 +39,8 @@ const ITEMS: Record<NavId, NavItem> = {
   settings: { id: 'settings', labelKey: 'nav.settings', icon: 'Settings', path: '/settings' },
   myArticles: { id: 'myArticles', labelKey: 'nav.myArticles', icon: 'FileText', path: '/write', permission: 'articles.create' },
   myPaths: { id: 'myPaths', labelKey: 'nav.myPaths', icon: 'Route', path: '/paths', queryParams: { tab: 'mine' } },
-  moderation: { id: 'moderation', labelKey: 'nav.moderation', icon: 'ShieldAlert', path: '/moderation', permission: 'moderation.manage' },
-  verificationRequests: {
-    id: 'verificationRequests',
-    labelKey: 'nav.verificationRequests',
-    icon: 'BadgeCheck',
-    path: '/admin/verification',
-    permission: 'verification.manage',
-  },
+  // The admin console (F23): the reports, tickets and verification queues and the other sections are inside it.
+  admin: { id: 'admin', labelKey: 'nav.admin', icon: 'LayoutDashboard', path: '/admin', permission: 'admin.access' },
 };
 
 /** Same five destinations as the mobile app's bottom navigation (SPEC §7.2). */
@@ -60,7 +53,7 @@ export const BOTTOM_NAV: readonly NavItem[] = [ITEMS.home, ITEMS.explore, ITEMS.
 export const TOP_NAV: readonly NavItem[] = [ITEMS.home, ITEMS.explore, ITEMS.paths, ITEMS.saved, ITEMS.notifications, ITEMS.write];
 
 /** The "Me" menu's links, after the profile header; the permission items only for accounts that have them. */
-export const ME_MENU: readonly NavItem[] = [ITEMS.settings, ITEMS.myArticles, ITEMS.myPaths, ITEMS.moderation, ITEMS.verificationRequests];
+export const ME_MENU: readonly NavItem[] = [ITEMS.settings, ITEMS.myArticles, ITEMS.myPaths, ITEMS.admin];
 
 export function profilePath(username: string | null): string {
   return username ? `/@${username}` : '/auth/sign-in';

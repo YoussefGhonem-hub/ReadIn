@@ -9,7 +9,7 @@ import { PreferencesService } from '../../core/auth/preferences.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { ErrorMessages } from '../../core/i18n/error-messages';
 import { LanguageService, UiLanguage } from '../../core/i18n/language.service';
-import { ModerationSummaryStore } from '../../core/moderation/moderation-summary.store';
+import { AdminSummaryStore } from '../../core/admin/admin-summary.store';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
@@ -25,8 +25,8 @@ import { ProfileSettings } from './profile-settings';
  * Settings (F18): theme, UI language, article language, reminder time, your interests (F12, their own page), what you
  * muted (F28, its own page), font size, show highlights (F30),
  * notifications (push in this browser and a link to the notification preferences, F17), profile (with writer
- * verification, F19) and privacy, Moderation for moderators (F22; the side nav isn't there on narrow screens),
- * verification requests for admins (F19), account. A header card, then each section as a card.
+ * verification, F19) and privacy, the admin console with its badge for accounts with admin.access (F23; the reports
+ * and verification queues are inside it), account. A header card, then each section as a card.
  */
 @Component({
   selector: 'rd-settings-page',
@@ -155,32 +155,30 @@ import { ProfileSettings } from './profile-settings';
     <!-- Profile and privacy (F14, F18) -->
     <rd-profile-settings />
 
-    <!-- Moderation (F22), for moderators -->
-    @if (moderation.canModerate()) {
-      <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="settings-moderation" data-settings-moderation>
-        <h2 id="settings-moderation" class="m-0 mb-2 text-base font-semibold">{{ 'moderation.title' | transloco }}</h2>
-        <a routerLink="/moderation" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline">
-          <svg lucideIcon="ShieldAlert" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
-          <span class="flex-1">{{ 'moderation.settings.body' | transloco }}</span>
-          @if (moderation.total() > 0) {
-            <span class="min-w-6 rounded-chip bg-error px-1.5 text-center text-xs font-semibold leading-5 text-on-error" data-moderation-badge>{{ moderation.total() }}</span>
+    <!-- The admin console (F23), for accounts with admin.access: the side nav isn't there on narrow screens -->
+    @if (admin.canAccess()) {
+      <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="settings-admin" data-settings-admin>
+        <h2 id="settings-admin" class="m-0 mb-2 text-base font-semibold">{{ 'nav.admin' | transloco }}</h2>
+        <a routerLink="/admin" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-admin-console>
+          <svg lucideIcon="LayoutDashboard" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+          <span class="flex-1">{{ 'admin.settingsRow' | transloco }}</span>
+          @if (admin.total() > 0) {
+            <span class="min-w-6 rounded-chip bg-error px-1.5 text-center text-xs font-semibold leading-5 text-on-error" data-admin-badge>{{ admin.total() }}</span>
           }
           <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
         </a>
       </section>
     }
 
-    <!-- Admin (F19): verification requests, for admins (the side nav isn't there on narrow screens) -->
-    @if (session.hasPermission('verification.manage')) {
-      <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="settings-admin" data-settings-admin>
-        <h2 id="settings-admin" class="m-0 mb-2 text-base font-semibold">{{ 'settings.admin.title' | transloco }}</h2>
-        <a routerLink="/admin/verification" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-verification-requests>
-          <svg lucideIcon="BadgeCheck" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
-          <span class="flex-1">{{ 'settings.admin.verification' | transloco }}</span>
-          <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
-        </a>
-      </section>
-    }
+    <!-- Help & support (F35): a new ticket and your tickets -->
+    <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="settings-support" data-settings-support>
+      <h2 id="settings-support" class="m-0 mb-2 text-base font-semibold">{{ 'support.title' | transloco }}</h2>
+      <a routerLink="/support" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-support-link>
+        <svg lucideIcon="LifeBuoy" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+        <span class="flex-1">{{ 'support.settingsRow' | transloco }}</span>
+        <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+      </a>
+    </section>
 
     <!-- Account (F18): phone, password, PIN, sign out, sign out everywhere, delete -->
     <rd-account-settings />
@@ -194,7 +192,7 @@ export class SettingsPage {
   protected readonly readerPrefs = inject(ReaderPrefsService);
   protected readonly highlightPrefs = inject(HighlightsPrefs);
   protected readonly session = inject(SessionStore);
-  protected readonly moderation = inject(ModerationSummaryStore);
+  protected readonly admin = inject(AdminSummaryStore);
   private readonly preferences = inject(PreferencesService);
   private readonly toasts = inject(ToastService);
   private readonly errors = inject(ErrorMessages);

@@ -4,7 +4,7 @@ import { Router, provideRouter } from '@angular/router';
 import { testMe } from '../../testing/auth-testing';
 import { setupSocialTesting, TEST_API } from '../../testing/social-testing';
 import { AuthService } from '../core/auth/auth.service';
-import { ModerationSummaryStore } from '../core/moderation/moderation-summary.store';
+import { AdminSummaryStore } from '../core/admin/admin-summary.store';
 import { ThemeService } from '../core/theme/theme.service';
 import { MeMenu } from './me-menu';
 import { MeMenuHost } from './me-menu-host';
@@ -13,21 +13,23 @@ import { MeMenuHost } from './me-menu-host';
 class Blank {}
 
 describe('MeMenu', () => {
-  const moderationTotal = signal(0);
+  const adminTotal = signal(0);
+  let adminRefresh: ReturnType<typeof vi.fn>;
   let host: { closeMeMenu: ReturnType<typeof vi.fn> };
   let auth: { signOut: ReturnType<typeof vi.fn> };
 
   function render(permissions?: string[], patch: Parameters<typeof testMe>[0] = {}) {
     TestBed.resetTestingModule();
     document.cookie = 'theme=; Path=/; Max-Age=0';
-    moderationTotal.set(0);
+    adminTotal.set(0);
+    adminRefresh = vi.fn(() => Promise.resolve());
     host = { closeMeMenu: vi.fn() };
     auth = { signOut: vi.fn(() => Promise.resolve()) };
     const testing = setupSocialTesting({
       providers: [
         { provide: MeMenuHost, useValue: host },
         { provide: AuthService, useValue: auth },
-        { provide: ModerationSummaryStore, useValue: { total: moderationTotal } },
+        { provide: AdminSummaryStore, useValue: { total: adminTotal, refresh: adminRefresh } },
         provideRouter([{ path: '**', component: Blank }]),
       ],
     });
@@ -60,8 +62,8 @@ describe('MeMenu', () => {
     expect(root.querySelector('[data-me-item="myPaths"]')!.getAttribute('href')).toBe('/paths?tab=mine');
     expect(root.querySelector('[data-me-item="myPaths"]')!.textContent!.trim()).toBe('مساراتي');
     // Without the permissions: no admin entries.
-    expect(root.querySelector('[data-me-item="moderation"]')).toBeNull();
-    expect(root.querySelector('a[href="/admin/verification"]')).toBeNull();
+    expect(root.querySelector('[data-me-item="admin"]')).toBeNull();
+    expect(root.querySelector('a[href^="/admin"]')).toBeNull();
   });
 
   it('"My articles" needs articles.create', () => {
@@ -69,25 +71,25 @@ describe('MeMenu', () => {
     expect(root.querySelector('[data-me-item="myArticles"]')).toBeNull();
   });
 
-  // Moved from the desktop side nav (F19), which the top bar and this menu replaced.
-  it('"Verification requests" only with verification.manage', () => {
-    expect(render(['articles.read', 'articles.create']).root.querySelector('a[href="/admin/verification"]')).toBeNull();
+  // F23: one entry for the console replaced Moderation (F22) and Verification requests (F19); the queues are inside it.
+  it('"Admin console" only with admin.access, with the console badge; opening the menu refreshes it', () => {
+    const member = render(['articles.read', 'articles.create', 'moderation.manage', 'verification.manage']).root;
+    expect(member.querySelector('[data-me-item="admin"]')).toBeNull();
+    expect(member.querySelector('a[href="/moderation"]')).toBeNull();
+    expect(member.querySelector('a[href="/admin/verification"]')).toBeNull();
 
-    const { root } = render(['articles.read', 'articles.create', 'verification.manage']);
-    const link = root.querySelector<HTMLAnchorElement>('a[href="/admin/verification"]')!;
-    expect(link.textContent!.trim()).toBe('طلبات التوثيق');
-    // Moderation stays with its own permission.
-    expect(root.querySelector('a[href="/moderation"]')).toBeNull();
-  });
-
-  it('moderators: Moderation with the open reports count', () => {
-    const { fixture, root } = render(['articles.read', 'moderation.manage']);
-    const link = root.querySelector<HTMLAnchorElement>('a[href="/moderation"]')!;
-    expect(link.textContent).toContain('الإشراف');
-    expect(link.querySelector('[data-moderation-badge]')).toBeNull();
-    moderationTotal.set(4);
+    const { fixture, root } = render(['articles.read', 'admin.access', 'moderation.manage']);
+    expect(adminRefresh).toHaveBeenCalledTimes(1);
+    const link = root.querySelector<HTMLAnchorElement>('[data-me-item="admin"]')!;
+    expect(link.getAttribute('href')).toBe('/admin');
+    expect(link.textContent).toContain('لوحة التحكم');
+    expect(link.querySelector('[data-admin-badge]')).toBeNull();
+    adminTotal.set(4);
     fixture.detectChanges();
-    expect(link.querySelector('[data-moderation-badge]')!.textContent!.trim()).toBe('4');
+    expect(link.querySelector('[data-admin-badge]')!.textContent!.trim()).toBe('4');
+    adminTotal.set(140);
+    fixture.detectChanges();
+    expect(link.querySelector('[data-admin-badge]')!.textContent!.trim()).toBe('99+');
   });
 
   it('Appearance: Light / Dark / System radios, the current one checked; picking one applies and saves it', () => {

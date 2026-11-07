@@ -75,12 +75,10 @@ export const routes: Routes = [
         data: { keepOnBack: true },
       },
       { path: 'settings', loadChildren: () => import('./features/settings/settings.routes') },
-      // Reports queue, cases and log (F22): moderators only, client-rendered, its own chunk.
-      {
-        path: 'moderation',
-        canActivate: [permissionGuard('moderation.manage')],
-        loadChildren: () => import('./features/moderation/moderation.routes'),
-      },
+      // Reports queue, cases and log (F22) moved into the admin console (F23): old links and bookmarks keep working.
+      { path: 'moderation', pathMatch: 'full', redirectTo: '/admin/reports' },
+      { path: 'moderation/log', redirectTo: '/admin/reports/log' },
+      { path: 'moderation/:type/:id', redirectTo: '/admin/reports/:type/:id' },
       {
         // Delete account (SPEC F01): in the app, two taps from Settings, as the stores require.
         path: 'settings/delete-account',
@@ -101,12 +99,16 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () => import('./features/verification/verification.page').then((m) => m.VerificationPage),
       },
-      // Reviewing verification requests (F19): admins only, client-rendered, its own chunk. The rest of /admin is to come.
+      // The admin console (F23): `admin.access`, its own layout and lazy sections (Reports = F22, Verification = F19).
+      // Client-rendered and noindex (app.routes.server.ts); the docked following panel stays off its tables.
       {
-        path: 'admin/verification',
-        canActivate: [permissionGuard('verification.manage')],
-        loadComponent: () => import('./features/admin/verification/admin-verification.page').then((m) => m.AdminVerificationPage),
+        path: 'admin',
+        canActivate: [permissionGuard('admin.access')],
+        data: { hideFollowingDock: true },
+        loadChildren: () => import('./features/admin/admin.routes'),
       },
+      // Help & support (F35): `/support` is public and server-rendered; My tickets and a ticket are signed in only.
+      { path: 'support', loadChildren: () => import('./features/support/support.routes') },
       // My articles and the editor (F05).
       { path: 'write', canActivate: [permissionGuard('articles.create')], loadChildren: () => import('./features/editor/editor.routes') },
       ...PLACEHOLDER_ROUTES,

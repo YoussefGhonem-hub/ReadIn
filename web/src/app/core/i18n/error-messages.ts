@@ -231,6 +231,29 @@ export const CONTRACT_ERROR_CODES = [
   // Removing a writer's Verified badge (roles change, 2026-11-05)
   'verification.not_verified',
   'verification.system_account',
+  // Admin console (F23): validation codes in `errors` and the console's problems
+  'validation.slug',
+  'validation.invalid',
+  'announcement.limit',
+  'announcement.no_recipients',
+  'announcement.link_invalid',
+  'field.slug_taken',
+  'field.icon_invalid',
+  'field.color_invalid',
+  'topic.slug_taken',
+  'admin.order_invalid',
+  'tag.name_taken',
+  'tag.merge_self',
+  'path.featured_invalid',
+  // Help & support (F35): support.category_invalid comes in a validation failure's `errors.category`
+  'support.limit',
+  'support.ticket_not_found',
+  'support.attachment_not_found',
+  'support.ticket_closed',
+  'support.reopen_expired',
+  'support.attachment_invalid',
+  'support.too_many_attachments',
+  'support.category_invalid',
 ] as const;
 
 /** Translates stable API error codes (e.g. `user.suspended`) into the active UI language. */

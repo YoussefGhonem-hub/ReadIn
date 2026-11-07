@@ -3,7 +3,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { translocoTesting } from '../../../testing/transloco-testing';
 import { testNotification } from '../../../testing/notifications-testing';
 import { NotificationDto } from '../../core/api/models';
-import { dayKey, notificationIcon, notificationPath, notificationText, verificationOutcome } from './notification-view';
+import { dayKey, isActorType, notificationDetail, notificationIcon, notificationPath, notificationText, verificationOutcome } from './notification-view';
 
 const ORIGIN = 'https://readin.app';
 
@@ -209,5 +209,35 @@ describe('notification view (F17)', () => {
     expect(dayKey(late, 'Africa/Cairo')).toBe('2026-11-04');
     expect(dayKey(late, 'UTC')).toBe('2026-11-03');
     expect(dayKey(late, 'Not/AZone')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  // F23 and F35: announcements, support replies and new tickets.
+  describe('announcements and support (F23, F35)', () => {
+    it("an announcement reads its own title and body; without them, the general line", () => {
+      const n = testNotification({ type: 'announcement', actor: null, actorCount: 0, article: null, comment: null, data: { announcementId: 'x', title: 'Paths are here', body: 'Try a learning path.' }, link: 'readin://paths/dotnet' });
+      expect(sentence(n, 'en')).toBe('Paths are here');
+      expect(notificationDetail(n)).toBe('Try a learning path.');
+      expect(notificationIcon(n)).toBe('Megaphone');
+      expect(sentence({ ...n, data: {} }, 'ar')).toBe('أخبار من فريق ReadIn');
+      expect(notificationPath(n, 'ar', 'https://readin.app')).toBe('/paths/dotnet');
+    });
+
+    it('a support reply says whether support replied or closed it, with "#12 · subject", and opens the ticket', () => {
+      const n = testNotification({ type: 'support_reply', actor: null, actorCount: 0, article: null, comment: null, data: { ticketId: 't1', ticketNumber: 12, subject: 'The app closes' }, link: 'readin://support/t1' });
+      expect(sentence(n, 'ar')).toBe('ردّ فريق الدعم على تذكرتك');
+      expect(sentence({ ...n, data: { ...n.data, closed: true } }, 'en')).toBe('Your ticket was closed');
+      expect(notificationDetail(n)).toBe('#12 · The app closes');
+      expect(notificationIcon(n)).toBe('LifeBuoy');
+      expect(notificationPath(n, 'ar', 'https://readin.app')).toBe('/support/tickets/t1');
+    });
+
+    it("a new ticket names the member and opens the console's ticket", () => {
+      const n = testNotification({ type: 'support_ticket', article: null, comment: null, data: { ticketId: 't1', ticketNumber: 3, subject: 'Login' }, link: 'readin://admin/support/t1' });
+      expect(isActorType('support_ticket')).toBe(true);
+      const { actor } = notificationText(n, transloco, 'en');
+      expect(actor).toBe('Ahmed Samir');
+      expect(sentence(n, 'en')).toBe('New support message from Ahmed Samir');
+      expect(notificationPath(n, 'en', 'https://readin.app')).toBe('/admin/tickets/t1');
+    });
   });
 });

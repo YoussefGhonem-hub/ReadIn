@@ -65,7 +65,7 @@ export function targetLink(item: Pick<ModerationQueueItemDto, 'targetType' | 'ta
     <nav class="mt-3 flex gap-5 overflow-x-auto border-b border-border px-4 lg:px-5" [attr.aria-label]="'moderation.tabs.label' | transloco" data-moderation-tabs>
       @for (tab of tabs; track tab) {
         <a
-          [routerLink]="tab === 'log' ? '/moderation/log' : '/moderation'"
+          [routerLink]="tab === 'log' ? '/admin/reports/log' : '/admin/reports'"
           [queryParams]="tab === 'log' ? {} : { status: tab === 'open' ? null : tab, type: type() }"
           class="-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm no-underline"
           [class]="active() === tab ? 'border-primary font-bold text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'"
@@ -234,7 +234,7 @@ export class TargetPreview {
       @if (e.targetLabel || e.targetUser) {
         <p class="m-0 mt-0.5 truncate text-text-secondary">
           @if (linkTarget()) {
-            <a [routerLink]="['/moderation', e.targetType, e.targetId]" class="text-link no-underline hover:underline" data-log-target>
+            <a [routerLink]="['/admin/reports', e.targetType, e.targetId]" class="text-link no-underline hover:underline" data-log-target>
               <rd-bdi-text [text]="label()" />
             </a>
           } @else {
@@ -277,9 +277,11 @@ export class ModerationLogEntry {
     switch (this.entry().action) {
       case 'comment.hide':
       case 'article.hide':
+      case 'user.hide_content':
         return 'EyeOff';
       case 'comment.unhide':
       case 'article.unhide':
+      case 'user.unhide_content':
         return 'Eye';
       case 'comment.delete':
         return 'Trash2';

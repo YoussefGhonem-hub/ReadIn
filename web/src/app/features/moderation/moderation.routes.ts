@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 
 /**
- * `/moderation` (F22): the reports queue (`?status=open|resolved|dismissed&type=article|comment|user`), the log and
- * one case per reported target. Guarded by `moderation.manage` in app.routes.ts and rendered in the browser.
+ * `/admin/reports` (F22, inside the admin console since F23; `/moderation` redirects here): the reports queue (`?status=open|resolved|dismissed&type=article|comment|user`), the log and
+ * one case per reported target. Guarded by `moderation.manage` in features/admin/admin.routes.ts and rendered in the browser.
  */
 export default [
   { path: '', pathMatch: 'full', loadComponent: () => import('./moderation-queue.page').then((m) => m.ModerationQueuePage) },

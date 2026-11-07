@@ -16,7 +16,7 @@ import { ModerationHeader, ReasonChips, TargetPreview, isTargetType } from './mo
 export const QUEUE_PAGE_SIZE = 20;
 
 /**
- * The reports queue (F22), `/moderation?status=&type=`: Open / Resolved / Dismissed, filtered by type (All, Articles,
+ * The reports queue (F22), `/admin/reports?status=&type=` (the admin console, F23): Open / Resolved / Dismissed, filtered by type (All, Articles,
  * Comments, Users). One row per reported target: its preview, the reasons with their counts, how many reports and
  * when the last came (or when the case was closed); a row opens its case. Moderators only (route guard), rendered in
  * the browser; the URL keeps the tab and filter, so every view can be linked to.
@@ -61,7 +61,7 @@ export const QUEUE_PAGE_SIZE = 20;
                 @for (item of list.items(); track item.targetType + item.targetId) {
                   <li>
                     <a
-                      [routerLink]="['/moderation', item.targetType, item.targetId]"
+                      [routerLink]="['/admin/reports', item.targetType, item.targetId]"
                       class="block px-4 py-4 text-inherit no-underline transition-colors hover:bg-surface-variant focus-visible:-outline-offset-2 lg:px-5"
                       [attr.data-case]="item.targetType + ':' + item.targetId"
                     >
@@ -154,7 +154,7 @@ export class ModerationQueuePage {
   }
 
   protected setType(type: ModerationTargetType | null): void {
-    void this.router.navigate(['/moderation'], { queryParams: { status: this.currentStatus() === 'open' ? null : this.currentStatus(), type }, replaceUrl: true });
+    void this.router.navigate(['/admin/reports'], { queryParams: { status: this.currentStatus() === 'open' ? null : this.currentStatus(), type }, replaceUrl: true });
   }
 
   protected reportCount(item: ModerationQueueItemDto): string {

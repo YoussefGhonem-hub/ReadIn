@@ -47,7 +47,9 @@ export function pushNotificationId(raw: unknown): string | null {
  * Turns a push or notification link into an in-app path. Deep links map to the web routes (SPEC §23):
  * `readin://a/{slug}#comment-{id}` → `/{lang}/a/{slug}#comment-{id}`, `readin://u/{username}[/followers]` →
  * `/@{username}[/followers]`, `readin://settings/account` → `/settings#account`, `readin://verification` →
- * `/verification` (F19), and the rest to the same path (`readin://notifications`, `readin://me/stats`). Same-origin URLs
+ * `/verification` (F19), `readin://support/{id}` → `/support/tickets/{id}` and `readin://admin/support/{id}` →
+ * `/admin/tickets/{id}` (F35), and the rest to the same path (`readin://notifications`, `readin://me/stats`,
+ * `readin://paths/{slug}`). Same-origin URLs
  * and absolute paths are kept; anything else is dropped, so a push can never open another site.
  */
 export function pushLinkToPath(link: string | null | undefined, origin: string, lang: 'ar' | 'en'): string | null {
@@ -67,6 +69,9 @@ function deepLinkToPath(rest: string, lang: 'ar' | 'en'): string | null {
   if (rest.startsWith('u/')) return rest.length > 2 ? safePath(`/@${rest.slice(2)}`) : null;
   if (rest === 'settings/account') return '/settings#account';
   if (rest === 'verification') return '/verification';
+  // F35: the member's ticket, and the console's (the console's guard sends anyone else home).
+  if (rest.startsWith('support/')) return safePath(`/support/tickets/${rest.slice('support/'.length)}`);
+  if (rest.startsWith('admin/support/')) return safePath(`/admin/tickets/${rest.slice('admin/support/'.length)}`);
   return safePath(`/${rest}`);
 }
 

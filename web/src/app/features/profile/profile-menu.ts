@@ -1,8 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { Router } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon, LucideIconData } from '@lucide/angular';
-import { ProfileDto } from '../../core/api/models';
+import { firstValueFrom } from 'rxjs';
+import { ModerationActionRequest, ProfileDto } from '../../core/api/models';
+import { VerificationApi } from '../../core/api/verification.api';
+import { ErrorMessages } from '../../core/i18n/error-messages';
+import { isolate } from '../../shared/directives/bidi';
+import { BottomSheet } from '../../shared/ui/bottom-sheet';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { MuteStore } from '../../core/social/mute.store';
@@ -11,7 +18,7 @@ import { ModerationActionDraft, ModerationActionSheet } from '../../shared/moder
 import { provideModerationIcons } from '../../shared/moderation/moderation-icons';
 import { ReportSheet, ReportTarget } from '../../shared/moderation/report-sheet';
 
-type ProfileMenuAction = 'muteUser' | 'report' | 'warn' | 'suspend';
+type ProfileMenuAction = 'muteUser' | 'report' | 'warn' | 'suspend' | 'unsuspend' | 'removeBadge' | 'openInConsole';
 
 interface ProfileMenuItem {
   id: ProfileMenuAction;
@@ -24,12 +31,14 @@ interface ProfileMenuItem {
  * The "⋯" on someone else's profile (F22): Mute user first (F28; not on the official account, which can't be muted),
  * then Report user, for everyone (guests get the sign-in prompt). Mute works like the article menu's Mute author: the
  * toast has Undo, which follows again when the mute ended your follow; the profile then shows the muted banner.
- * Moderators can also Warn (with a note the user sees) and, with `users.suspend`, Suspend the account for 1, 7 or 30
- * days or for good.
+ * Moderators can also Warn (with a note the user sees) and, with `users.suspend`, Suspend the account (F23's form: 1, 3,
+ * 7 or 30 days, a custom length or for good, optionally hiding all their content) or Unsuspend it; never staff
+ * (`ProfileDto.admin.isStaff`, F23). With `verification.manage`, Remove verified badge (confirmed); with `users.read` and
+ * the console, Open in console.
  */
 @Component({
   selector: 'rd-profile-menu',
-  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet],
+  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet, BottomSheet],
   providers: [provideModerationIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
@@ -63,18 +72,49 @@ interface ProfileMenuItem {
     </ng-template>
 
     <rd-report-sheet [target]="reporting()" (closed)="reporting.set(null)" />
-    <rd-moderation-action-sheet [draft]="moderating()" (closed)="moderating.set(null)" />
+    <rd-moderation-action-sheet [draft]="moderating()" (done)="onModerated($event)" (closed)="moderating.set(null)" />
+    <!-- F23: removing the Verified badge asks first -->
+    <rd-bottom-sheet [open]="removingBadge()" role="alertdialog" labelledBy="remove-badge-title" describedBy="remove-badge-body" [dismissible]="!badgeBusy()" (closed)="removingBadge.set(false)">
+      @if (removingBadge()) {
+        <div class="flex flex-col gap-3 pt-1" data-remove-badge-sheet>
+          <h2 id="remove-badge-title" class="m-0 pe-10 text-xl font-semibold">{{ 'verification.admin.removeBadgeSheet.title' | transloco: { name: isolate(profile().displayName) } }}</h2>
+          <p id="remove-badge-body" class="m-0 text-sm text-text-secondary">{{ 'verification.admin.removeBadgeSheet.body' | transloco }}</p>
+          @if (badgeError()) {
+            <p class="rd-alert rd-alert-error m-0" role="alert">{{ badgeError() }}</p>
+          }
+          <div class="flex gap-2">
+            <button type="button" class="rd-btn rd-btn-outline flex-1" [disabled]="badgeBusy()" (click)="removingBadge.set(false)">{{ 'common.cancel' | transloco }}</button>
+            <button type="button" class="rd-btn flex-1 bg-error text-on-error" [disabled]="badgeBusy()" (click)="removeBadge()" data-remove-badge-confirm>{{ 'admin.confirm.ok' | transloco }}</button>
+          </div>
+        </div>
+      }
+    </rd-bottom-sheet>
   `,
 })
 export class ProfileMenu {
   private readonly session = inject(SessionStore);
   private readonly prompt = inject(AuthPromptService);
   private readonly mutes = inject(MuteStore);
+  private readonly router = inject(Router);
+  private readonly verification = inject(VerificationApi);
+  private readonly toasts = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
+  private readonly errors = inject(ErrorMessages);
 
   readonly profile = input.required<ProfileDto>();
 
   protected readonly reporting = signal<ReportTarget | null>(null);
   protected readonly moderating = signal<ModerationActionDraft | null>(null);
+
+  /** F23: the account is suspended now (`admin`, for users.read holders), or after an action here. */
+  private readonly suspendedNow = signal<boolean | null>(null);
+  private readonly suspended = computed(() => this.suspendedNow() ?? this.profile().admin?.isSuspended ?? false);
+  private readonly verifiedNow = signal<boolean | null>(null);
+  private readonly verified = computed(() => this.verifiedNow() ?? this.profile().isVerified);
+  protected readonly removingBadge = signal(false);
+  protected readonly badgeBusy = signal(false);
+  protected readonly badgeError = signal<string | null>(null);
+  protected readonly isolate = isolate;
 
   /** You muted this user (false for guests). */
   private readonly muted = computed(() => {
@@ -93,9 +133,24 @@ export class ProfileMenu {
           : { id: 'muteUser', labelKey: 'mute.menu.muteUser', icon: MUTE_ICON.VolumeX },
       );
     }
-    if (permissions.has('moderation.manage')) {
+    // F23: staff (admins, moderators, the official account) can't be warned or suspended; `admin` comes with users.read.
+    const staff = p.admin?.isStaff ?? false;
+    if (permissions.has('moderation.manage') && !staff) {
       items.push({ id: 'warn', labelKey: 'profile.menu.warn', icon: 'TriangleAlert' });
-      if (permissions.has('users.suspend')) items.push({ id: 'suspend', labelKey: 'profile.menu.suspend', icon: 'Ban', danger: true });
+      if (permissions.has('users.suspend')) {
+        items.push(
+          this.suspended()
+            ? { id: 'unsuspend', labelKey: 'profile.menu.unsuspend', icon: 'UserRoundCheck' }
+            : { id: 'suspend', labelKey: 'profile.menu.suspend', icon: 'Ban', danger: true },
+        );
+      }
+    }
+    if (permissions.has('verification.manage') && this.verified() && !p.isSystemAccount) {
+      items.push({ id: 'removeBadge', labelKey: 'profile.menu.removeBadge', icon: 'BadgeCheck', danger: true });
+    }
+    // The console needs admin.access too.
+    if (permissions.has('users.read') && permissions.has('admin.access')) {
+      items.push({ id: 'openInConsole', labelKey: 'profile.menu.openInConsole', icon: 'LayoutDashboard' });
     }
     items.push({ id: 'report', labelKey: 'profile.menu.report', icon: 'Flag', danger: true });
     return items;
@@ -107,6 +162,34 @@ export class ProfileMenu {
     const user = { id: p.id, displayName: p.displayName };
     if (action === 'muteUser') void (this.muted() ? this.mutes.unmuteAuthor(user) : this.mutes.muteAuthor(user));
     else if (action === 'report') this.reporting.set({ type: 'user', id: p.id });
-    else this.moderating.set({ action, targetType: 'user', targetId: p.id, name: p.displayName });
+    else if (action === 'openInConsole') void this.router.navigate(['/admin/users', p.id]);
+    else if (action === 'removeBadge') {
+      this.badgeError.set(null);
+      this.removingBadge.set(true);
+    } else this.moderating.set({ action, targetType: 'user', targetId: p.id, name: p.displayName });
+  }
+
+  /** After a suspend or unsuspend (F23): the menu offers the other one. */
+  protected onModerated(request: ModerationActionRequest): void {
+    if (request.action === 'suspend' || request.action === 'unsuspend') this.suspendedNow.set(request.action === 'suspend');
+  }
+
+  /** Remove verified badge (F19, F23), after the dialog: nothing is sent to the user. */
+  protected async removeBadge(): Promise<void> {
+    const p = this.profile();
+    if (this.badgeBusy()) return;
+    this.badgeBusy.set(true);
+    this.badgeError.set(null);
+    try {
+      await firstValueFrom(this.verification.removeBadge(p.id));
+      this.verifiedNow.set(false);
+      this.toasts.success(this.transloco.translate('verification.admin.badgeRemoved', { name: isolate(p.displayName) }));
+      this.badgeBusy.set(false);
+      this.removingBadge.set(false);
+    } catch (error) {
+      this.badgeError.set(this.errors.forError(error));
+    } finally {
+      this.badgeBusy.set(false);
+    }
   }
 }

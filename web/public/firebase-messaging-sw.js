@@ -79,6 +79,9 @@ function toPath(link, lang) {
     if (rest.startsWith('u/')) return rest.length > 2 ? safePath(`/@${rest.slice(2)}`) : null;
     if (rest === 'settings/account') return '/settings#account';
     if (rest === 'verification') return '/verification';
+    // F35: the member's ticket, and the console's.
+    if (rest.startsWith('support/')) return safePath(`/support/tickets/${rest.slice('support/'.length)}`);
+    if (rest.startsWith('admin/support/')) return safePath(`/admin/tickets/${rest.slice('admin/support/'.length)}`);
     return safePath(`/${rest}`);
   }
   if (link.startsWith('/')) return safePath(link);

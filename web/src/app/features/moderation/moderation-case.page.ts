@@ -9,6 +9,7 @@ import { ModerationApi } from '../../core/api/moderation.api';
 import { ModerationCaseDto, ModerationTargetType } from '../../core/api/models';
 import { SessionStore } from '../../core/auth/session.store';
 import { LanguageService } from '../../core/i18n/language.service';
+import { AdminSummaryStore } from '../../core/admin/admin-summary.store';
 import { ModerationSummaryStore } from '../../core/moderation/moderation-summary.store';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { isolate } from '../../shared/directives/bidi';
@@ -34,7 +35,7 @@ export interface CaseAction {
 }
 
 /**
- * One case (F22), `/moderation/{type}/{id}`: the reported article, comment or user with a link to it, the reasons, the
+ * One case (F22), `/admin/reports/{type}/{id}`: the reported article, comment or user with a link to it, the reasons, the
  * actions a moderator can take (Dismiss, Hide / Unhide, Delete a comment, Warn or Suspend the author or the user,
  * Unsuspend; suspending needs `users.suspend`), a user's title and social links with "Clear title" / "Clear links"
  * (F14), a user's writer categories with "Clear name" for an offensive one (F31), every report (reporter, reason, details, time, outcome) and the history. Each action is confirmed in a sheet with an optional note (required to warn and suspend); afterwards the
@@ -63,7 +64,7 @@ export interface CaseAction {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto block max-w-[720px] px-4 pb-10 pt-5 lg:pt-8' },
   template: `
-    <a routerLink="/moderation" class="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-text-secondary no-underline hover:text-text-primary" data-case-back>
+    <a routerLink="/admin/reports" class="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-text-secondary no-underline hover:text-text-primary" data-case-back>
       <svg lucideIcon="ArrowLeft" [size]="16" class="rd-flip-rtl" aria-hidden="true"></svg>
       {{ 'moderation.case.back' | transloco }}
     </a>
@@ -298,7 +299,7 @@ export interface CaseAction {
         <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
           @if (notFound()) {
             <rd-empty-state [title]="'moderation.case.notFound.title' | transloco" [message]="'moderation.case.notFound.body' | transloco" data-case-not-found>
-              <a routerLink="/moderation" class="rd-btn rd-btn-primary mt-3">{{ 'moderation.case.back' | transloco }}</a>
+              <a routerLink="/admin/reports" class="rd-btn rd-btn-primary mt-3">{{ 'moderation.case.back' | transloco }}</a>
             </rd-empty-state>
           } @else {
             <rd-error-state [message]="'moderation.case.loadError' | transloco" (retry)="load()" />
@@ -325,6 +326,7 @@ export class ModerationCasePage {
   private readonly api = inject(ModerationApi);
   private readonly session = inject(SessionStore);
   private readonly summary = inject(ModerationSummaryStore);
+  private readonly adminSummary = inject(AdminSummaryStore);
   private readonly transloco = inject(TranslocoService);
   private readonly title = inject(Title);
   protected readonly lang = inject(LanguageService).lang;
@@ -431,5 +433,6 @@ export class ModerationCasePage {
   protected onDone(): void {
     void this.load();
     void this.summary.refresh();
+    void this.adminSummary.refresh();
   }
 }

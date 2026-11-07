@@ -17,7 +17,18 @@ async function render(prepare: () => void = () => undefined) {
   fixture.detectChanges();
   const root = fixture.nativeElement as HTMLElement;
   const error = () => root.querySelector('[data-error]')?.textContent?.trim() ?? null;
-  return { ...testing, fixture, root, error };
+  /** F35: a suspension shows the support email for appeals, from `GET /support/config`. */
+  const supportConfig = async (email: string | null = 'help@readin.test') => {
+    // Signed out: the token lookup's refresh finds no session, then the config call goes out anonymously.
+    for (const req of testing.http.match(`${TEST_API}/auth/refresh`)) req.flush({ code: 'auth.refresh_invalid', status: 401 }, { status: 401, statusText: 'Unauthorized' });
+    await settle(10);
+    // Once per time the note appears (it stays while the message does).
+    for (const req of testing.http.match(`${TEST_API}/support/config`)) req.flush({ email, categories: [], maxAttachments: 3, maxAttachmentBytes: 5242880, attachmentTypes: [] });
+    await settle();
+    fixture.detectChanges();
+    return root.querySelector('[data-appeal-email]')?.textContent?.trim() ?? null;
+  };
+  return { ...testing, fixture, root, error, supportConfig };
 }
 
 describe('Sign in: suspended accounts (F22)', () => {
@@ -27,6 +38,7 @@ describe('Sign in: suspended accounts (F22)', () => {
     const t = await render(() => TestBed.inject(AuthFlowState).suspension.set({ suspendedUntil: '2026-11-10T14:30:00Z' }));
     expect(t.error()).toMatch(/^هذا الحساب موقوف حتى .*نوفمبر 2026.*\.$/);
     expect(TestBed.inject(AuthFlowState).suspension()).toBeNull(); // shown once
+    expect(await t.supportConfig()).toBe('help@readin.test');
     t.http.verify();
   });
 
@@ -44,6 +56,7 @@ describe('Sign in: suspended accounts (F22)', () => {
     await done;
     t.fixture.detectChanges();
     expect(t.error()).toBe('هذا الحساب موقوف نهائيًا. تواصل مع الدعم.');
+    expect(await t.supportConfig()).toBe('help@readin.test');
 
     done = page.submit();
     await settle();
@@ -53,6 +66,7 @@ describe('Sign in: suspended accounts (F22)', () => {
     await done;
     t.fixture.detectChanges();
     expect(t.error()).toContain('هذا الحساب موقوف حتى');
+    expect(await t.supportConfig()).toBe('help@readin.test');
     t.http.verify();
   });
 });

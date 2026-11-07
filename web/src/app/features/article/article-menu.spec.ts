@@ -472,4 +472,29 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     expect(await t.openMenu()).toEqual(['highlights', 'muteTopics', 'downloadPdf', 'hide']);
     expect(document.querySelectorAll('[data-article-menu-panel] [data-menu-divider]')).toHaveLength(1);
   });
+
+  // F23: admins feature an article from the reader (confirmed) and open it in the console.
+  it('admins: Feature / Unfeature in the reader (asks first), and Open in console', async () => {
+    const ADMIN = [...MODERATOR, 'articles.feature', 'admin.access'];
+    const t = await render({ ...testCard(), isFeatured: false }, { permissions: ADMIN });
+    http = t.http;
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'downloadPdf', 'report', 'hide', 'feature', 'openInConsole']);
+    expect(t.label('feature')).toBe('تمييز');
+    await t.pick('feature');
+    t.$('[data-feature-confirm]')!.click();
+    const req = t.http.expectOne({ method: 'PUT', url: `${TEST_API}/admin/articles/a1/featured` });
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    await t.stable();
+    expect(t.toastList()).toEqual(['تم تمييز المقال']);
+    document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
+    expect(await t.openMenu()).toContain('unfeature');
+  });
+
+  it("a post card has no Feature (it doesn't know); without the console there is no Open in console", async () => {
+    const t = await render(testCard(), { permissions: [...MODERATOR, 'articles.feature'] });
+    http = t.http;
+    const items = await t.openMenu();
+    expect(items).not.toContain('feature');
+    expect(items).not.toContain('openInConsole');
+  });
 });

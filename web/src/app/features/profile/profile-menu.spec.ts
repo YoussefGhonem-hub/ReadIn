@@ -167,12 +167,13 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['تم إرسال التحذير']);
   });
 
-  it('with users.suspend: suspend for 1, 7, 30 days or permanently, with a note', async () => {
+  // F23 changed the form: 1, 3, 7 or 30 days, a custom 1–365, or permanently.
+  it('with users.suspend: suspend for 1, 3, 7, 30 days, a custom length or permanently, with a note', async () => {
     const t = await render({ permissions: ['articles.read', 'moderation.manage', 'users.suspend'] });
     http = t.http;
     expect(await t.openMenu()).toEqual(['muteUser', 'warn', 'suspend', 'report']);
     await t.pick('suspend');
-    expect([...t.root.querySelectorAll('[data-duration]')].map((el) => el.getAttribute('data-duration'))).toEqual(['1', '7', '30', 'permanent']);
+    expect([...t.root.querySelectorAll('[data-duration]')].map((el) => el.getAttribute('data-duration'))).toEqual(['1', '3', '7', '30', 'custom', 'permanent']);
     expect(t.$<HTMLInputElement>('[data-duration="7"]')!.checked).toBe(true);
     expect(t.$('[data-suspend-duration]')!.textContent).toContain('نهائي');
 
@@ -193,5 +194,26 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     second.flush(null, { status: 204, statusText: 'No Content' });
     await t.stable();
     expect(t.toasts.toasts().map((toast) => toast.message)).toEqual(['تم إيقاف الحساب']);
+  });
+
+  // F23: the console's actions in the profile "⋯".
+  it('admins: Unsuspend a suspended account, Remove verified badge (asks first), Open in console', async () => {
+    const ADMIN = ['articles.read', 'moderation.manage', 'users.suspend', 'verification.manage', 'users.read', 'admin.access'];
+    const t = await render({ permissions: ADMIN, profile: { admin: { isSuspended: true, suspendedUntil: null, isStaff: false } } });
+    http = t.http;
+    expect(await t.openMenu()).toEqual(['muteUser', 'warn', 'unsuspend', 'removeBadge', 'openInConsole', 'report']);
+    await t.pick('removeBadge');
+    t.$('[data-remove-badge-confirm]')!.click();
+    t.http.expectOne({ method: 'DELETE', url: `${TEST_API}/admin/users/writer-1/verification` }).flush(null, { status: 204, statusText: 'No Content' });
+    await t.stable();
+    expect(t.$('[data-remove-badge-sheet]')).toBeNull();
+    document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
+    expect(await t.openMenu()).not.toContain('removeBadge');
+  });
+
+  it("staff can't be warned or suspended (ProfileDto.admin.isStaff)", async () => {
+    const t = await render({ permissions: ['articles.read', 'moderation.manage', 'users.suspend', 'users.read'], profile: { admin: { isSuspended: false, suspendedUntil: null, isStaff: true } } });
+    http = t.http;
+    expect(await t.openMenu()).toEqual(['muteUser', 'report']);
   });
 });

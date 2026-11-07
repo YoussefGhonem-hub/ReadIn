@@ -3,6 +3,9 @@ import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon, LucideIconData } from '@lucide/angular';
 import { firstValueFrom } from 'rxjs';
+import { HttpClient, HttpContext } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { API_BASE_URL, SILENT_ERRORS } from '../../core/api/api.config';
 import { ModerationApi } from '../../core/api/moderation.api';
 import { ArticleCardDto, ArticleModerationDto, ModerationActionRequest } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
@@ -15,15 +18,29 @@ import { provideModerationIcons } from '../../shared/moderation/moderation-icons
 import { ReportSheet, ReportTarget } from '../../shared/moderation/report-sheet';
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { MuteTopicsSheet } from '../../shared/mutes/mute-topics-sheet';
+import { BottomSheet } from '../../shared/ui/bottom-sheet';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { HIGHLIGHT_ICON } from '../highlights/highlight-icons';
 import { HighlightsPrefs } from '../highlights/highlights-prefs';
 import { ArticlePdfService } from '../pdf/article-pdf.service';
 
-/** An article in the reader, with its moderation state when it is hidden (F22). */
-export type MenuArticle = ArticleCardDto & { moderation?: ArticleModerationDto | null };
+/** An article in the reader, with its moderation state when it is hidden (F22) and whether it is featured (F23). */
+export type MenuArticle = ArticleCardDto & { moderation?: ArticleModerationDto | null; isFeatured?: boolean };
 
-export type ArticleMenuAction = 'showLess' | 'highlights' | 'follow' | 'muteAuthor' | 'muteTopics' | 'downloadPdf' | 'hide' | 'unhide' | 'report';
+export type ArticleMenuAction =
+  | 'showLess'
+  | 'highlights'
+  | 'follow'
+  | 'muteAuthor'
+  | 'muteTopics'
+  | 'downloadPdf'
+  | 'hide'
+  | 'unhide'
+  | 'report'
+  // F23: admins
+  | 'feature'
+  | 'unfeature'
+  | 'openInConsole';
 
 /** What the items decide on: the article and where you stand with it. */
 export interface ArticleMenuContext {
@@ -41,6 +58,10 @@ export interface ArticleMenuContext {
   pdfBuilding: boolean;
   /** The reader's menu: highlights are shown or hidden (F30). Absent on a post card's menu. */
   highlights?: 'shown' | 'hidden' | null;
+  /** F23: `articles.feature`, and the article says whether it is featured (the reader's details do). */
+  featured?: boolean | null;
+  /** F23: `moderation.manage` and the console (`admin.access`): "Open in console". */
+  console?: boolean;
 }
 
 type MenuIcon = string | LucideIconData;
@@ -122,6 +143,10 @@ export const ARTICLE_MENU: readonly ArticleMenuEntry[] = [
   // Moderators (F22), after a divider: hide, or unhide a hidden article.
   { id: 'hide', visible: (c) => c.isModerator && !c.article.moderation, labelKey: 'article.menu.hide', icon: 'EyeOff', moderation: true },
   { id: 'unhide', visible: (c) => c.isModerator && !!c.article.moderation, labelKey: 'article.menu.unhide', icon: 'Eye', moderation: true },
+  // Admins (F23): feature or unfeature (`articles.feature`, the reader only), and the article's console page.
+  { id: 'feature', visible: (c) => c.featured === false, labelKey: 'article.menu.feature', icon: 'Sparkles', moderation: true },
+  { id: 'unfeature', visible: (c) => c.featured === true, labelKey: 'article.menu.unfeature', icon: 'Sparkles', moderation: true },
+  { id: 'openInConsole', visible: (c) => !!c.console, labelKey: 'article.menu.openInConsole', icon: 'LayoutDashboard', moderation: true },
 ];
 
 /** The items of {@link ARTICLE_MENU} shown for `ctx`, with their labels and icons resolved. */
@@ -142,7 +167,9 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
  * The "⋯" menu of the reader's action bar and the post card's header (F28, F22, F34). Guests get the sign-in prompt for
  * every item. Show less and Mute author confirm with a toast and Undo, and the cards they concern leave the lists on
  * screen (MuteStore, PostCard); in the reader, a muted writer's article shows the "انت كاتم الكاتب ده" banner instead.
- * Mute topics opens a sheet with the field and topic toggles (its own lazy chunk). Moderators also Hide (with a note
+ * Mute topics opens a sheet with the field and topic toggles (its own lazy chunk). In the reader, admins with
+ * `articles.feature` also Feature / Unfeature it (F23, confirmed), and with the console "Open in console" goes to its
+ * console page. Moderators also Hide (with a note
  * dialog) or Unhide the article; the new moderation state goes up through `moderationChange`, so the reader shows or
  * drops the "hidden" banner at once. In the reader (`pdf`), every article but someone else's hidden one also has
  * Download PDF (F33): a normal download of the version on screen, "Preparing the PDF…" (`pdf.building`) and disabled
@@ -150,7 +177,7 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
  */
 @Component({
   selector: 'rd-article-menu',
-  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet, MuteTopicsSheet],
+  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet, MuteTopicsSheet, BottomSheet],
   providers: [provideModerationIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
@@ -194,6 +221,22 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
 
     <rd-report-sheet [target]="reporting()" (closed)="reporting.set(null)" />
     <rd-moderation-action-sheet [draft]="moderating()" (done)="onModerated($event)" (closed)="moderating.set(null)" />
+    <!-- F23: featuring asks first -->
+    <rd-bottom-sheet [open]="!!featuring()" role="alertdialog" labelledBy="feature-sheet-title" describedBy="feature-sheet-body" [dismissible]="!featureBusy()" (closed)="featuring.set(null)">
+      @if (featuring(); as action) {
+        <div class="flex flex-col gap-3 pt-1" data-feature-sheet>
+          <h2 id="feature-sheet-title" class="m-0 pe-10 text-xl font-semibold">{{ (action === 'feature' ? 'admin.content.confirmFeature.title' : 'admin.content.confirmUnfeature.title') | transloco }}</h2>
+          <p id="feature-sheet-body" class="m-0 text-sm text-text-secondary">{{ (action === 'feature' ? 'admin.content.confirmFeature.body' : 'admin.content.confirmUnfeature.body') | transloco }}</p>
+          @if (featureError()) {
+            <p class="rd-alert rd-alert-error m-0" role="alert">{{ featureError() }}</p>
+          }
+          <div class="flex gap-2">
+            <button type="button" class="rd-btn rd-btn-outline flex-1" [disabled]="featureBusy()" (click)="featuring.set(null)">{{ 'common.cancel' | transloco }}</button>
+            <button type="button" class="rd-btn rd-btn-primary flex-1" [disabled]="featureBusy()" (click)="setFeatured()" data-feature-confirm>{{ 'admin.confirm.ok' | transloco }}</button>
+          </div>
+        </div>
+      }
+    </rd-bottom-sheet>
     <!-- The topics sheet is its own chunk, loaded the first time it opens; it stays so it can give focus back. -->
     @if (topicsUsed()) {
       @defer (on immediate) {
@@ -213,6 +256,10 @@ export class ArticleMenu {
   private readonly mutes = inject(MuteStore);
   private readonly pdfs = inject(ArticlePdfService);
   private readonly highlightPrefs = inject(HighlightsPrefs);
+  // F23's two featuring calls go straight to HttpClient: the post cards' chunk shouldn't carry the console's API.
+  private readonly http = inject(HttpClient);
+  private readonly base = inject(API_BASE_URL);
+  private readonly router = inject(Router);
 
   readonly article = input.required<MenuArticle>();
   /** The reader's menu: Download PDF (F33), but not on someone else's hidden article. A post card's menu has none. */
@@ -231,6 +278,11 @@ export class ArticleMenu {
   protected readonly moderating = signal<ModerationActionDraft | null>(null);
   protected readonly topics = signal<MenuArticle | null>(null);
   protected readonly topicsUsed = signal(false);
+  /** F23: the feature dialog, and the featured state after an admin changed it here (by article id). */
+  protected readonly featuring = signal<'feature' | 'unfeature' | null>(null);
+  protected readonly featureBusy = signal(false);
+  protected readonly featureError = signal<string | null>(null);
+  private readonly featuredNow = signal<Record<string, boolean>>({});
 
   private readonly context = computed<ArticleMenuContext>(() => {
     const article = this.article();
@@ -245,6 +297,8 @@ export class ArticleMenu {
       pdf: this.pdf(),
       pdfBuilding: this.pdfs.isBuilding(article.id),
       highlights: this.highlights() ? (this.highlightPrefs.visible() ? 'shown' : 'hidden') : null,
+      featured: this.session.permissions().has('articles.feature') && article.isFeatured !== undefined ? (this.featuredNow()[article.id] ?? article.isFeatured) : null,
+      console: this.session.permissions().has('moderation.manage') && this.session.permissions().has('admin.access'),
     };
   });
 
@@ -287,6 +341,36 @@ export class ArticleMenu {
       case 'unhide':
         void this.unhide(article.id);
         return;
+      case 'feature':
+      case 'unfeature':
+        this.featureError.set(null);
+        this.featuring.set(action);
+        return;
+      case 'openInConsole':
+        void this.router.navigate(['/admin/content', article.id]);
+        return;
+    }
+  }
+
+  /** Feature or unfeature (F23), after the dialog: `PUT` / `DELETE /admin/articles/{id}/featured`. */
+  protected async setFeatured(): Promise<void> {
+    const action = this.featuring();
+    const id = this.article().id;
+    if (!action || this.featureBusy()) return;
+    this.featureBusy.set(true);
+    this.featureError.set(null);
+    try {
+      const url = `${this.base}/admin/articles/${encodeURIComponent(id)}/featured`;
+      const context = new HttpContext().set(SILENT_ERRORS, true);
+      await firstValueFrom(action === 'feature' ? this.http.put<void>(url, null, { context }) : this.http.delete<void>(url, { context }));
+      this.featuredNow.update((map) => ({ ...map, [id]: action === 'feature' }));
+      this.toasts.success(this.transloco.translate(action === 'feature' ? 'admin.content.featuredDone' : 'admin.content.unfeaturedDone'));
+      this.featureBusy.set(false);
+      this.featuring.set(null);
+    } catch (error) {
+      this.featureError.set(this.errors.message(error));
+    } finally {
+      this.featureBusy.set(false);
     }
   }
 

@@ -57,13 +57,34 @@ describe('writer verification routes (F19)', () => {
     expect(await guard('verification', testMe())).toBe(true);
   });
 
-  it('/admin/verification needs verification.manage: a member goes home, a guest signs in first', async () => {
-    expect(route('admin/verification').loadComponent).toBeDefined();
-    expect(await guard('admin/verification', testMe({ permissions: ['articles.read', 'articles.create'] }))).toBe('/');
-    expect(await guard('admin/verification', null)).toBe('/auth/sign-in?returnUrl=%2Fadmin%2Fverification');
-    expect(await guard('admin/verification', testMe({ permissions: ['articles.read', 'verification.manage'] }))).toBe(true);
-    // The rest of /admin stays a placeholder for the other admin tools.
-    expect(PLACEHOLDER_ROUTES.find((r) => r.path === 'admin')).toBeDefined();
+  // F23: the verification queue moved into the admin console, which needs admin.access; the section needs its own permission.
+  it('/admin (the console) needs admin.access: a member goes home, a guest signs in first; verification sits inside it', async () => {
+    expect(route('admin').loadChildren).toBeDefined();
+    expect(route('admin').data?.['hideFollowingDock']).toBe(true);
+    expect(await guard('admin', testMe({ permissions: ['articles.read', 'articles.create', 'verification.manage'] }))).toBe('/');
+    expect(await guard('admin', null)).toBe('/auth/sign-in?returnUrl=%2Fadmin');
+    expect(await guard('admin', testMe({ permissions: ['articles.read', 'admin.access'] }))).toBe(true);
+    expect(PLACEHOLDER_ROUTES.find((r) => r.path === 'admin')).toBeUndefined();
+
+    const { default: group } = (await (route('admin').loadChildren as () => Promise<{ default: Routes }>)()) as { default: Routes };
+    const sections = group[0].children!;
+    const verification = sections.find((r) => r.path === 'verification')!;
+    expect(verification.loadComponent).toBeDefined();
+    const [canActivate] = verification.canActivate as CanActivateFn[];
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: PLATFORM_ID, useValue: 'browser' }, { provide: AuthService, useValue: { whenReady: async () => null } }] });
+    TestBed.inject(SessionStore).setMe(testMe({ permissions: ['admin.access'] }));
+    const denied = await TestBed.runInInjectionContext(() => canActivate({} as ActivatedRouteSnapshot, { url: '/admin/verification' } as RouterStateSnapshot));
+    expect(TestBed.inject(Router).serializeUrl(denied as UrlTree)).toBe('/');
+  });
+
+  it('/moderation (F22) redirects into the console: the queue, the log and a case keep working', () => {
+    const redirects = shell.children!.filter((r) => r.path?.startsWith('moderation')).map((r) => [r.path, r.redirectTo]);
+    expect(redirects).toEqual([
+      ['moderation', '/admin/reports'],
+      ['moderation/log', '/admin/reports/log'],
+      ['moderation/:type/:id', '/admin/reports/:type/:id'],
+    ]);
   });
 });
 

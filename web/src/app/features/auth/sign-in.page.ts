@@ -14,17 +14,19 @@ import { PhoneField } from '../../shared/ui/phone/phone-field';
 import { AuthCard, SubmitButton, fieldErrors } from './auth-shared';
 import { DEV_LOGIN_PANEL } from './dev/dev-login';
 import { ExternalSignIn } from './external-sign-in';
+import { SupportEmail } from '../support/support-email';
+import { isApiError } from '../../core/api/api.config';
 
 /**
  * Sign in (SPEC §9.2): phone + password. One generic error for a wrong number or password (it never says whether
  * the number exists); lockout, suspended (until when, or permanently) and rate-limit messages; after a reset, the number
  * is pre-filled with a banner, and after an account deletion a banner says it was deleted. A session that ended because
- * the account was suspended (F22) lands here with that message. Then the account-setup guards apply (change password →
+ * the account was suspended (F22) lands here with that message, and the support email for appeals (F35). Then the account-setup guards apply (change password →
  * PIN → profile → onboarding).
  */
 @Component({
   selector: 'rd-sign-in-page',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LucideDynamicIcon, NgComponentOutlet, AuthCard, SubmitButton, PhoneField, PasswordField, ExternalSignIn],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LucideDynamicIcon, NgComponentOutlet, AuthCard, SubmitButton, PhoneField, PasswordField, ExternalSignIn, SupportEmail],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <rd-auth-card [title]="'auth.signIn.title' | transloco" [subtitle]="'auth.signIn.subtitle' | transloco">
@@ -68,6 +70,10 @@ import { ExternalSignIn } from './external-sign-in';
         </div>
         @if (error()) {
           <p class="rd-alert rd-alert-error" role="alert" data-error>{{ error() }}</p>
+          @if (suspended()) {
+            <!-- F35: a suspended account appeals by email. -->
+            <rd-support-email />
+          }
         }
         <rd-submit-button [busy]="busy()">{{ 'auth.signIn.action' | transloco }}</rd-submit-button>
       </form>
@@ -102,6 +108,8 @@ export class SignInPage {
   /** Shown once: after a password reset, or after the account was deleted. */
   protected readonly banner = signal(this.flow.takeBanner());
   protected readonly busy = signal(false);
+  /** The account is suspended (F22): the message then carries the support email for appeals (F35). */
+  protected readonly suspended = signal(false);
   protected readonly error = signal<string | null>(this.suspensionMessage());
   private readonly submitted = signal(false);
   private readonly serverPhoneError = signal<string | null>(null);
@@ -165,6 +173,7 @@ export class SignInPage {
       const phoneCodes = fieldErrors(error, 'phoneNumber');
       if (phoneCodes.length) this.serverPhoneError.set(`errors.${phoneCodes[0]}`);
       else this.error.set(this.errors.forError(error));
+      this.suspended.set(isApiError(error) && error.code === 'user.suspended');
     } finally {
       this.busy.set(false);
     }
@@ -173,6 +182,7 @@ export class SignInPage {
   /** The suspension that ended your session, if that is how you got here. */
   private suspensionMessage(): string | null {
     const suspension = this.flow.takeSuspension();
+    if (suspension) this.suspended.set(true);
     return suspension ? this.errors.suspended(suspension) : null;
   }
 
