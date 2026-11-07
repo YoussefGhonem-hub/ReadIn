@@ -82,7 +82,7 @@ ReadIn is a bilingual (Arabic + English) knowledge platform where **anyone can p
 
 Rules that apply to every field:
 - **There is no review**: anyone publishes directly ([F06](#f06--article-lifecycle), [ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
-- Admins can add fields and topics at any time ([F23](#f23--admin-console)); free tags (max 5, [F32](#f32--tags-التاجات)) cover anything more specific, and writers can organize their own articles into personal categories ([F31](#f31--writer-categories-أقسام-الكاتب)).
+- Admins can add fields and topics at any time ([F23](#f23--admin-console-لوحة-التحكم)); free tags (max 5, [F32](#f32--tags-التاجات)) cover anything more specific, and writers can organize their own articles into personal categories ([F31](#f31--writer-categories-أقسام-الكاتب)).
 - Open publishing still follows the community guidelines: illegal or harmful content can be reported and removed ([F22](#f22--reporting--moderation)).
 - The 300 seeded articles are software only ([§19](#19-content-pipeline-300-seed-articles)). That is launch content, not a limit on what people can publish.
 
@@ -654,6 +654,8 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 | Deletion record: account id and time | `AuditLogs` (`account.deleted`) | **Retained**, no IP or other personal data | Proves the deletion happened and answers retried requests; kept with the security log |
 | Writer verification requests (field, job title, proof URL, note, decision) and their proof files (F19) | `VerificationRequests`, files in the private store (`Storage:PrivatePath`) | **Deleted** (cascade from `Users`); proof files right after the commit (a failed delete is finished by the daily proofs cleanup job). A decided request has no file any more | Proof is only needed while a request is pending |
 | Verification requests the account decided as an admin | `VerificationRequests.DecidedById` | **Anonymized**: the link to the account is removed (no FK; nulled explicitly) | The decision and its reason stay with the user it concerns |
+| Support tickets the account opened, their messages and screenshots (F35) | `SupportTickets`, `SupportMessages`, `SupportAttachments`, files in the private store | **Deleted** (cascade from `Users`); the files right after the commit | They are the account's own conversation with support |
+| Replies and notes the account wrote on other users' tickets as an admin | `SupportMessages.AuthorId`, `SupportTickets.ClosedById` | **Anonymized**: the link to the account is removed (no FK; nulled explicitly) | The conversation stays with the user it concerns |
 | Tags the account created (F32) | `Tags.CreatedById` | **Anonymized**: the link to the account is removed (no FK; nulled explicitly) | Tags are shared by everyone; a tag no article carries is still deleted by the daily cleanup |
 | Writer categories (F31) | `WriterCategories`, `Articles.WriterCategoryId` | **Deleted** (cascade); the published articles that stay lose their category (`ON DELETE SET NULL`) | They only group the writer's own articles |
 | Highlights (F30): the account's own highlights | `ArticleHighlights` | **Deleted** (cascade from `Users`); the cached popular ranges of the articles it highlighted are dropped right after, so its marks stop counting at once. Highlights on its deleted articles go with those articles; other people's highlights on its kept articles stay | They were private; popular ranges never said who marked them |
@@ -670,7 +672,7 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 |---|---|
 | **Guest** | Not signed in. Can browse and read published articles. |
 | **Member** | Default for every signed-up user. Reads, interacts, and can write articles. A user stays a Member with or without the Verified badge. |
-| **SuperAdmin** | The app's owner. Full access: reports and moderation, suspending users, fields, topics, tags, paths, featured content, verification requests and system settings. |
+| **SuperAdmin** | The app's owner. Full access, from the admin console ([F23](#f23--admin-console-لوحة-التحكم)): the dashboard, all users, suspending users, reports and moderation, support tickets (F35), fields, topics, tags, paths, featured content, announcements, verification requests, the audit log and system settings. |
 
 An account is a `Member` or the `SuperAdmin`, and `Guest` only means not signed in. There is no Reviewer role ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
 
@@ -690,6 +692,12 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 | `comments.create` / `reactions.create` / `reposts.create` / `highlights.create` | | ✅ | ✅ |
 | `follows.manage` / `saved.manage` | | ✅ | ✅ |
 | `reports.create` | | ✅ | ✅ |
+| `support.create` (send and follow your own tickets, F35) | | ✅ | ✅ |
+| `admin.access` (the admin console and its dashboard, F23) | | | ✅ |
+| `users.read` (list and open any account in the console) | | | ✅ |
+| `support.manage` (the ticket queue, F35) | | | ✅ |
+| `notifications.broadcast` (announcements, F23) | | | ✅ |
+| `audit.read` (the audit log, F23) | | | ✅ |
 | `moderation.manage` (hide content, resolve reports) | | | ✅ |
 | `users.suspend` | | | ✅ |
 | `users.reset_password` (admin password reset) | | | ✅ |
@@ -889,7 +897,7 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
 ### F17 — Notifications
 **Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Notifications", "Push payloads"); details in [§21.1](#211-notifications).
 - In-app notification center (SQL `Notifications` table, live unread badge via Firebase Realtime Database) + push (FCM).
-- Types: new follower, reply to your comment, mention (comments and articles), reactions milestone (10/50/100), comment on your article, verification result (F19: approved or rejected), daily article, streak reminder (20:00, if not read yet), new article from a followed writer, repost of your article (`article_reposted`, F29), **security alerts** (password/PIN/phone changed, recovery lockout, Google/Apple linked or unlinked), moderation notices (F22).
+- Types: new follower, reply to your comment, mention (comments and articles), reactions milestone (10/50/100), comment on your article, verification result (F19: approved or rejected), daily article, streak reminder (20:00, if not read yet), new article from a followed writer, repost of your article (`article_reposted`, F29), **security alerts** (password/PIN/phone changed, recovery lockout, Google/Apple linked or unlinked), moderation notices (F22), a support reply (`support_reply`, F35), a new support ticket for admins (`support_ticket`, F35) and announcements (`announcement`, F23; can be turned off).
 - Per-type preferences (push / in-app / off), quiet hours. Details in [§21](#21-notifications--real-time).
 
 ### F18 — Settings
@@ -908,12 +916,12 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
   - Sign out, sign out of all devices, and a red **Delete account** (also the last row of Settings): the flow and data map are in [§9.6](#96-account-deletion--data-map).
 
 ### F19 — Writer Verification
-**Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Writer verification"). The user's page is `/verification` on the web and Settings → "Writer verification" (`/settings/verification`) on mobile; the admin queue is web only (`/admin/verification`).
+**Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Writer verification"). The user's page is `/verification` on the web and Settings → "Writer verification" (`/settings/verification`) on mobile; the admin queue is in the admin console ([F23](#f23--admin-console-لوحة-التحكم)) on web (`/admin/verification`) and mobile.
 - Request verification: field, job title, proof (LinkedIn/GitHub URL, certificate or syndicate card upload).
 - The SuperAdmin reviews and approves or rejects with a reason. An approved user gets the Verified badge (`Users.IsVerified`) next to their name and stays a `Member`: no role or permission changes.
 - **Request:** a field (enabled), a job title (2–100), proof (an `https://` URL ≤ 500, a file, or both) and an optional note (≤ 500). At most one pending request per user (a filtered unique index); verified writers and suspended users can't ask. The user can withdraw a pending request (it is deleted with its file), and ask again after a rejection. The page shows the latest request: pending with its date, approved, or rejected with the reason.
 - **Proof files are private.** A PDF, JPEG, PNG or WebP of at most 10 MB, recognized by its magic bytes (never the name or the client's content type), stored as `verification/{requestId}{.ext}` in the **private store** (`Storage:PrivatePath`, default `App_Data/private`), never in `wwwroot` and never at a public URL. The API refuses to start when that folder overlaps the web root or the uploads folder. Only `GET /admin/verification-requests/{id}/proof` (`verification.manage`) reads a file: `Content-Disposition: attachment` under a neutral name, `Cache-Control: no-store`, `nosniff`. The uploaded name is only shown to admins, sanitized (no folders, control or direction-override characters, ≤ 120). Configuration and backups: [deployment](setup/deployment.md#8-private-files-verification-proofs).
-- **Review queue** (`verification.manage`: SuperAdmin only; web only): Pending (oldest first), Approved and Rejected (newest decided first). **Approve** sets `IsVerified` and `VerifiedAt`, and the badge shows at once; **Reject** needs a reason (5–500) that only the user's verification page shows. A request is decided once (`409 verification.already_decided`). Both are in the audit log (`admin.verification_approved` / `_rejected`). The SuperAdmin can also remove a badge (F23, audited), and that user can request again.
+- **Review queue** (`verification.manage`: SuperAdmin only; in the admin console, F23): Pending (oldest first), Approved and Rejected (newest decided first). **Approve** sets `IsVerified` and `VerifiedAt`, and the badge shows at once; **Reject** needs a reason (5–500) that only the user's verification page shows. A request is decided once (`409 verification.already_decided`). Both are in the audit log (`admin.verification_approved` / `_rejected`). The SuperAdmin can also remove a badge (F23, audited), and that user can request again.
 - **Retention:** the proof file is deleted when the request is decided; the decision, the reviewer, the reason and the URL stay. Withdrawing deletes the request and its file; deleting the account deletes the user's requests and files and removes the account from the requests it decided (§9.6). A daily job deletes proof files that no request points at any more (a delete that failed).
 - **Notification:** `verification_result` (F17) to the requester on each decision, `data.approved` true/false, no actor, link `readin://verification`; not configurable, quiet hours apply. Push: "بقيت كاتب موثّق ✓" / "You're now a verified writer ✓", or "طلب التوثيق بتاعك ماتقبلش" / "Your verification request wasn't approved" with "افتحه عشان تعرف السبب" / "Open it to see why". The reason is never in the push.
 
@@ -928,19 +936,99 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
 ### F22 — Reporting & Moderation
 **Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Reports and moderation").
 - Report article/comment/user with reason (spam, misinformation, harassment, copyright, other) and optional details (≤ 500). You can't report your own content or yourself; reporting the same thing twice is a no-op. A suspended user can be reported.
-- **Moderation queue** (`moderation.manage`; web `/moderation`, mobile Settings → "الإشراف", nav badge with the open count): open / resolved / dismissed tabs, type filter, one item per target with its reason counts; open cases with the most reports first. A case shows the target, every report and its history.
+- **Moderation queue** (`moderation.manage`; today web `/moderation` and mobile Settings → "الإشراف"; with F23 it moves to the admin console's Reports, `/admin/reports`, and the console badge counts it): open / resolved / dismissed tabs, type filter, one item per target with its reason counts; open cases with the most reports first. A case shows the target, every report and its history.
 - **Actions:** hide/unhide articles and comments, delete comments (moderators never delete articles), warn, suspend (1–365 days or permanent; `users.suspend`) and unsuspend users, dismiss reports. Hide, delete, warn and suspend resolve the target's reports (and optionally those of the content an author is warned for); dismiss closes them without touching the content. A note is required to warn or suspend. Nobody warns or suspends themselves or staff (holders of `moderation.manage`); staff content can be hidden.
 - **Hidden article:** gone from every list, feed, count, today's pick, profile, saved list and collection; only its author and moderators open it, with a "Hidden by moderators" banner.
 - **Suspension:** the account is blocked at once (`403 user.suspended` on every call and on sign in, with when it ends); a temporary suspension ends by itself.
 - **Notices:** a warning or a hidden article is a notice (dialog with "فهمت") the user acknowledges, with a push.
 - Full **moderation log** (`ModerationActions`) of every action that changed something; actions on a user's content or account are also in `AuditLogs`.
 
-### F23 — Admin Console
-- Dashboard: daily active readers, articles read, new users, top articles, streak retention.
-- Manage fields, topics, tags, learning paths, featured content.
-- Manage users and verification requests. There is no role management, because the only account roles are Member and SuperAdmin (§10).
-- Content pipeline status (generated / auto-checked / published counts).
-- Available on **web and mobile** (mobile uses a compact layout).
+### F23 — Admin Console (لوحة التحكم)
+**Specified, not built (user request, 2026-11-07).** Until now the SuperAdmin used the same screens as a member, plus "الإشراف" in Settings and the web's verification queue. F23 gives the SuperAdmin a console of their own, and admin actions inside the normal app. There is no role management, because the only account roles are Member and SuperAdmin (§10).
+
+**Where it lives**
+- Only accounts with `admin.access` see it (today, only the SuperAdmin). Members never see the entry, and every `/admin` API answers `403 auth.forbidden`.
+- **Web:** `/admin`, with its own layout and a side menu: Dashboard, Users, Content, Reports, Tickets, Verification, Taxonomy & Tags, Paths & Featured, Announcements, Audit log, System. It opens from the avatar menu ("لوحة التحكم" / "Admin console").
+- **Mobile:** "لوحة التحكم" is the first row in Settings and in the More sheet. It replaces "الإشراف". It opens a compact console with Dashboard, Users, Content, Reports, Tickets and Verification. The other sections are web only.
+- **Badge:** one number on the entry: open reports + open tickets + pending verification requests. It comes from `GET /admin/summary` and refreshes on open, on resume and every 60 seconds.
+- **The old routes move into the console:** `/moderation` → `/admin/reports` and `/admin/verification` stay as redirects. The queues behave as F22 and F19 describe.
+
+**Admin actions inside the app.** The SuperAdmin also gets these in the normal "⋯" menus, each calling the existing endpoint and audited:
+- **A user's profile:** "Suspend…" or "Unsuspend", "Warn…", "Remove verified badge" and "Open in console".
+- **An article:** "Hide" or "Unhide", "Feature" or "Unfeature" (`articles.feature`), and "Open in console".
+- **A comment:** "Hide" and "Delete".
+
+**Dashboard** (`GET /admin/dashboard?period=`)
+- **Period:** Today (default), Yesterday, 7 days or 30 days. A day is a calendar day in `Admin:TimeZone` (default `Africa/Cairo`), not UTC. Every number shows the change from the previous period of the same length.
+- **Cards:**
+  - **Articles published:** tapping it opens Content filtered to the period, with each article's writer, field, time and reads.
+  - **New users:** split by sign-up method (phone, Google, Apple).
+  - **Active readers:** distinct accounts that read at least one article.
+  - **Reads**, **comments**, **reactions** and **reposts**.
+  - **Open reports**, **open tickets** and **pending verification requests**, each linking to its queue.
+  - **Accounts suspended now.**
+- **Charts (last 30 days, one point per day):** new users, active readers and articles published.
+- **Lists for the period:** the top 10 articles by reads, the top 10 writers by reads, the top 20 searches with no results (§22; what readers want and ReadIn doesn't have yet), and streak retention (the share of last week's active readers who kept a streak of 3 days or more).
+- **Content pipeline:** article folders in `content/`, articles seeded and published under `@readin`, and the last seed run.
+- **How it's computed:** SQL aggregates, cached 60 seconds. No personal data appears on the dashboard.
+
+**Users** (`users.read`)
+- **The table:** every account, 50 per page (offset pagination, §17.1), with avatar, name, `@username`, sign-in methods, joined, last seen (`Users.LastSeenAt`, updated at most once an hour by any signed-in call), published articles, followers, Verified, status (active, or suspended until a date, or permanently) and open reports against them.
+- **Phone numbers** stay masked (`+20***1234`). "Show" reveals one with `users.read.pii`, and each reveal is audited (`admin.pii_viewed`).
+- **Search:** name, `@username`, or an exact phone number (with `users.read.pii`).
+- **Filters:** status, Verified, sign-in method, joined in a period, and has open reports.
+- **Sort:** joined, last seen, followers or open reports.
+- **A user's page:**
+  - Profile and stats.
+  - Sign-in methods and the number of active sessions.
+  - Moderation history: warnings, suspensions and hidden content.
+  - Reports against them and reports they filed.
+  - Verification history, their tickets (F35) and the audit entries about them.
+- **Actions:**
+  - **Suspend (ban)** for 1, 3, 7 or 30 days, a custom 1–365 days, or permanently, with a required reason (5–500). It optionally hides all of their articles and comments too, for spam accounts, and that can be undone. It uses `POST /moderation/actions`; no report is needed.
+  - **Unsuspend** and **Warn** (F22).
+  - **Reset password** (`users.reset_password`).
+  - **Sign out of all devices**, which ends every session (`POST /admin/users/{id}/logout-all`).
+  - **Remove verified badge** (F19).
+  - **Clear headline or links** (F14).
+- **Limits on actions:** nobody suspends, warns or signs out themselves, another holder of `admin.access`, or the official `@readin` account. Admins can't delete accounts: deletion stays the user's own action (§9.6). There is no bulk export of users.
+
+**Content** (`moderation.manage`)
+- **All published and archived articles,** newest first. Drafts stay private.
+- **Filters:** published in a period, field, topic, writer, hidden, featured and reported. Search by title.
+- **Actions:** open, hide or unhide (F22), feature or unfeature, and see its reports.
+- **A "Latest comments" tab,** newest first across all articles, with hide and delete, so spam shows up before anyone reports it.
+
+**Reports, Tickets and Verification:** the F22 moderation queue, the F35 ticket queue and the F19 verification queue, inside the console on web and mobile.
+
+**Taxonomy & Tags** (`taxonomy.manage`, web only)
+- **Fields and topics:** add, rename (both languages), reorder, and disable or enable. Fields from `content/taxonomy.yaml` can be renamed and disabled, never deleted.
+- **Tags:** rename, merge and hide (F32).
+
+**Paths & Featured** (`paths.manage`, `articles.feature`, web only)
+- **Admin paths:** create, edit, reorder their articles, and publish or unpublish, using the existing `paths.manage` API. Editorial paths stay read-only (F09).
+- **Featured lists:** which paths are featured on Explore and in what order, and the featured articles.
+
+**Announcements** (`notifications.broadcast`, web only)
+- **What it sends:** a push and an in-app notification to everyone, or to the readers of one field or one article language.
+- **The message:** a title (≤ 60) and body (≤ 180) in both languages, and an optional link to an article or a path.
+- **Sending:** preview it, send a test to yourself, then confirm a dialog that shows the number of recipients.
+- **Limits:** at most one announcement a day. It is a new notification type, `announcement`, that users can turn off (F17), and quiet hours apply. Every send is audited.
+
+**Audit log** (`audit.read`, web only): browse `AuditLogs` and `ModerationActions` by actor, target user, action and date, newest first. IP addresses show only with `users.read.pii`.
+
+**System** (`system.settings`, web only)
+- **Read only:** the API version and start time, the environment, the app update policy (§8.3), and whether the database and Firebase are reachable.
+- **Background jobs:** the last run and the failures of each job in the last 24 hours.
+- **Push:** push delivery failures in the last 24 hours.
+- **Storage:** disk used by uploads and the private store.
+- **Changing settings** still happens in configuration.
+
+**Rules for every admin screen**
+- Every `/admin` endpoint checks a permission (§10.2), never a role.
+- Every write is audited (`admin.*`).
+- Admin tables use offset pagination with at most 100 rows a page.
+- Both languages, both themes and keyboard access (§26). Mobile uses compact lists instead of tables.
 
 ### F24 — Sharing
 - Share article link (deep link opens app if installed, otherwise web). **Built.** Setup: [docs/setup/app-links.md](setup/app-links.md).
@@ -1245,6 +1333,47 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 
 **Accessibility:** every action is a real button with a label in both languages and reachable by keyboard, Read more has `aria-expanded`, focus stays on the card when it expands, and "reduce motion" is respected (§26).
 
+### F35 — Help & Support Tickets (المساعدة والدعم)
+**Specified, not built (user request, 2026-11-07).** Members send a ticket from the app, and the SuperAdmin answers it from the admin console (F23).
+
+**Where**
+- **In the app:** Settings → "المساعدة والدعم" / "Help & support" (web `/support`, mobile `/settings/support`), with "New ticket" and "My tickets".
+- **The public web page `/support`** is also the App Store support URL. It explains how to reach support and shows the support email (`Support:Email`). Signed-in members see the form there; guests see "Sign in to send a ticket" and the email.
+- **Suspended users** can't sign in (F22), so the suspension screen shows the support email for appeals.
+
+**A new ticket**
+- **Category:** a problem in the app, account and sign-in, content or a report, verification, a suggestion, or other.
+- **Subject** (5–120), **message** (10–2000), and **up to 3 screenshots.**
+- **Screenshots:** JPEG, PNG or WebP, ≤ 5 MB each, recognized by their magic bytes. They are stored in the **private store** like F19 proofs (`support/{messageId}/{n}{.ext}`), never at a public URL, and only the ticket's owner and `support.manage` can read them.
+- **Added by the app:** the platform, OS version, app version and build, the UI language, and the screen the ticket came from. No device identifier.
+- **Limits:** 5 new tickets a day per user and at most 10 open at once (`429 support.limit`).
+
+**Statuses**
+- **Open:** waiting for support.
+- **Answered:** support replied and is waiting for the user. A reply from the user moves it back to Open.
+- **Closed:** by the user or by support, or automatically 14 days after Answered with no reply from the user.
+- **Reopening:** the user can reopen a closed ticket within 30 days. After that, they send a new one.
+
+**Conversation:** both sides' messages in order. Each message has up to 2000 characters and up to 3 images. Support can also add **internal notes** that only admins see.
+
+**Admin queue** (`support.manage`; in the console on web and mobile)
+- **Tabs:** Open (waiting longest first), Answered and Closed.
+- **Filter and search:** filter by category; search by subject or user.
+- **Each row:** the user, category, subject, how long it has waited, and the last message.
+- **The ticket page:** the conversation, a card for the user (links to their page in the console), the device details, and their reports and suspensions.
+- **Actions:** reply, add an internal note, change the category, close and reopen.
+
+**Notifications (F17)**
+- **`support_reply`:** goes to the user when support replies or closes the ticket, as push and in-app, with link `readin://support/{id}`. It can't be turned off, like `verification_result`.
+- **`support_ticket`:** goes to holders of `support.manage` for a new ticket or a user's reply. They can turn it off in their notification settings.
+
+**Data and retention**
+- **Tables:** `SupportTickets`, `SupportMessages` and `SupportAttachments` (§16).
+- **Closed tickets** are deleted a year after closing, with their files, by a daily job.
+- **Deleting the account** deletes the user's tickets, messages and files (§9.6). On other users' tickets, an admin's replies stay, with the link to the admin removed.
+
+**API:** see §17.2 ("Support").
+
 ---
 
 ## 12. Feature Parity Matrix (Web + Mobile)
@@ -1285,6 +1414,7 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 | F32 | Tags | ✅ | ✅ | 1 |
 | F33 | Download Article PDF | ✅ | ✅ | 2 |
 | F34 | Post-style Feed Card | ✅ | ✅ | 1 |
+| F35 | Help & Support Tickets | ✅ | ✅ | 2 |
 
 **Process:** each feature is one GitHub issue with three sub-tasks (`backend`, `web`, `mobile`). The issue closes only when all three are committed to `dev` (see [§29](#29-git-workflow--conventions)).
 
@@ -1481,6 +1611,8 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Glossary | `GlossaryTerms` (Slug = the RDoc `termId` unique, TermEn, DefinitionEn, ExplanationAr), `ArticleTerms` (ArticleId + TermId key; rebuilt from the content's `term` nodes) |
 | Trust & Moderation | `VerificationRequests` (F19: UserId → Users cascade, FieldId → Fields no cascade, JobTitle ≤ 100, ProofUrl ≤ 500, ProofFilePath / ProofFileContentType / ProofFileSizeBytes / ProofFileName ≤ 120 (null once decided), Note ≤ 500, Status `Pending`/`Approved`/`Rejected` (a concurrency token), SubmittedAt, DecidedAt, DecidedById (no FK; account deletion nulls it), RejectionReason ≤ 500), `Reports` (TargetType article/comment/user, TargetId, ReporterId, Reason, Details, Status open/resolved/dismissed, ResolvedAt, ResolvedById (resolved or dismissed by); one per reporter and target), `ModerationActions` (the moderation log, F22: Action `varchar(32)` e.g. `article.hide`, TargetType, TargetId, TargetUserId, ModeratorId, TargetLabel ≤ 200 (title / first 80 characters / @username at the time), Note ≤ 500, SuspendedUntil, ReportsClosed, CreatedAt, NoticeKind warning/article_hidden (a notice the user acknowledges), AcknowledgedAt; no FKs to Users, account deletion nulls them), `AuditLogs` |
 | Notifications | `Notifications` (UserId, Type, Payload JSON, IsRead), `NotificationPreferences` |
+| Support (F35) | `SupportTickets` (UserId → Users cascade, Category, Subject ≤ 120, Status Open/Answered/Closed, Platform, OsVersion, AppVersion, Language, Screen, CreatedAt, UpdatedAt, LastUserMessageAt, LastAdminReplyAt, ClosedAt, ClosedById no FK), `SupportMessages` (TicketId → cascade, AuthorId no FK (null once removed), IsInternalNote, Body ≤ 2000, CreatedAt), `SupportAttachments` (MessageId → cascade, private file path, ContentType, Size) |
+| Admin (F23) | `Users.LastSeenAt` (updated at most once an hour by any signed-in call), `SearchMisses` (normalized query ≤ 100, Language, Date in `Admin:TimeZone`, Count: searches that returned nothing, with no user id; kept 90 days) |
 | Infrastructure | `OutboxMessages`, `SeedHistory` (seeder name + version + checksum), Hangfire schema |
 
 ### 16.3 Key Indexes
@@ -1489,6 +1621,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 - `ArticleTranslations(ArticleId, Language)` unique.
 - `Comments(ArticleId, ParentId, CreatedAt)`.
 - `Reports(Status, TargetType, TargetId)` (the queue), `ModerationActions(TargetType, TargetId, CreatedAt)`, `(TargetUserId, CreatedAt)`, `(ModeratorId, CreatedAt)` and `(TargetUserId, AcknowledgedAt)` filtered on `NoticeKind IS NOT NULL` (notices).
+- `SupportTickets(Status, LastUserMessageAt)` (the admin queue) and `(UserId, CreatedAt)` (My tickets); `Users(LastSeenAt)` and `Users(CreatedAt)` (the console's users table and the dashboard); `SearchMisses(Date, Language, Query)` unique.
 - `ReadingProgress(UserId, ArticleId)` unique.
 - `VerificationRequests(Status, SubmittedAt)` (the admin queue), `(UserId, SubmittedAt)` (the user's latest request) and `(UserId)` unique filtered on `[Status] = 'Pending'` (one pending request per user).
 - `Reactions(ArticleId, Type)`, `UserFollows(FolloweeId)`.
@@ -1539,8 +1672,9 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Notifications | `GET /notifications` · `POST /notifications/read` · `GET/PUT /me/notification-preferences` |
 | Uploads & media | `POST /uploads/images` (purpose `image` \| `avatar` \| `cover`; `article-image` is still accepted) · `POST /uploads/documents` (PDF, `202` + processing) · `GET /uploads/{id}` (status, variants, pages) · `DELETE /uploads/{id}` · `GET /documents/{assetId}/download` (attachments are part of the editor draft) — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) |
 | Trust | `GET /me/verification` · `POST /verification-requests` (multipart) · `DELETE /me/verification` (withdraw) |
+| Support (F35) | `POST /support/tickets` (multipart) · `GET /me/support/tickets?status=` · `GET /support/tickets/{id}` · `POST /support/tickets/{id}/messages` (multipart) · `POST /support/tickets/{id}/close` · `POST /support/tickets/{id}/reopen` · `GET /support/attachments/{id}` (owner or `support.manage`; `attachment`, `no-store`) |
 | Moderation | `POST /reports` · `GET /moderation/summary` · `GET /moderation/reports?status=&type=` · `GET /moderation/reports/{targetType}/{targetId}` · `POST /moderation/actions` · `GET /moderation/actions` (log) · `GET /me/moderation-notices` · `POST /me/moderation-notices/{id}/acknowledge` |
-| Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests` (list, detail, `/{id}/proof`, `/{id}/approve`, `/{id}/reject`), `DELETE /admin/users/{id}/verification`, `/admin/dashboard`, `/admin/content-pipeline`, `POST /admin/realtime/rebuild-counters` |
+| Admin | `/admin/users`, `POST /admin/users/{id}/reset-password`, `/admin/fields`, `/admin/topics`, `/admin/paths`, `/admin/verification-requests` (list, detail, `/{id}/proof`, `/{id}/approve`, `/{id}/reject`), `DELETE /admin/users/{id}/verification`, `/admin/dashboard`, `/admin/content-pipeline`, `POST /admin/realtime/rebuild-counters`. F23 adds: `GET /admin/summary` (badge counts) · `GET /admin/dashboard?period=today\|yesterday\|7d\|30d` · `GET /admin/users?q=&status=&verified=&method=&joinedFrom=&joinedTo=&hasReports=&sort=&page=` · `GET /admin/users/{id}` · `GET /admin/users/{id}/phone` (`users.read.pii`, audited) · `POST /admin/users/{id}/logout-all` · `GET /admin/articles?from=&to=&field=&topic=&writer=&hidden=&featured=&reported=&q=&page=` · `GET /admin/comments?page=` · `PUT` / `DELETE /admin/articles/{id}/featured` · `/admin/support/tickets` (list, detail, `POST /{id}/messages` with `{ body, internal }`, `PATCH /{id}` status and category) · `POST /admin/announcements` (`/preview`, `/test`) · `GET /admin/audit?actor=&target=&action=&from=&to=&page=` · `GET /admin/system`. Suspend, warn and hide stay `POST /moderation/actions` (F22). |
 
 ---
 
@@ -1750,6 +1884,7 @@ Times are epoch milliseconds; `updatedAt` and `at` are the RTDB server clock.
 - **Arabic normalization** into `SearchText` and on queries: remove diacritics (تشكيل) and tatweel (ـ), unify `أ إ آ → ا`, `ى → ي`, `ة → ه`.
 - Ranking: full-text rank × quality score × freshness (the formula is in [`docs/api/contract-v1.md`](api/contract-v1.md), "Search").
 - Typo tolerance and "did you mean" in Phase 3 (or move to Azure AI Search / Elasticsearch if needed). As-you-type suggestions (`GET /search/suggest`) ship with F16.
+- **Searches with no results** are counted per normalized query, language and day in `SearchMisses`, with no user id, and kept 90 days. The admin dashboard (F23) lists the top ones, which shows what readers look for and ReadIn doesn't have yet.
 
 ---
 
@@ -1912,7 +2047,7 @@ The API host and `backend.yml` need Chromium and its system libraries for F33, i
 |---|---|
 | **0 — Foundation** | Repo, solution skeleton, CI, design tokens, RDoc schema, Firebase project + emulators, seeders for roles/fields/users |
 | **1 — MVP** | F01–F07, F10–F14, F18, F26–F32, F34 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
-| **2 — Growth** | F08, F09, F15–F17, F19, F22–F24, F33 |
+| **2 — Growth** | F08, F09, F15–F17, F19, F22–F24, F33, F35 |
 | **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles |
 
 ---

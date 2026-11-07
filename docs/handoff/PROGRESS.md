@@ -467,6 +467,11 @@ Later decisions (user, 2026-11-05):
   says to start it** (its contract draft is ready, nothing built). The order is now: F24 quote card → the F33 change →
   the small leftovers → the final review (F23 and F25 not counted as gaps). The web's Arabic UI is Modern Standard
   Arabic (SPEC §14.4); mobile keeps its Egyptian Arabic.
+- **SPEC only, 2026-11-07 (user):** the SuperAdmin's screens looked the same as a member's, so F23 (admin console) is
+  now specified in full. It has a dashboard of today's numbers, all users with suspend (ban), content, reports, tickets,
+  verification, taxonomy, paths, announcements, an audit log and system health, plus admin actions in the normal
+  menus. A new **F35 Help & Support Tickets** was added, with permissions, tables and API rows (§10.2, §16, §17.2),
+  §9.6 rows and §22 search misses. Nothing is built; F23 and F35 start only when the user says so.
 - **Blocked, needs the user (2026-11-06):** GitHub Actions stopped starting jobs from 5fd40c08 (F24) on: "The job was
   not started because recent account payments have failed or your spending limit needs to be increased" (GitHub →
   Settings → Billing & plans). The last runs that did start (f6551dee) passed. Until billing is fixed, CI can't check
