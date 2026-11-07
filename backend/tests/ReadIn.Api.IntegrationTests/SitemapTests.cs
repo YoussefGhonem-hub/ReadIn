@@ -15,9 +15,31 @@ public sealed class SitemapTests(ApiFactory api)
     {
         var writer = await api.UserAsync("Sitemap Writer");
         var moderator = (await api.SuperAdminAsync("Sitemap Moderator")).Client;
-        // A field no other test publishes in or pages through: articles here can't push another test's article off the
-        // first page of a field feed (MediaTests reads the first 50 of dotnet's For you).
-        var field = await writer.Client.FieldIdAsync("history-culture");
+        // A field of its own, made in the admin console (F23): articles here can't push another test's article off the
+        // first page of a field feed (MediaTests reads the first 50 of dotnet's For you). The fixture taxonomy has no
+        // spare enabled field, so this one is disabled again at the end, as the console's own tests do.
+        var fieldSlug = $"sitemap-{Guid.NewGuid():N}"[..17];
+        var fieldBody = new
+        {
+            slug = fieldSlug, nameAr = "خريطة الموقع", nameEn = "Sitemap", icon = "cpu", color = "accent", isSensitive = false,
+            requiresSources = false, isEnabled = true,
+        };
+        var newField = await moderator.PostAsJsonAsync("/api/v1/admin/fields", fieldBody, Ct);
+        var newFieldBody = await newField.Content.ReadAsStringAsync(Ct);
+        newField.StatusCode.Should().Be(HttpStatusCode.Created, newFieldBody);
+        var field = JsonNode.Parse(newFieldBody)!["id"]!.GetValue<Guid>();
+        try
+        {
+            await ListsWhatAGuestCanOpenAsync(writer, moderator, field, fieldSlug);
+        }
+        finally
+        {
+            await moderator.PutAsJsonAsync($"/api/v1/admin/fields/{field}", fieldBody with { isEnabled = false }, Ct);
+        }
+    }
+
+    private async Task ListsWhatAGuestCanOpenAsync(SignedInUser writer, HttpClient moderator, Guid field, string fieldSlug)
+    {
         var u = $"zs{Guid.NewGuid():N}"[..10];
 
         var (english, englishSlug) = await writer.Client.WriteAndPublishAsync(ArticleTestKit.Document(field, $"English {u}", tags: [$"seen {u}"]));
@@ -54,7 +76,7 @@ public sealed class SitemapTests(ApiFactory api)
             .Should().Contain((username, category["slug"]!.GetValue<string>()));
 
         Strings(sitemap, "tags", "slug").Should().Contain($"seen-{u}").And.NotContain($"gone-{u}", "its only article is hidden");
-        Strings(sitemap, "fields", "slug").Should().Contain("history-culture").And.Contain("dotnet");
+        Strings(sitemap, "fields", "slug").Should().Contain(fieldSlug).And.Contain("dotnet");
     }
 
     private static IEnumerable<string> Strings(JsonObject sitemap, string list, string property) =>

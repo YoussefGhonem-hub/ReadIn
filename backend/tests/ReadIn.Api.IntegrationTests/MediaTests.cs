@@ -57,6 +57,25 @@ public sealed class MediaTests(ApiFactory api)
     private static async Task<JsonObject> GetAssetAsync(HttpClient client, JsonObject asset) =>
         (await client.GetFromJsonAsync<JsonObject>($"/api/v1/uploads/{asset["id"]}", Ct))!;
 
+    /// <summary>
+    /// The article's card in dotnet's For you feed, on whichever page it ranks: other tests publish in dotnet too, so a
+    /// new article isn't always in the first 50 (For you orders by interest, popularity and freshness).
+    /// </summary>
+    private static async Task<JsonNode> ForYouCardAsync(HttpClient client, string slug)
+    {
+        string? cursor = null;
+        for (var page = 0; page < 40; page++)
+        {
+            var url = "/api/v1/feed/for-you?field=dotnet&limit=50" + (cursor is null ? "" : $"&cursor={Uri.EscapeDataString(cursor)}");
+            var feed = (await client.GetFromJsonAsync<JsonObject>(url, Ct))!;
+            var card = feed["items"]!.AsArray().SingleOrDefault(c => c!["slug"]!.GetValue<string>() == slug);
+            if (card is not null) return card;
+            cursor = feed["nextCursor"]?.GetValue<string>();
+            if (cursor is null) break;
+        }
+        throw new InvalidOperationException($"{slug} isn't in dotnet's For you feed");
+    }
+
     private static async Task<Guid> CreateDraftAsync(HttpClient client, string title)
     {
         var dotnet = (await client.GetFromJsonAsync<JsonArray>("/api/v1/fields", Ct))!
@@ -247,8 +266,7 @@ public sealed class MediaTests(ApiFactory api)
         shown[0]!["variants"]!.AsArray().Select(v => v!["width"]!.GetValue<int>()).Should().Equal(320, 640, 1000);
         shown[0]!["blurHash"]!.GetValue<string>().Should().HaveLength(28);
 
-        var feed = (await client.GetFromJsonAsync<JsonObject>("/api/v1/feed/for-you?field=dotnet&limit=50", Ct))!;
-        var card = feed["items"]!.AsArray().Single(c => c!["slug"]!.GetValue<string>() == slug)!;
+        var card = await ForYouCardAsync(client, slug);
         card["attachments"]!["images"]!.AsArray().Should().HaveCount(3);
     }
 
@@ -321,8 +339,7 @@ public sealed class MediaTests(ApiFactory api)
         allowed.Headers.GetValues("Content-Security-Policy").Should().Equal("sandbox");
         (await allowed.Content.ReadAsByteArrayAsync(Ct)).Should().Equal(Fixture("normal-12-pages.pdf"), "the ORIGINAL file");
 
-        var feedCard = (await api.GuestClient().GetFromJsonAsync<JsonObject>("/api/v1/feed/for-you?field=dotnet&limit=50", Ct))!["items"]!
-            .AsArray().Single(c => c!["slug"]!.GetValue<string>() == slug)!;
+        var feedCard = await ForYouCardAsync(api.GuestClient(), slug);
         feedCard["attachments"]!["document"]!["pages"]!.AsArray().Should().HaveCount(10, "feed cards carry at most 10 page thumbs");
         feedCard["attachments"]!["document"]!["canDownload"]!.GetValue<bool>().Should().BeTrue();
     }
