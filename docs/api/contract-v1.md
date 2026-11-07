@@ -77,9 +77,34 @@ names; `isVerified` keeps its meaning.
 **Web sessions:** send `X-ReadIn-Client: web` with `credentials: "include"` on every `/auth/*` call and on `PUT /me/password`,
 `PUT /me/phone`, `POST /me/phone-sign-in` and `DELETE /me`. The refresh token then comes as an `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth`
 cookie named `readin_refresh`, and `SessionDto.refreshToken` is `null`. Without the header the cookie is ignored.
-**Mobile** keeps `refreshToken` in secure storage and may send `X-Device-Name` (e.g. "Pixel 8"). Tokens rotate: presenting a
-refresh token that was already used ends the whole session (a 30-second grace covers parallel tabs), so refresh one call
-at a time (single-flight) and always keep the newest token.
+**Mobile** sends `X-ReadIn-Client: mobile` on every call: its sessions last 10 years from the last refresh
+(`Auth:MobileRefreshTokenLifetime`), the web's and other clients' 30 days. It keeps `refreshToken` in secure storage and
+may send `X-Device-Name` (e.g. "Pixel 8"). Tokens rotate: presenting a refresh token that was already used ends the whole
+session (a 30-second grace covers parallel tabs), so refresh one call at a time (single-flight) and always keep the
+newest token.
+
+**Retrying a lost refresh:** the app stores a random `retryKey` with the refresh token **before** `POST /auth/refresh` and
+keeps it until the new token is stored. If the response is lost, send the same `refreshToken` with the same `retryKey`
+again. It succeeds as long as the token issued for that refresh was never used: the server issues another one and
+retires the unused one. Without the key, with another key, or after the new token was used, it is reuse and ends the
+whole session.
+
+### App (mobile) 🌐 — SPEC §8.3
+
+| Method | Path | Response |
+|---|---|---|
+| GET | `/app/update-policy` | `200 UpdatePolicyDto` (`Cache-Control: no-cache`): the oldest app version each platform still accepts. Older apps block with "Update ReadIn" |
+
+```ts
+interface UpdatePolicyDto {
+  ios: PlatformUpdatePolicyDto;
+  android: PlatformUpdatePolicyDto;
+}
+interface PlatformUpdatePolicyDto {
+  minimumVersion: string | null; // "1.2.0" or "1.2.0+57" (+build: equal versions with a lower build are blocked too); null = none
+  storeUrl: string | null;       // the store page; null on iOS until the App Store id is known
+}
+```
 
 **After sign in**, route by `SessionDto.user` in this order (SPEC §9.2): `mustChangePassword` → change password,
 `mustSetRecoveryPin` → set PIN, `!isProfileComplete` → complete profile, `!onboardingCompleted` → onboarding, else home.
@@ -1692,14 +1717,17 @@ interface RegisterRequest {
 }
 
 interface LoginRequest { phoneNumber: string; password: string }
-interface RefreshRequest { refreshToken?: string }   // omit on the web (cookie)
+interface RefreshRequest {
+  refreshToken?: string;         // omit on the web (cookie)
+  retryKey?: string;             // mobile: random, at most 200 characters; resend with the same token after a lost response
+}
 interface VerifyPinRequest { phoneNumber: string; pin: string }
 
 interface SessionDto {
   accessToken: string;           // JWT, send as Bearer
   accessTokenExpiresAt: string;  // ~15 minutes
   refreshToken: string | null;   // null on the web (HttpOnly cookie)
-  refreshTokenExpiresAt: string; // 30 days; rotates on every refresh
+  refreshTokenExpiresAt: string; // 30 days (web), 10 years (X-ReadIn-Client: mobile); rotates on every refresh
   user: MeDto;
 }
 

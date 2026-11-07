@@ -546,3 +546,32 @@ the web), which regenerates and uploads `web.config`.
 SmarterASP panel (Web Deploy's recycle is refused there); the workflow's last step says so. The SSL certificates are
 Let's Encrypt ones imported by hand (the plan's free-SSL quota is used up): they expire on 2027-02-05 and are renewed
 from `D:\tmp\readin-ssl` (README there).
+
+## 13. Requiring a mobile app update (SPEC §8.3)
+
+The app asks the API for the oldest version it still accepts (`GET /api/v1/app/update-policy`). Older versions show
+a full-screen "Update ReadIn" page with a button to the store, and nothing else works until the user updates.
+
+1. **Release first.** Raise `version:` in `mobile/pubspec.yaml` (e.g. `0.2.0+1`), and publish that build on the
+   App Store and Google Play. The iOS build number is the GitHub run number, so iOS and Android builds don't share
+   numbers. Compare by version name, and raise it for every store release.
+2. **Wait until it is live** in that store. A minimum that the store can't offer yet blocks users with no way out.
+   Each platform has its own setting, so iOS can follow after App Review.
+3. **Raise the minimum on the API.** Set the variables in the API's `web.config` through the deploy kit
+   (`D:\tmp\readin-deploy`), or in `backend/src/ReadIn.Api/appsettings.json` for the next `uat` deploy. An environment
+   variable wins over `appsettings.json`.
+
+   | Setting (environment variable) | Example |
+   |---|---|
+   | `MobileApp__Ios__MinimumVersion` | `0.2.0` |
+   | `MobileApp__Android__MinimumVersion` | `0.2.0` |
+   | `MobileApp__Ios__StoreUrl` | `https://apps.apple.com/app/id<Apple ID>`. The Apple ID is under App Store Connect → App Information. Until it is set, iOS shows the page without a button. |
+   | `MobileApp__Android__StoreUrl` | Set in `appsettings.json` already: the Play Store page of the app's package. |
+
+   `1.2.0+57` also blocks builds of 1.2.0 below 57. A value that isn't a version stops the API from starting, so
+   check the API's `/health` after the change.
+4. **Check:** `curl https://api.readin.online/api/v1/app/update-policy`. Apps check when they start, and again when
+   they come back to the foreground, at most every 30 minutes.
+
+To lift the block, empty the value. Versions released before this feature (`0.1.0` builds without the check) can't
+be blocked: they never ask.

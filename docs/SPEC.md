@@ -489,6 +489,15 @@ mobile/lib/
 - Offline: saved articles and today's article are cached for offline reading.
 - Deep links and push notification taps open the exact article/comment.
 
+### 8.3 Required Updates
+When a release must replace older versions (user request, 2026-11-07), the app blocks older versions until they update.
+- **The policy lives on the server.** `GET /app/update-policy` (anonymous) returns `minimumVersion` and `storeUrl` for `ios` and `android`. It comes from the `MobileApp` settings (`MobileApp:Ios:MinimumVersion`, `MobileApp:Ios:StoreUrl`, and the same for `Android`). An empty `minimumVersion` means no version is blocked. A version is `major.minor.patch`, optionally `+build`, e.g. `1.2.0` or `1.2.0+57`. A missing part counts as 0. The API refuses to start with an invalid value.
+- **The app compares.** It reads its own version and build (`package_info_plus`). It is blocked when its version is lower than the minimum. When the versions are equal and the minimum names a build, a lower build is blocked too.
+- **When it checks:** at start, in parallel with the session restore, so the splash never waits; and when it comes back to the foreground, at most every 30 minutes.
+- **Offline:** a failed check never blocks. The last policy the app received is kept, so an app that was already told to update stays blocked when it starts offline.
+- **The block.** A full-screen page replaces the whole app, above the router, so links and push taps can't get past it, and Back doesn't close it. It shows the logo, "Update ReadIn" / «حدِّث ReadIn», why, and an **Update now** button that opens the store. Android falls back to the Play Store page of the app's package. iOS shows the button only when `storeUrl` is set (an App Store link needs the app's id).
+- **Releasing:** publish the new version in the stores first. When it is live, raise `minimumVersion`. Raising it earlier would block users from a version the store doesn't offer yet. The steps are in [`docs/setup/deployment.md`](setup/deployment.md).
+
 ---
 
 ## 9. Authentication: Phone, Google, Apple
@@ -555,14 +564,17 @@ Then **Complete profile** (display name, unique `@username` with live availabili
 | Token | Details |
 |---|---|
 | Access token | JWT, **15 minutes**. Claims: `sub`, `security_stamp`. Signed with `Jwt:SigningKey`. Issuer, audience, lifetime and key are validated. |
-| Refresh token | Random 256-bit, **30 days**, **rotating**, stored **hashed** in `RefreshTokens`. Reusing an already-rotated token revokes the whole token family (theft detection). |
+| Refresh token | Random 256-bit, **rotating**, stored **hashed** in `RefreshTokens`. Lifetime: **30 days** on the web (`Auth:RefreshTokenLifetime`), **10 years** in the mobile app (`Auth:MobileRefreshTokenLifetime`, for requests with `X-ReadIn-Client: mobile`). Every refresh issues a new token with a full lifetime, so a session only expires when it goes unused that long. Reusing an already-rotated token revokes the whole token family (theft detection), except for the retry below. |
 | Reset token | Random 256-bit, **10 minutes**, single use, bound to the user and the creating IP, stored hashed. Issued after a correct recovery PIN. |
 
 - An `IClaimsTransformation` loads roles & permissions from SQL Server (cached, invalidated on role change). Tokens whose `security_stamp` no longer matches are rejected.
 - `SecurityStamp` changes on password change, password reset, phone change, adding phone sign in to a Google/Apple account and "sign out of all devices", which signs out every other session.
 - Google/Apple sign in starts the same session (access + refresh token). Provider tokens are verified once and never stored.
 - **Web:** refresh token in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie (path `/api/v1/auth`); access token in memory only (never localStorage). On start (browser only) the app calls `/auth/refresh`. SSR of public pages is anonymous. The interceptor refreshes once on 401 (single-flight) and retries.
-- **Mobile:** refresh token in `flutter_secure_storage`, access token in memory, Dio `QueuedInterceptor` with the same single-flight refresh. Splash → restore session → route by guards.
+- **Mobile:** refresh token in `flutter_secure_storage`, access token in memory, Dio `QueuedInterceptor` with the same single-flight refresh. Splash → restore session → route by guards. Every request carries `X-ReadIn-Client: mobile`.
+- **Mobile stays signed in** until the user signs out, deletes the app, changes the password or phone number, signs out of all devices, or the account is suspended or deleted (user decision, 2026-11-07). No other sign in is asked for. The API takes `X-ReadIn-Client: mobile` on trust: any client that sends it gets the long lifetime. That only spares the holder a sign in. It opens nothing a token didn't already open, and rotation, reuse detection and "sign out of all devices" still apply.
+  - **A lost refresh response is retried, not treated as theft.** Before each refresh the app stores a random `retryKey` with the refresh token. It sends both and keeps them until the new token is stored. The server keeps the key's hash on the rotated token. The same old token with the same key is accepted again only while the token issued for it was never used: the server issues another one and retires the unused one. Without the key, with another key, or once the new token was used, reuse still revokes the family. A timeout on a slow server, or an app killed mid-refresh, no longer signs the user out.
+  - **Deleting the app signs out.** iOS keeps Keychain items after an app is deleted. On the first launch after an install, the app deletes any stored refresh token. It tells an install from an update by a marker in its own Hive data, which is deleted with the app. An update from a build without the marker keeps its session.
 - Suspended users get `403` with code `user.suspended`.
 
 ### 9.4 Shared Input Components
