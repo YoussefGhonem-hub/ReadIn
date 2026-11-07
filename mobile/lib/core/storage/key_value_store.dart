@@ -6,6 +6,9 @@ abstract interface class KeyValueStore {
   T? read<T>(String key);
   Future<void> write<T>(String key, T value);
   Future<void> delete(String key);
+
+  /// Nothing stored: a new install, before anything was written (the store goes with the app when it is deleted).
+  bool get isEmpty;
 }
 
 class HiveKeyValueStore implements KeyValueStore {
@@ -28,6 +31,9 @@ class HiveKeyValueStore implements KeyValueStore {
 
   @override
   Future<void> delete(String key) => _box.delete(key);
+
+  @override
+  bool get isEmpty => _box.isEmpty;
 }
 
 class InMemoryKeyValueStore implements KeyValueStore {
@@ -46,4 +52,7 @@ class InMemoryKeyValueStore implements KeyValueStore {
 
   @override
   Future<void> delete(String key) async => _values.remove(key);
+
+  @override
+  bool get isEmpty => _values.isEmpty;
 }

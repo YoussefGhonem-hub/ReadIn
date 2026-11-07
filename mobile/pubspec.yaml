@@ -78,6 +78,10 @@ dependencies:
   # The comment box's emoji picker (SPEC F11): emoji are ordinary text. Exact version, published 2026-09-01.
   emoji_picker_flutter: 4.5.4
 
+  # The installed version and package name for the forced update check (`GET /app/update-policy`). Exact version,
+  # published 2026-10-01.
+  package_info_plus: 10.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

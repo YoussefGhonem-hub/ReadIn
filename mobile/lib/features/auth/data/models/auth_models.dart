@@ -230,11 +230,16 @@ class LoginRequest {
 
 /// `RefreshRequest` (mobile sends the token in the body).
 class RefreshRequest {
-  const RefreshRequest(this.refreshToken);
+  const RefreshRequest(this.refreshToken, {this.retryKey});
 
   final String refreshToken;
 
-  Map<String, dynamic> toJson() => {'refreshToken': refreshToken};
+  /// `POST /auth/refresh` only: the same key for every attempt with this token. When an answer is lost (a timeout, the
+  /// app killed meanwhile), the server accepts this token again with this key as long as the token it issued was never
+  /// used, so a lost answer doesn't end the session. Left out when null.
+  final String? retryKey;
+
+  Map<String, dynamic> toJson() => {'refreshToken': refreshToken, 'retryKey': ?retryKey};
 }
 
 /// `VerifyPinRequest`.

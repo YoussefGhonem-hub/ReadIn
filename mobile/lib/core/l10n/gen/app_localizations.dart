@@ -8935,6 +8935,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You need an internet connection to make a quote card.'**
   String get errQuoteCardOffline;
+
+  /// No description provided for @updateRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update ReadIn'**
+  String get updateRequiredTitle;
+
+  /// No description provided for @updateRequiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This version is no longer supported. Update to the latest version to keep reading.'**
+  String get updateRequiredBody;
+
+  /// No description provided for @updateRequiredAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get updateRequiredAction;
 }
 
 class _AppLocalizationsDelegate

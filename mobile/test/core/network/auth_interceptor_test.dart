@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:readin/core/config/app_config.dart';
+import 'package:readin/core/di/register_module.dart';
 import 'package:readin/core/errors/failure.dart';
+import 'package:readin/core/l10n/current_locale.dart';
 import 'package:readin/core/network/interceptors.dart';
 import 'package:readin/core/network/request_context.dart';
 import 'package:readin/features/auth/data/datasources/auth_api.dart';
@@ -46,6 +49,9 @@ Dio client(SessionTokenProvider tokens, ScriptedAdapter adapter) {
 
 String? bearer(RequestOptions o) => o.headers['Authorization'] as String?;
 
+/// The app's DI module, to build both API clients as the app does.
+class _Module extends RegisterModule {}
+
 void main() {
   test('sends the access token, but not on sign-in calls', () async {
     final adapter = ScriptedAdapter((_) => (200, {'ok': true}));
@@ -58,6 +64,30 @@ void main() {
     expect(bearer(adapter.requests[0]), 'Bearer a1');
     expect(bearer(adapter.requests[1]), isNull);
     expect(bearer(adapter.requests[2]), 'Bearer a1');
+  });
+
+  test('both API clients say every call comes from the mobile app (X-ReadIn-Client: mobile)', () async {
+    const config = AppConfig(
+      flavor: Flavor.prod,
+      apiBaseUrl: 'http://api.test/api/v1',
+      useFirebaseEmulator: false,
+      emulatorHost: 'localhost',
+    );
+    final module = _Module();
+    final locale = CurrentLocale();
+    final api = module.dio(config, FakeTokens('a1'), locale, FakeDevice());
+    final anonymous = module.authDio(config, locale, FakeDevice());
+    final adapter = ScriptedAdapter((o) => (200, o.path == '/auth/refresh' ? session('a2', 'r2').toJson() : {'ok': true}));
+    api.httpClientAdapter = adapter;
+    anonymous.httpClientAdapter = adapter;
+
+    await api.get<dynamic>('/feed/today');
+    await api.post<dynamic>('/auth/login', data: {});
+    await AuthSessionStore(AuthApi(anonymous), FakeSecureStore({AuthSessionStore.refreshTokenKey: 'r1'})).refresh();
+    await anonymous.get<dynamic>('/app/update-policy');
+
+    expect(adapter.requests.map((r) => r.path), ['/feed/today', '/auth/login', '/auth/refresh', '/app/update-policy']);
+    expect(adapter.requests.map((r) => r.headers[ClientInterceptor.header]), everyElement('mobile'));
   });
 
   test('names the device on calls that issue a session', () async {
@@ -129,8 +159,8 @@ void main() {
 
     expect(responses.map((r) => r.statusCode), [200, 200, 200]);
     expect(refreshes, 1);
-    expect(authAdapter.requests.single.data, {'refreshToken': 'r1'});
-    expect(secure.values[AuthSessionStore.refreshTokenKey], 'r2');
+    expect(authAdapter.requests.single.data, {'refreshToken': 'r1', 'retryKey': matches(RegExp(r'^[A-Za-z0-9_-]{43}$'))});
+    expect(secure.values, {AuthSessionStore.refreshTokenKey: 'r2'}, reason: 'the retry key goes once the refresh is answered');
   });
 
   test('a signed-in call refused with 403 user.suspended ends the session with suspendedUntil (F22)', () async {

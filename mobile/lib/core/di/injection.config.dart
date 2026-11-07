@@ -15,6 +15,20 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i558;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
+import '../../features/app_update/data/datasources/app_update_api.dart'
+    as _i147;
+import '../../features/app_update/data/datasources/installed_app_source.dart'
+    as _i469;
+import '../../features/app_update/data/datasources/update_policy_cache.dart'
+    as _i725;
+import '../../features/app_update/data/repositories/app_update_repository_impl.dart'
+    as _i201;
+import '../../features/app_update/domain/repositories/app_update_repository.dart'
+    as _i756;
+import '../../features/app_update/domain/usecases/check_app_update.dart'
+    as _i773;
+import '../../features/app_update/presentation/cubit/app_update_cubit.dart'
+    as _i764;
 import '../../features/article/data/datasources/article_api.dart' as _i462;
 import '../../features/article/data/datasources/article_offline_store.dart'
     as _i1010;
@@ -55,6 +69,7 @@ import '../../features/auth/data/datasources/apple_sign_in_data_source.dart'
     as _i815;
 import '../../features/auth/data/datasources/auth_api.dart' as _i367;
 import '../../features/auth/data/datasources/auth_session_store.dart' as _i348;
+import '../../features/auth/data/datasources/fresh_install_check.dart' as _i544;
 import '../../features/auth/data/datasources/google_sign_in_data_source.dart'
     as _i811;
 import '../../features/auth/data/repositories/auth_repository_impl.dart'
@@ -426,11 +441,17 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i504.TakePhoto>(() => _i504.TakePhoto(gh<_i956.MediaPicker>()));
     gh.factory<_i504.PickPdf>(() => _i504.PickPdf(gh<_i956.MediaPicker>()));
+    gh.lazySingleton<_i469.InstalledAppSource>(
+      () => _i469.PackageInfoInstalledAppSource(),
+    );
     gh.factory<_i295.PickVerificationProof>(
       () => _i295.PickVerificationProof(gh<_i1070.ProofFilePicker>()),
     );
     gh.lazySingleton<_i115.PhoneCountryMemory>(
       () => _i115.PhoneCountryMemory(gh<_i892.KeyValueStore>()),
+    );
+    gh.lazySingleton<_i725.UpdatePolicyCache>(
+      () => _i725.UpdatePolicyCache(gh<_i892.KeyValueStore>()),
     );
     gh.lazySingleton<_i1027.RecentSearchesStore>(
       () => _i1027.RecentSearchesStore(gh<_i892.KeyValueStore>()),
@@ -452,6 +473,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i815.AppleSignInDataSource>(),
       ),
     );
+    gh.lazySingleton<_i544.FreshInstallCheck>(
+      () => _i544.FreshInstallCheck(
+        gh<_i892.KeyValueStore>(),
+        gh<_i271.SecureStore>(),
+      ),
+    );
     await gh.singletonAsync<_i223.FirebaseStatus>(
       () => registerModule.firebase(gh<_i650.AppConfig>()),
       preResolve: true,
@@ -463,6 +490,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i46.ConfirmWithLinkedProvider>(
       () =>
           _i46.ConfirmWithLinkedProvider(gh<_i62.ExternalIdentityRepository>()),
+    );
+    gh.lazySingleton<_i147.AppUpdateApi>(
+      () => _i147.AppUpdateApi(gh<_i361.Dio>(instanceName: 'authDio')),
     );
     gh.lazySingleton<_i367.AuthApi>(
       () => _i367.AuthApi(gh<_i361.Dio>(instanceName: 'authDio')),
@@ -479,12 +509,25 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i223.FirebaseStatus>(),
       ),
     );
+    gh.lazySingleton<_i756.AppUpdateRepository>(
+      () => _i201.AppUpdateRepositoryImpl(
+        gh<_i147.AppUpdateApi>(),
+        gh<_i725.UpdatePolicyCache>(),
+        gh<_i469.InstalledAppSource>(),
+      ),
+    );
     gh.lazySingleton<_i348.AuthSessionStore>(
       () =>
           _i348.AuthSessionStore(gh<_i367.AuthApi>(), gh<_i271.SecureStore>()),
     );
+    gh.factory<_i773.CheckAppUpdate>(
+      () => _i773.CheckAppUpdate(gh<_i756.AppUpdateRepository>()),
+    );
     gh.lazySingleton<_i194.SessionTokenProvider>(
       () => authModule.sessionTokens(gh<_i348.AuthSessionStore>()),
+    );
+    gh.lazySingleton<_i764.AppUpdateCubit>(
+      () => _i764.AppUpdateCubit(gh<_i773.CheckAppUpdate>()),
     );
     gh.lazySingleton<_i361.Dio>(
       () => registerModule.dio(

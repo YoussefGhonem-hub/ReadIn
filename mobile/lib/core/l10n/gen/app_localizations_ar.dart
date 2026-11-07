@@ -5419,4 +5419,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get errQuoteCardOffline =>
       'يلزمك اتصال بالإنترنت لإنشاء بطاقة اقتباس.';
+
+  @override
+  String get updateRequiredTitle => 'حدِّث ReadIn';
+
+  @override
+  String get updateRequiredBody =>
+      'لم يعد هذا الإصدار مدعومًا. حدِّث التطبيق إلى أحدث إصدار لمتابعة القراءة.';
+
+  @override
+  String get updateRequiredAction => 'حدِّث الآن';
 }

@@ -1680,5 +1680,9 @@
   "errQuoteCardLimit": "You've made many quote cards this hour. Try again later.",
   "errQuoteCardBusy": "Many cards are being prepared right now. Try again in a moment.",
   "errQuoteCardFailed": "We couldn't prepare the quote card. Try again.",
-  "errQuoteCardOffline": "You need an internet connection to make a quote card."
+  "errQuoteCardOffline": "You need an internet connection to make a quote card.",
+
+  "updateRequiredTitle": "Update ReadIn",
+  "updateRequiredBody": "This version is no longer supported. Update to the latest version to keep reading.",
+  "updateRequiredAction": "Update now"
 }

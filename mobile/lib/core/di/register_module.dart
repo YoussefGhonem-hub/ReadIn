@@ -30,6 +30,7 @@ abstract class RegisterModule {
   Dio dio(AppConfig config, SessionTokenProvider session, CurrentLocale locale, DeviceNameProvider device) {
     final dio = _apiClient(config);
     dio.interceptors.addAll([
+      ClientInterceptor(),
       LanguageInterceptor(locale),
       DeviceNameInterceptor(device),
       AuthInterceptor(session, dio),
@@ -38,12 +39,13 @@ abstract class RegisterModule {
     return dio;
   }
 
-  /// For the anonymous `/auth/*` calls (sign in, refresh, recovery): no bearer token and no refresh, so refreshing
-  /// never waits on its own queue.
+  /// For the anonymous `/auth/*` calls (sign in, refresh, recovery) and the update check: no bearer token and no
+  /// refresh, so refreshing never waits on its own queue and the update check never waits on a refresh.
   @Named('authDio')
   @lazySingleton
   Dio authDio(AppConfig config, CurrentLocale locale, DeviceNameProvider device) => _apiClient(config)
     ..interceptors.addAll([
+      ClientInterceptor(),
       LanguageInterceptor(locale),
       DeviceNameInterceptor(device),
       if (config.flavor == Flavor.dev) LogInterceptor(requestBody: false, responseBody: false),

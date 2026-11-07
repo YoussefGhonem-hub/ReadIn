@@ -8,6 +8,8 @@ import '../core/di/injection.dart';
 import '../core/errors/failure.dart';
 import '../core/l10n/l10n_x.dart';
 import '../core/theme/app_theme.dart';
+import '../features/app_update/presentation/cubit/app_update_cubit.dart';
+import '../features/app_update/presentation/widgets/app_update_gate.dart';
 import '../features/article/presentation/cubit/engagement_cubit.dart';
 import '../features/auth/presentation/pages/sign_in_page.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
@@ -32,11 +34,21 @@ class SocialStores {
 }
 
 class ReadInApp extends StatefulWidget {
-  const ReadInApp({super.key, required this.session, required this.settings, required this.social, this.pushOpens});
+  const ReadInApp({
+    super.key,
+    required this.session,
+    required this.settings,
+    required this.social,
+    required this.appUpdate,
+    this.pushOpens,
+  });
 
   final SessionCubit session;
   final SettingsCubit settings;
   final SocialStores social;
+
+  /// The forced update check: while it says so, the Update page replaces the whole app.
+  final AppUpdateCubit appUpdate;
 
   /// Routes to open for tapped push notifications (SPEC §21.1).
   final Stream<String>? pushOpens;
@@ -69,6 +81,7 @@ class _ReadInAppState extends State<ReadInApp> {
       providers: [
         BlocProvider.value(value: widget.session),
         BlocProvider.value(value: widget.settings),
+        BlocProvider.value(value: widget.appUpdate),
         BlocProvider.value(value: getIt<StreakCubit>()), // follows the session itself (F08)
         BlocProvider.value(value: widget.social.engagement),
         BlocProvider.value(value: widget.social.follows),
@@ -95,12 +108,15 @@ class _ReadInAppState extends State<ReadInApp> {
                 supportedLocales: AppLocales.supported,
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 routerConfig: _router,
-                // Warnings and hidden-article notices over whatever screen is open, once past the splash (F22).
-                builder: (context, child) => ModerationNoticesHost(
-                  navigatorKey: _router.routerDelegate.navigatorKey,
-                  changes: _router.routerDelegate,
-                  canShow: () => _router.routerDelegate.currentConfiguration.uri.path != AppRoutes.splash,
-                  child: child!,
+                // Above the router, a required update replaces every screen, deep links and push taps included. Below
+                // it, warnings and hidden-article notices over whatever screen is open, once past the splash (F22).
+                builder: (context, child) => AppUpdateGate(
+                  child: ModerationNoticesHost(
+                    navigatorKey: _router.routerDelegate.navigatorKey,
+                    changes: _router.routerDelegate,
+                    canShow: () => _router.routerDelegate.currentConfiguration.uri.path != AppRoutes.splash,
+                    child: child!,
+                  ),
                 ),
               );
             },

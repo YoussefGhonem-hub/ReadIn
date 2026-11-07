@@ -13,6 +13,24 @@ import '../../helpers/fake_auth.dart';
 
 class MockAuthApi extends Mock implements AuthApi {}
 
+/// A Keychain whose write of the retry key waits for [gate].
+class _GatedKeyWrite extends FakeSecureStore {
+  _GatedKeyWrite(this.gate);
+
+  final Completer<void> gate;
+  bool waiting = false;
+
+  @override
+  Future<void> write(String key, String value) async {
+    if (key == AuthSessionStore.retryKeyKey) {
+      waiting = true;
+      await gate.future;
+      waiting = false;
+    }
+    await super.write(key, value);
+  }
+}
+
 void main() {
   setUpAll(() => registerFallbackValue(const RefreshRequest('')));
 
@@ -125,6 +143,145 @@ void main() {
     expect(await store.refreshToken(), isNull);
     expect(await store.accessToken(), isNull);
     expect(users, [null]);
+  });
+
+  group('the refresh retry key', () {
+    final base64UrlKey = matches(RegExp(r'^[A-Za-z0-9_-]{43}$')); // 32 bytes, no padding
+    String? sentKey(int call) => (verify(() => api.refresh(captureAny())).captured[call] as RefreshRequest).retryKey;
+    String pendingFor(String token, String key) => '${AuthSessionStore.tokenTag(token)}:$key';
+
+    test('is stored with the token before the refresh is sent, sent with it, and removed after a success', () async {
+      secure.values[AuthSessionStore.refreshTokenKey] = 'r1';
+      String? storedWhenSent;
+      when(() => api.refresh(any())).thenAnswer((_) async {
+        storedWhenSent = secure.values[AuthSessionStore.retryKeyKey];
+        return session('a2', 'r2');
+      });
+
+      expect((await store.refresh()).isOk, isTrue);
+
+      final request = verify(() => api.refresh(captureAny())).captured.single as RefreshRequest;
+      expect(request.refreshToken, 'r1');
+      expect(request.retryKey, base64UrlKey);
+      expect(request.toJson(), {'refreshToken': 'r1', 'retryKey': request.retryKey});
+      expect(storedWhenSent, pendingFor('r1', request.retryKey!));
+      expect(secure.values, {AuthSessionStore.refreshTokenKey: 'r2'});
+    });
+
+    for (final (name, error) in [
+      ('a network error', offline('/auth/refresh')),
+      (
+        'a timeout',
+        DioException(requestOptions: RequestOptions(path: '/auth/refresh'), type: DioExceptionType.receiveTimeout),
+      ),
+    ]) {
+      test('after $name, keeps both and sends the same token with the same key again', () async {
+        secure.values[AuthSessionStore.refreshTokenKey] = 'r1';
+        when(() => api.refresh(any())).thenThrow(error);
+        expect((await store.refresh()).isOk, isFalse);
+        final key = sentKey(0);
+        expect(secure.values, {AuthSessionStore.refreshTokenKey: 'r1', AuthSessionStore.retryKeyKey: pendingFor('r1', key!)});
+
+        when(() => api.refresh(any())).thenAnswer((_) async => session('a2', 'r2'));
+        expect((await store.refresh()).isOk, isTrue);
+
+        final retry = verify(() => api.refresh(captureAny())).captured.single as RefreshRequest;
+        expect(retry.refreshToken, 'r1');
+        expect(retry.retryKey, key);
+        expect(secure.values, {AuthSessionStore.refreshTokenKey: 'r2'});
+      });
+    }
+
+    test('a key left by a refresh the app never heard back from is sent again after a restart', () async {
+      secure.values
+        ..[AuthSessionStore.refreshTokenKey] = 'r1'
+        ..[AuthSessionStore.retryKeyKey] = pendingFor('r1', 'k-pending');
+      when(() => api.refresh(any())).thenAnswer((_) async => session('a2', 'r2'));
+
+      await store.refresh();
+
+      expect(sentKey(0), 'k-pending');
+      expect(secure.values.containsKey(AuthSessionStore.retryKeyKey), isFalse);
+    });
+
+    test('a key made for another token is never sent with this one', () async {
+      secure.values
+        ..[AuthSessionStore.refreshTokenKey] = 'r1'
+        ..[AuthSessionStore.retryKeyKey] = pendingFor('r0', 'k-old');
+      when(() => api.refresh(any())).thenThrow(offline('/auth/refresh'));
+
+      await store.refresh();
+
+      final key = sentKey(0);
+      expect(key, allOf(base64UrlKey, isNot('k-old')));
+      expect(secure.values[AuthSessionStore.retryKeyKey], pendingFor('r1', key!));
+    });
+
+    test('a new token from anywhere else (sign in) drops the pending key', () async {
+      secure.values[AuthSessionStore.refreshTokenKey] = 'r1';
+      when(() => api.refresh(any())).thenThrow(offline('/auth/refresh'));
+      await store.refresh();
+      expect(secure.values.containsKey(AuthSessionStore.retryKeyKey), isTrue);
+
+      await store.save(session('a9', 'r9'));
+
+      expect(secure.values, {AuthSessionStore.refreshTokenKey: 'r9'});
+    });
+
+    test('a 401 removes it with the token', () async {
+      secure.values[AuthSessionStore.refreshTokenKey] = 'r1';
+      when(() => api.refresh(any())).thenThrow(offline('/auth/refresh'));
+      await store.refresh();
+      when(() => api.refresh(any())).thenThrow(httpError('/auth/refresh', 401, code: 'auth.refresh_invalid'));
+
+      await store.refresh();
+
+      expect(sentKey(0), isNotNull);
+      expect(secure.values, isEmpty);
+    });
+
+    test('clear (sign out) removes it with the token', () async {
+      secure.values[AuthSessionStore.refreshTokenKey] = 'r1';
+      when(() => api.refresh(any())).thenThrow(offline('/auth/refresh'));
+      await store.refresh();
+
+      await store.clear();
+
+      expect(secure.values, isEmpty);
+    });
+
+    test('callers that arrive while the key is being stored join the same refresh (single-flight)', () async {
+      final gate = Completer<void>();
+      final slow = _GatedKeyWrite(gate)..values[AuthSessionStore.refreshTokenKey] = 'r1';
+      final store = AuthSessionStore(api, slow, clock: () => now);
+      when(() => api.refresh(any())).thenAnswer((_) async => session('a2', 'r2'));
+
+      final first = store.refresh();
+      await pumpEventQueue();
+      expect(slow.waiting, isTrue, reason: 'the refresh now waits on the key write');
+      final second = store.refresh();
+      final afterRejection = store.refreshAfterRejection('a-rejected');
+      final access = store.accessToken();
+      verifyNever(() => api.refresh(any()));
+      gate.complete();
+
+      expect(identical(first, second), isTrue);
+      expect((await Future.wait([first, second])).map((r) => r.isOk), [true, true]);
+      expect(await afterRejection, 'a2');
+      expect(await access, 'a2');
+      verify(() => api.refresh(any())).called(1);
+      expect(slow.values, {AuthSessionStore.refreshTokenKey: 'r2'});
+    });
+
+    test('is a new random key for every token', () {
+      final keys = {for (var i = 0; i < 20; i++) AuthSessionStore.newRetryKey()};
+      expect(keys, hasLength(20));
+      expect(keys, everyElement(base64UrlKey));
+    });
+
+    test('is left out of the sign-out body', () {
+      expect(const RefreshRequest('r1').toJson(), {'refreshToken': 'r1'});
+    });
   });
 
   group('a suspended account (F22)', () {

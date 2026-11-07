@@ -86,6 +86,19 @@ class DeviceNameInterceptor extends Interceptor {
   }
 }
 
+/// `X-ReadIn-Client: mobile` on every call: the API gives the app's sessions a long sliding lifetime, so they last
+/// until the user signs out or deletes the app.
+class ClientInterceptor extends Interceptor {
+  static const header = 'X-ReadIn-Client';
+  static const value = 'mobile';
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    options.headers[header] = value;
+    handler.next(options);
+  }
+}
+
 /// `Accept-Language: ar|en` controls error messages and taxonomy names (SPEC §17.1).
 class LanguageInterceptor extends Interceptor {
   LanguageInterceptor(this._locale);

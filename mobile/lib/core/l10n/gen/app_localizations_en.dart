@@ -5330,4 +5330,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errQuoteCardOffline =>
       'You need an internet connection to make a quote card.';
+
+  @override
+  String get updateRequiredTitle => 'Update ReadIn';
+
+  @override
+  String get updateRequiredBody =>
+      'This version is no longer supported. Update to the latest version to keep reading.';
+
+  @override
+  String get updateRequiredAction => 'Update now';
 }
