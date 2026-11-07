@@ -86,13 +86,58 @@ class ExternalProviderButton extends StatelessWidget {
   }
 }
 
+/// The provider's mark alone in a small round button (Sign in): Google outlined, Apple black (white in dark mode). The
+/// full "Continue with …" is its tooltip and its name for screen readers.
+class ExternalProviderIconButton extends StatelessWidget {
+  const ExternalProviderIconButton({super.key, required this.provider, required this.onPressed, this.busy = false});
+
+  static const double size = 48;
+
+  final ExternalProvider provider;
+  final VoidCallback? onPressed;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final label = switch (provider) {
+      ExternalProvider.google => l10n.continueWithGoogle,
+      ExternalProvider.apple => l10n.continueWithApple,
+    };
+    final apple = context.isDark ? Colors.white : Colors.black;
+    final (background, foreground, side) = switch (provider) {
+      ExternalProvider.google => (colors.surface, colors.textPrimary, BorderSide(color: colors.border)),
+      ExternalProvider.apple => (apple, context.isDark ? Colors.black : Colors.white, BorderSide.none),
+    };
+    return IconButton(
+      tooltip: busy ? '$label, ${l10n.loading}' : label,
+      onPressed: busy ? null : onPressed,
+      style: IconButton.styleFrom(
+        fixedSize: const Size.square(size),
+        backgroundColor: background,
+        foregroundColor: foreground,
+        disabledBackgroundColor: background.withValues(alpha: busy ? 1 : 0.5),
+        side: side,
+        shape: const CircleBorder(),
+      ),
+      icon: busy
+          ? SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2, color: foreground))
+          : ExternalProviderIcon(provider, size: 22, color: foreground),
+    );
+  }
+}
+
 /// The Google / Apple buttons of Welcome and Sign in (SPEC §9.2), and the "not linked yet" choice that follows a new
 /// identity. Needs an [ExternalSignInCubit] above it.
 class ExternalSignInButtons extends StatelessWidget {
-  const ExternalSignInButtons({super.key, this.beforeStart});
+  const ExternalSignInButtons({super.key, this.beforeStart, this.compact = false});
 
   /// Runs before a provider's sheet opens (Welcome marks itself as seen).
   final Future<void> Function()? beforeStart;
+
+  /// Only the marks, in small round buttons side by side (Sign in, where the showcase needs the room).
+  final bool compact;
 
   Future<void> _start(BuildContext context, ExternalProvider provider) async {
     final cubit = context.read<ExternalSignInCubit>();
@@ -123,7 +168,22 @@ class ExternalSignInButtons extends StatelessWidget {
         builder: (context, state) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final (index, provider) in state.providers.indexed) ...[
+            if (compact)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (final (index, provider) in state.providers.indexed) ...[
+                    if (index > 0) const SizedBox(width: ReadInSpace.s4),
+                    ExternalProviderIconButton(
+                      provider: provider,
+                      busy: state.busy == provider,
+                      onPressed: state.submitting ? null : () => _start(context, provider),
+                    ),
+                  ],
+                ],
+              )
+            else
+              for (final (index, provider) in state.providers.indexed) ...[
               if (index > 0) const SizedBox(height: ReadInSpace.s3),
               ExternalProviderButton(
                 provider: provider,

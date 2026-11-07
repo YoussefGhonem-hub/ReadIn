@@ -370,13 +370,12 @@ class AuthShowcaseHeader extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(
                   top: MediaQuery.paddingOf(context).top,
-                  bottom: sheetOverlap + ReadInSpace.s4,
+                  bottom: sheetOverlap + ReadInSpace.s2,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _TopRow(palette: palette),
-                    const SizedBox(height: ReadInSpace.s2),
                     const ExcludeSemantics(child: _Stage()),
                   ],
                 ),
@@ -399,7 +398,7 @@ class _TopRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final canPop = ModalRoute.of(context)?.impliesAppBarDismissal ?? false;
     return SizedBox(
-      height: kToolbarHeight,
+      height: 48,
       child: Row(
         children: [
           if (canPop) BackButton(color: palette.ink) else const SizedBox(width: ReadInSpace.s5),
@@ -517,7 +516,8 @@ class _Stage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
-          final scale = math.min(0.75, (constraints.maxWidth - 2 * ReadInSpace.s4) / _size.width);
+          // As large as the whole screen allows: with the form under it, it still fits a 390 × 844 phone unscrolled.
+          final scale = math.min(0.72, (constraints.maxWidth - 2 * ReadInSpace.s4) / _size.width);
           return SizedBox(
             width: _size.width * scale,
             height: _size.height * scale,

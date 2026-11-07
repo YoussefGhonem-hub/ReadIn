@@ -52,7 +52,7 @@ class SignInPage extends StatelessWidget {
           builder: (_, hasProviders) => SignInView(
             args: args,
             showDevLogin: !kReleaseMode && DevLogin.available,
-            alternatives: [if (hasProviders) const ExternalSignInButtons()],
+            alternatives: [if (hasProviders) const ExternalSignInButtons(compact: true)],
           ),
         ),
       );
@@ -155,7 +155,7 @@ class _SignInViewState extends State<SignInView> {
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 480),
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s6, ReadInSpace.s5, ReadInSpace.s5),
+                            padding: const EdgeInsets.fromLTRB(ReadInSpace.s5, ReadInSpace.s5, ReadInSpace.s5, ReadInSpace.s2),
                             child: _form(context),
                           ),
                         ),
@@ -170,6 +170,9 @@ class _SignInViewState extends State<SignInView> {
       ),
     );
   }
+
+  /// The text links (forgot password, create account): no extra height around them, so the whole screen fits.
+  static final _compactLink = TextButton.styleFrom(minimumSize: const Size(48, 40), visualDensity: VisualDensity.compact);
 
   Widget _form(BuildContext context) {
     final l10n = context.l10n;
@@ -192,7 +195,7 @@ class _SignInViewState extends State<SignInView> {
               'subtitle',
               Text(l10n.signInSubtitle, style: context.textTheme.bodyMedium?.copyWith(color: colors.textSecondary)),
             ),
-            const SizedBox(height: ReadInSpace.s5),
+            const SizedBox(height: ReadInSpace.s4),
             // Read from the arguments (not kept): Delete account replaces this route's arguments once it's done.
             if (widget.args.accountDeleted && !_passwordReset && state.failure == null) ...[
               rise('deleted', FormBanner(message: l10n.accountDeleted, tone: BannerTone.success)),
@@ -235,10 +238,10 @@ class _SignInViewState extends State<SignInView> {
               'forgot',
               Align(
                 alignment: AlignmentDirectional.centerEnd,
-                child: TextButton(onPressed: busy ? null : _forgotPassword, child: Text(l10n.forgotPassword)),
+                child: TextButton(style: _compactLink, onPressed: busy ? null : _forgotPassword, child: Text(l10n.forgotPassword)),
               ),
             ),
-            const SizedBox(height: ReadInSpace.s2),
+            const SizedBox(height: ReadInSpace.s1),
             // The sign-in actions: the phone sign in first, then any alternatives under "أو".
             rise(
               'actions',
@@ -247,9 +250,9 @@ class _SignInViewState extends State<SignInView> {
                 children: [
                   AuthButtonMotion(child: SubmitButton(label: l10n.signIn, submitting: busy, onPressed: _submit)),
                   if (widget.alternatives.isNotEmpty) ...[
-                    const SizedBox(height: ReadInSpace.s5),
-                    const OrDivider(),
                     const SizedBox(height: ReadInSpace.s4),
+                    const OrDivider(),
+                    const SizedBox(height: ReadInSpace.s3),
                     ...widget.alternatives,
                   ],
                 ],
@@ -266,7 +269,7 @@ class _SignInViewState extends State<SignInView> {
                 ),
               ),
             ],
-            const SizedBox(height: ReadInSpace.s5),
+            const SizedBox(height: ReadInSpace.s2),
             rise(
               'footer',
               Wrap(
@@ -274,7 +277,11 @@ class _SignInViewState extends State<SignInView> {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(l10n.noAccount, style: context.textTheme.bodyMedium),
-                  TextButton(onPressed: () => context.pushReplacement('/auth/sign-up'), child: Text(l10n.createAccountLink)),
+                  TextButton(
+                    style: _compactLink,
+                    onPressed: () => context.pushReplacement('/auth/sign-up'),
+                    child: Text(l10n.createAccountLink),
+                  ),
                 ],
               ),
             ),

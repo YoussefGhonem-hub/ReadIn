@@ -201,7 +201,7 @@ void main() {
       await pumpScreen(
         tester,
         variant,
-        const SignInView(alternatives: [ExternalSignInButtons()]),
+        const SignInView(alternatives: [ExternalSignInButtons(compact: true)]),
         providers: [
           BlocProvider<SignInCubit>.value(value: MockSignInCubit()..seed(const SignInState())),
           BlocProvider<ExternalSignInCubit>.value(
