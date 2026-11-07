@@ -497,8 +497,10 @@ Later decisions (user, 2026-11-05):
   `D:\tmp\readin-ssl`, outside git) and imported in the panel; they expire on 2027-02-05 and must be renewed and
   re-imported in early January 2027. Open: Google sign-in on the web needs `https://readin.online` in the OAuth
   client's JavaScript origins (user); `/.well-known/assetlinks.json` answers 404 until `ANDROID_APP_ID` and
-  `ANDROID_CERT_SHA256` are set on the web server, so Android opens `readin.online` links in the browser; live updates
-  and push need the Firebase service account (`realtime/token` answers 500). Still on `readin.app`: the API's
+  `ANDROID_CERT_SHA256` are set on the web server, so Android opens `readin.online` links in the browser. The Firebase
+  Admin SDK key is on the API server since 2026-11-07 (in the deploy kit's `config.env`, outside git):
+  `realtime/token` answers 200 and the web's live connection works; push to a real device is not tried yet, and iOS
+  push also needs the APNs key uploaded in Firebase (user). Still on `readin.app`: the API's
   `Jwt:Issuer` default (a name only), the public legal pages, and the SPEC.
 
 ### Content check: HTTP 429 is a warning ✅ (c416c55)
