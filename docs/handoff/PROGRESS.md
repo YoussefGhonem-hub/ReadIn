@@ -472,6 +472,14 @@ Later decisions (user, 2026-11-05):
   verification, taxonomy, paths, announcements, an audit log and system health, plus admin actions in the normal
   menus. A new **F35 Help & Support Tickets** was added, with permissions, tables and API rows (§10.2, §16, §17.2),
   §9.6 rows and §22 search misses. Nothing is built; F23 and F35 start only when the user says so.
+- **F23 + F35 built, 2026-11-07 (user: "build the SuperAdmin features; unit tests and working APIs only, no Playwright,
+  no mobile goldens").** Backend, web and mobile, per the contract's "Admin console (F23)" and "Support (F35)" sections
+  (their Decisions and "As built" lists). Two migrations: `AdminConsole` (last seen in its own `UserPresence` table,
+  because `Users` has a row version) and `SupportTickets`. Tested with backend integration + unit tests and web/mobile
+  unit and widget tests only. **Not done for these screens:** Playwright specs and baselines (the `/settings`,
+  `/settings/notifications` and any `/moderation` e2e baselines need updating when the full suite runs next), new
+  mobile goldens. Also fixed: `SitemapTests` (it used a field the fixture taxonomy doesn't have) and the two
+  order-dependent `MediaTests` (they now look for their card on any page of the For you feed).
 - **Blocked, needs the user (2026-11-06):** GitHub Actions stopped starting jobs from 5fd40c08 (F24) on: "The job was
   not started because recent account payments have failed or your spending limit needs to be increased" (GitHub →
   Settings → Billing & plans). The last runs that did start (f6551dee) passed. Until billing is fixed, CI can't check
