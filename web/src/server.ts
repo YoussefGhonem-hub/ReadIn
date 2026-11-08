@@ -8,6 +8,7 @@ import express from 'express';
 import { join } from 'node:path';
 import { environment } from './environments/environment';
 import { appLinksConfig, appleAppSiteAssociation, assetLinks } from './server/app-links';
+import { LEGAL_REDIRECTS, legalRedirectUrl } from './server/legal-redirects';
 import { SITEMAP_FILES, SitemapData, createSitemapSource, robotsTxt, sitemapIndexXml, sitemapXml } from './server/sitemap';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -53,6 +54,15 @@ app.get(SITEMAP_FILES.index, sitemap((data) => sitemapIndexXml(environment.siteU
 app.get(SITEMAP_FILES.ar, sitemap((data) => sitemapXml(environment.siteUrl, 'ar', data)));
 app.get(SITEMAP_FILES.en, sitemap((data) => sitemapXml(environment.siteUrl, 'en', data)));
 app.get(SITEMAP_FILES.pages, sitemap((data) => sitemapXml(environment.siteUrl, 'pages', data)));
+
+/**
+ * The privacy policy and "Delete your account" live on Firebase Hosting (server/legal-redirects.ts); the apps open them
+ * here. 302, so a page of our own can replace either later without browsers holding on to the redirect.
+ */
+const legalOrigin = new URL(environment.accountDeletionUrl).origin;
+for (const path of LEGAL_REDIRECTS) {
+  app.get(path, (req, res) => res.redirect(302, legalRedirectUrl(legalOrigin, path, req.originalUrl)));
+}
 
 /**
  * Serve static files from /browser
