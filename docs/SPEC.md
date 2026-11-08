@@ -50,6 +50,7 @@
 29. [Git Workflow & Conventions](#29-git-workflow--conventions)
 30. [Roadmap](#30-roadmap)
 31. [Definition of Done](#31-definition-of-done)
+32. [App Store & Google Play Review Readiness](#32-app-store--google-play-review-readiness)
 
 ---
 
@@ -550,6 +551,8 @@ Sign in ─► Forgot password ─► (phone + PIN) ─► New password ─► S
 2. **Recovery PIN:** "اعمل PIN للطوارئ", explanation that it is needed if the password is forgotten, PIN input + confirm PIN. Errors for a mismatch or missing digits.
 3. **Confirm your number** (dialog): the number in large LTR text with the warning "هتستخدم الرقم ده في تسجيل الدخول، ومش هتقدر تسترجع حسابك لو الرقم غلط." Buttons: "صح، اعمل الحساب" / "تعديل".
 
+**Terms acceptance (every new account, phone or Google/Apple):** before the account is created, a required checkbox: "موافق على [شروط الاستخدام] و[قواعد المجتمع]، ومفيش أي تسامح مع المحتوى المسيء أو المستخدمين اللي بيسيئوا" / "I agree to the [Terms of Use] and [Community Guidelines]. There is zero tolerance for objectionable content or abusive users." The button stays disabled until it is ticked; the links open `/terms` and `/community-guidelines`. Details in [F37](#f37--terms-acceptance--content-filter).
+
 Then **Complete profile** (display name, unique `@username` with live availability check, optional avatar, optional title) → **Onboarding** ([F02](#f02--onboarding-3-steps)).
 
 **Forgot password:**
@@ -662,6 +665,8 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 | Writer categories (F31) | `WriterCategories`, `Articles.WriterCategoryId` | **Deleted** (cascade); the published articles that stay lose their category (`ON DELETE SET NULL`) | They only group the writer's own articles |
 | Highlights (F30): the account's own highlights | `ArticleHighlights` | **Deleted** (cascade from `Users`); the cached popular ranges of the articles it highlighted are dropped right after, so its marks stop counting at once. Highlights on its deleted articles go with those articles; other people's highlights on its kept articles stay | They were private; popular ranges never said who marked them |
 | Mutes and "show less" marks (F28): the writers, fields and topics the account muted, other people's mutes of the account, its "show less" marks | `UserMutes`, `ContentMutes`, `ArticleFeedback` | **Deleted** (cascade from `Users`; mutes *of* the account deleted explicitly) | Private choices; nobody was ever told about them |
+| Blocks (F36): the people the account blocked and other people's blocks of the account | `UserBlocks` | **Deleted** (both directions) | Private choices |
+| Terms acceptance (F37): accepted version and date | `Users` | **Deleted** with the row | |
 | Database, uploads and private files backups | backup storage | **Retained up to 14 days**, then overwritten | Disaster recovery ([deployment](setup/deployment.md)) |
 | Server logs | Serilog sink | May hold the account id and masked phone numbers (§9.5) for the log store's retention | Operations |
 
@@ -694,6 +699,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 | `comments.create` / `reactions.create` / `reposts.create` / `highlights.create` | | ✅ | ✅ |
 | `follows.manage` / `saved.manage` | | ✅ | ✅ |
 | `reports.create` | | ✅ | ✅ |
+| `users.block` (block and unblock people, F36) | | ✅ | ✅ |
 | `support.create` (send and follow your own tickets, F35) | | ✅ | ✅ |
 | `admin.access` (the admin console and its dashboard, F23) | | | ✅ |
 | `users.read` (list and open any account in the console) | | | ✅ |
@@ -899,7 +905,7 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
 ### F17 — Notifications
 **Built.** API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Notifications", "Push payloads"); details in [§21.1](#211-notifications).
 - In-app notification center (SQL `Notifications` table, live unread badge via Firebase Realtime Database) + push (FCM).
-- Types: new follower, reply to your comment, mention (comments and articles), reactions milestone (10/50/100), comment on your article, verification result (F19: approved or rejected), daily article, streak reminder (20:00, if not read yet), new article from a followed writer, repost of your article (`article_reposted`, F29), **security alerts** (password/PIN/phone changed, recovery lockout, Google/Apple linked or unlinked), moderation notices (F22), a support reply (`support_reply`, F35), a new support ticket for admins (`support_ticket`, F35) and announcements (`announcement`, F23; can be turned off).
+- Types: new follower, reply to your comment, mention (comments and articles), reactions milestone (10/50/100), comment on your article, verification result (F19: approved or rejected), daily article, streak reminder (20:00, if not read yet), new article from a followed writer, repost of your article (`article_reposted`, F29), **security alerts** (password/PIN/phone changed, recovery lockout, Google/Apple linked or unlinked), moderation notices (F22), a support reply (`support_reply`, F35), a new support ticket for admins (`support_ticket`, F35), announcements (`announcement`, F23; can be turned off), a new report for staff (`report_new`, F22; push + in-app, at most one per target per hour, can be turned off) and the outcome of your report (`report_resolved`, F22; in-app only). Nothing from a blocked person is ever sent (F36).
 - Per-type preferences (push / in-app / off), quiet hours. Details in [§21](#21-notifications--real-time).
 
 ### F18 — Settings
@@ -908,6 +914,8 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
 - Article language preference, daily reminder time, notification preferences, font size.
 - Privacy: public reading stats on/off, who can mention me (**Everyone**, the default / **People I follow** / **Nobody**; you can always mention yourself, and deleted, suspended and system accounts are never linked). Checked by the mention suggestions, by comments when they are written or edited (existing comments keep their mentions), and by articles at every publish and Update.
 - **Muted:** muted writers, fields and topics, with unmute ([F28](#f28--article-menu-mute--show-less)).
+- **Blocked:** "المحظورين" / "Blocked accounts", the people you blocked with when, each with "إلغاء الحظر" / "Unblock" ([F36](#f36--block-users-الحظر)).
+- **Legal:** links to the Terms of Use, Community Guidelines and Privacy Policy ([F37](#f37--terms-acceptance--content-filter)).
 - Show or hide highlights ([F30](#f30--highlights)).
 - **Account:**
   - Phone number (visible to the owner only) + "تغيير الرقم" (new number + current password + confirm-number dialog).
@@ -944,6 +952,15 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
 - **Suspension:** the account is blocked at once (`403 user.suspended` on every call and on sign in, with when it ends); a temporary suspension ends by itself.
 - **Notices:** a warning or a hidden article is a notice (dialog with "فهمت") the user acknowledges, with a push.
 - Full **moderation log** (`ModerationActions`) of every action that changed something; actions on a user's content or account are also in `AuditLogs`.
+
+**Required for the App Store and Google Play (Guideline 1.2, added 2026-11-08 after the App Review request):**
+- **Report is everywhere a member sees someone else's content:** the article "⋯" (F28), every comment and reply "⋯", the profile "⋯", and a repost card's "⋯". Each opens the same report sheet. Never shown on your own content.
+- **The reporter stops seeing it at once.** After a report is sent, the reported article or comment is hidden **for the reporter only** (collapsed to "بلّغت عن ده، ومش هيظهرلك تاني" / "You reported this. It's hidden for you", with "عرض" / "Show"). A reported user stays visible unless the reporter also blocks them.
+- **"Report and block":** the report sheet has a "حظر @username كمان" / "Also block @username" checkbox (default off), which blocks the author in the same step ([F36](#f36--block-users-الحظر)).
+- **Timely action (24 hours):** every open report must be resolved or dismissed within **24 hours**. The console shows each case's age, cases older than 12 hours are marked "عاجل" / "Urgent", and the dashboard shows the number of open reports past 24 hours (target: 0).
+- **Staff are told at once:** a new report sends `report_new` (F17, push + in-app) to holders of `moderation.manage`, link `readin://admin/reports/{targetType}/{targetId}`. One push per target per hour, however many reports arrive. They can turn it off.
+- **The reporter is told the outcome:** `report_resolved` (F17, in-app only): "راجعنا بلاغك، وشيلنا المحتوى" / "We reviewed your report and removed the content", or "راجعنا بلاغك، والمحتوى مش مخالف لقواعد المجتمع" / "We reviewed your report; the content doesn't break our guidelines". It never names the moderator or the action taken on a user.
+- **Filtered content** ([F37](#f37--terms-acceptance--content-filter)) arrives in this queue as a report from the system ("فلتر المحتوى" / "Content filter"), with the matched terms shown to staff.
 
 ### F23 — Admin Console (لوحة التحكم)
 **Built 2026-11-07 (user request, same day).** The API and the decisions it settled are in [`docs/api/contract-v1.md`](api/contract-v1.md) ("Admin console (F23)"). Before it, the SuperAdmin used the same screens as a member, plus "الإشراف" in Settings and the web's verification queue. F23 gives the SuperAdmin a console of their own, and admin actions inside the normal app. There is no role management, because the only account roles are Member and SuperAdmin (§10).
@@ -1122,7 +1139,7 @@ Mute author (كتم / إلغاء الكتم) is also on a profile's "⋯" (not o
 - A muted writer's activity sends you no notifications.
 - Opening a direct link still works, so the reader can reach the Unmute action. A banner says "انت كاتم الكاتب ده" with "إلغاء الكتم".
 - Muting is private: the muted writer is not told and keeps seeing your content.
-- Mute is ReadIn's answer to the App Store's requirement to let people block abusive users (Guideline 1.2). Apple's review decides whether it is enough; if not, a separate Block action is needed.
+- Mute is the light, private option. The App Store's requirement to block abusive users (Guideline 1.2) is met by **Block** ([F36](#f36--block-users-الحظر)), which App Review asked for on 2026-11-07. Wherever Mute appears for a person, Block appears under it.
 
 **Settings → Muted (F18):** one list of muted writers, fields and topics, each with an unmute action.
 
@@ -1376,6 +1393,55 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 
 **API:** see §17.2 ("Support").
 
+### F36 — Block Users (الحظر)
+**Added 2026-11-08 (App Review, Guideline 1.2).** Mute (F28) is private and one-way. Block cuts all contact between two people, both ways.
+
+**Where (web + mobile, identical):**
+- The profile "⋯": "حظر @username" / "Block @username" (or "إلغاء الحظر" / "Unblock").
+- A comment's or reply's "⋯": blocks the commenter.
+- The article "⋯" (F28): blocks the author.
+- The report sheet: the "Also block" checkbox (F22).
+- Settings → Blocked accounts (F18): the list, with Unblock.
+- Never on your own content or profile. Guests get the sign-in prompt.
+
+**Confirmation:** a dialog: "حظر @username؟" / "Block @username?", with "مش هتشوفوا مقالات أو تعليقات بعض، ومش هتقدروا تتابعوا أو تذكروا أو تعلّقوا عند بعض. مش هيتبعتله إشعار." / "You won't see each other's articles or comments, and neither of you can follow, mention or comment on the other's content. They won't be notified." Buttons: "حظر" (error color) / "إلغاء". After it: a toast with Undo.
+
+**What a block does (both directions, A blocks B):**
+- **Follows** between A and B are removed both ways, and neither can follow the other.
+- **Articles and reposts** of each disappear for the other from every feed, Today's article, Related, Explore, Search, field pages, saved lists and collections. A direct link shows "المحتوى ده مش متاح" / "This content isn't available", plus "إلغاء الحظر" for A.
+- **Comments and replies** of each are hidden for the other; replies by others under them stay. Neither can comment, reply, react or highlight on the other's articles (`403 block.blocked`).
+- **Profiles:** each sees the other's profile as "الحساب ده مش متاح" / "This account isn't available" (A also sees Unblock). Their names disappear from each other's followers/following lists and mention suggestions.
+- **Mentions:** neither can mention the other. An existing mention stays as plain text without a link.
+- **Notifications:** nothing either does reaches the other, and pending notifications from the other are removed.
+- **B is never told.** B sees A's content as unavailable, exactly as if A had deleted it.
+- **Unblock** restores visibility. Follows don't come back.
+
+**Rules:**
+- You can't block yourself (`400 block.self`).
+- The official `@readin` account and staff can be blocked like anyone. Blocking doesn't hide content from moderators, and a staff member's moderation actions still apply.
+- At most 1,000 blocks per account; blocking twice is a no-op.
+
+**Data and API:** `UserBlocks` (§16.2), `PUT /users/{id}/block`, `DELETE /users/{id}/block`, `GET /me/blocked` (§17.2). Deleting either account deletes the row (§9.6).
+
+### F37 — Terms Acceptance & Content Filter
+**Added 2026-11-08 (App Review, Guideline 1.2).** Apple requires that users agree to terms with zero tolerance for objectionable content, and that the app filters objectionable material.
+
+**Terms of Use and Community Guidelines**
+- **Public pages** (web, bilingual, linked from the App Store listing, sign up, Settings → Legal and the web footer): `/terms`, `/community-guidelines`, `/privacy` (exists).
+- **The Community Guidelines** list what isn't allowed: hate speech, harassment and threats, sexual content, violence, spam and scams, impersonation, sharing other people's private data, copyright infringement, and medical or financial misinformation. They also state the consequences: content removed, warning, suspension or a permanent ban, and that reports are reviewed within 24 hours.
+- **Accepting:** sign up requires the checkbox (§9.2). The API refuses `POST /auth/register` and new Google/Apple accounts without `acceptTerms: true` (`400 auth.terms_required`) and stores `Users.TermsVersion` + `TermsAcceptedAt`.
+- **A new version** (`Legal:TermsVersion` in configuration): signed-in users whose version is older see a blocking screen with the changes and "موافق" / "I agree" before using the app (`POST /me/terms/accept`). Declining offers sign out or delete account.
+
+**Content filter (objectionable material)**
+- **Where it runs:** on article titles and text (every language version, on publish and Update), comments and replies, display names, @usernames, headlines, bios, collection names and support ticket subjects. Server side; the apps only show the result.
+- **Word lists:** `content/moderation/` with Arabic (including Egyptian and Franco-Arabic spellings) and English lists in two levels. Matching uses the Arabic normalization of §22 (diacritics, tatweel, letter variants) and ignores repeated letters and separators.
+- **Block level** (slurs, explicit sexual terms, threats): the text is refused with `422 content.objectionable`: "الكلام ده مخالف لقواعد المجتمع، عدّله وجرّب تاني" / "This text breaks our Community Guidelines. Edit it and try again". The matched words are not shown back.
+- **Flag level** (insults, likely spam such as repeated links or phone numbers): the text is published, and a system report (F22) goes to the moderation queue.
+- **Spam limits:** at most 5 articles a day and 60 comments an hour per account, on top of the existing rate limits (`429 content.too_many`).
+- The lists can be edited by the SuperAdmin in the console (Settings → System, F23) without a release. Every change is in the audit log.
+
+**Data and API:** `Users.TermsVersion`, `Users.TermsAcceptedAt`, `ContentFilterTerms` (§16.2), `GET /legal` (current terms version and page links), `POST /me/terms/accept`, `GET/PUT /admin/content-filter` (§17.2).
+
 ---
 
 ## 12. Feature Parity Matrix (Web + Mobile)
@@ -1403,7 +1469,7 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 | F19 | Writer Verification | ✅ | ✅ | 2 |
 | F20 | ~~Review Workflow~~ (removed, ADR 0015) | — | — | — |
 | F21 | Glossary | ✅ | ✅ | 3 |
-| F22 | Reporting & Moderation | ✅ | ✅ | 2 |
+| F22 | Reporting & Moderation | ✅ | ✅ | 1 (store requirement) |
 | F23 | Admin Console | ✅ | ✅ | 2 |
 | F24 | Sharing | ✅ | ✅ | 2 |
 | F25 | Offline | ✅ | ✅ | 3 |
@@ -1416,7 +1482,9 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 | F32 | Tags | ✅ | ✅ | 1 |
 | F33 | Download Article PDF | ✅ | ✅ | 2 |
 | F34 | Post-style Feed Card | ✅ | ✅ | 1 |
-| F35 | Help & Support Tickets | ✅ | ✅ | 2 |
+| F35 | Help & Support Tickets | ✅ | ✅ | 1 (store requirement) |
+| F36 | Block Users | ✅ | ✅ | 1 (store requirement) |
+| F37 | Terms Acceptance & Content Filter | ✅ | ✅ | 1 (store requirement) |
 
 **Process:** each feature is one GitHub issue with three sub-tasks (`backend`, `web`, `mobile`). The issue closes only when all three are committed to `dev` (see [§29](#29-git-workflow--conventions)).
 
@@ -1601,13 +1669,13 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 ### 16.2 Tables
 | Area | Tables |
 |---|---|
-| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, IsVerified, VerifiedAt, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Headline, Bio, Links JSON (`[{ platform, url, label? }]`, F14), UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, WhoCanMention Everyone/Following/Nobody (default Everyone), ShowHighlights (default on, F30), IsSuspended, SuspendedUntil), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
+| Identity | `Users` (PhoneNumber E.164 `varchar(16)` unique, PasswordHash, SecurityStamp, FailedLoginCount, LockoutEndAt, MustChangePassword, RecoveryPinHash, RecoveryPinSetAt, RecoveryFailedCount, RecoveryLockoutEndAt, RecoveryDisabled, MustSetRecoveryPin, IsProfileComplete, IsVerified, VerifiedAt, Email (only from a provider-verified address; links Google/Apple sign in), DisplayName, Username unique, AvatarUrl, Headline, Bio, Links JSON (`[{ platform, url, label? }]`, F14), UiLanguage, ArticleLanguagePref, ThemePref, TimeZone, ReminderTime, PublicReadingStats, WhoCanMention Everyone/Following/Nobody (default Everyone), ShowHighlights (default on, F30), IsSuspended, SuspendedUntil, TermsVersion `varchar(16)`, TermsAcceptedAt (F37), IsReviewAccount (§32: hidden from search, suggestions and analytics)), `UserExpertiseFields` (UserId + FieldId key, Position; ≤ 5 per user, F14), `UserExternalLogins` (UserId, Provider google/apple, Subject, Email, LinkedAt, LastUsedAt, ProviderRefreshToken (Apple, encrypted), ProviderClientId), `Roles`, `Permissions`, `RolePermissions`, `UserRoles` |
 | Auth | `RefreshTokens` (UserId, TokenHash, FamilyId, ExpiresAt, CreatedAt, CreatedByIp, DeviceName, RevokedAt, ReplacedById), `PasswordResetTokens` (UserId, TokenHash, ExpiresAt, UsedAt, CreatedByIp), `RecoveryAttempts` (UserId?, PhoneNumberHash, Ip, Succeeded, CreatedAt) |
 | Devices | `UserDevices` (FCM token, platform, device name, app version, language, last seen) |
 | Media | `MediaAssets` (OwnerId (null once a deleted account's asset stays with its published article), Kind Image/Document, Purpose Image/Avatar/Cover/Document, Status Uploading/Processing/Ready/Failed, FailureReason (stable code), OriginalPath, OriginalSizeBytes, StoredBytes (quota), Width, Height, BlurHash, Variants JSON `{ "320": { height, path, bytes }, … }` + `ISJSON` check, PageCount, Title `nvarchar(max)` ≤ 5000 (`Arabic_100_CI_AI`), AllowDownload, ExtractedText `nvarchar(max)` (`Arabic_100_CI_AI`)), `MediaAssetPages` (AssetId + PageNo key, ThumbPath, ViewPath, Width, Height, BlurHash, Bytes), `ArticleAttachments` (ArticleId + MediaAssetId key, Order, Caption ≤ 5000, AltText ≤ 5000, both `nvarchar(max)`); see [ADR 0011](adr/0011-media-pipeline-and-pdf-preview.md) |
 | Taxonomy | `Fields` (Slug, NameAr, NameEn, Icon, Color, IsSensitive (shows the health disclaimer, never blocks publishing), RequiresSources, IsEnabled), `Topics`, `Tags` (Slug (made once, URL-safe, unique), Name (the first spelling), NormalizedName (lower case + §22 normalization, unique, compared exactly: `Latin1_General_100_BIN2`), IsSystem (used by the seed content; never cleaned up), CreatedById (no FK; null for system tags and once the creator deleted the account), CreatedAt, IsHidden, EmptySince (no published article carries it since then; the daily cleanup, F32)), `ArticleTags` (ArticleId + TagId key, Position: the writer's order), `WriterCategories` (F31: UserId → Users cascade, Name ≤ 40 (the writer's spelling), NormalizedName (lower case + §22 normalization, compared exactly: `Latin1_General_100_BIN2`), Slug (made once from the first name; a moderator's clear makes a new one), SortOrder, CreatedAt; UserId+Slug unique, UserId+NormalizedName unique; ≤ 50 per writer), `UserInterests` |
 | Articles | `Articles` (AuthorId (null: the author deleted their account, §9.6), FieldId, TopicId, WriterCategoryId (null: no category; F31, `ON DELETE SET NULL`, set outside the editor's working copy), Slug, Status Draft/Published/Archived, SourceLanguage, CoverUrl, IsAiAssisted, VersionBadge, AutoCheckedAt, PublishedAt, QualityScore, counters, HiddenAt + HiddenById (hidden by a moderator, F22; no FK)), `ArticleTranslations` (ArticleId, Language, Title, Subtitle, Summary, Excerpt `nvarchar(400)` + ExcerptHasMore (the F34 card text and whether the article holds more; Excerpt null until the backfill job fills a pre-F34 version), ContentJson `nvarchar(max)` + `ISJSON` check, PlainText, SearchText, ReadingTimeMinutes, IsSource), `ArticleDrafts` (ArticleId key, DocumentJson: the editor's working copy, Version concurrency token, HasChanges, SavedAt; F05), `ArticleRevisions` (ArticleId, RevisionNumber, Title, Languages, DocumentJson: the document of one publish, CreatedBy, CreatedAt), `ArticleTags`, `ArticleSources` (Title, Url, LastCheckedAt, IsAlive) |
-| Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (F30: UserId → Users cascade, ArticleId → Articles cascade, Language `varchar(5)`, BlockId `varchar(64)`, StartOffset, EndOffset (UTF-16 code units, end exclusive, ≤ 1000 apart, a check constraint), Text `nvarchar(1000)`, CreatedAt; BlockId and Text compared exactly: `Latin1_General_100_BIN2`), `UserMutes` (MuterId+MutedUserId unique), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
+| Engagement | `Reposts` (UserId+ArticleId unique, CreatedAt), `ArticleHighlights` (F30: UserId → Users cascade, ArticleId → Articles cascade, Language `varchar(5)`, BlockId `varchar(64)`, StartOffset, EndOffset (UTF-16 code units, end exclusive, ≤ 1000 apart, a check constraint), Text `nvarchar(1000)`, CreatedAt; BlockId and Text compared exactly: `Latin1_General_100_BIN2`), `UserMutes` (MuterId+MutedUserId unique), `UserBlocks` (F36: BlockerId+BlockedId unique, both → Users, CreatedAt; an index on BlockedId for the reverse check), `ContentMutes` (UserId, TargetType Field/Topic, TargetId, unique), `ArticleFeedback` (UserId+ArticleId unique, Type ShowLess, CreatedAt), `Reactions` (UserId+ArticleId unique, Type), `Comments` (ArticleId, ParentId = the top-level comment, AuthorId nullable = "Deleted user", Body ≤ 2000, IsPinned, PinnedAt, LikeCount, ReplyCount, EditedAt, HiddenAt, HiddenById, DeletedByModerator; one pinned per article), `CommentLikes` (CommentId+UserId unique), `CommentMentions` (CommentId+UserId), `UserFollows` (FollowerId+FolloweeId), `FieldFollows`, `SavedArticles`, `Collections`, `CollectionItems` |
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths` (Slug, FieldId, TitleAr/En, DescriptionAr/En, SortOrder, IsPublished, IsEditorial, IsFeatured + FeaturedOrder (Explore's featured paths, F15; editorial paths start featured in their sort order, F23 will manage it)), `LearningPathItems` (PathId + ArticleId unique, Order), `PathEnrollments` (UserId + PathId unique, EnrolledAt, LastActivityAt, CompletedAt) |
 | Glossary | `GlossaryTerms` (Slug = the RDoc `termId` unique, TermEn, DefinitionEn, ExplanationAr), `ArticleTerms` (ArticleId + TermId key; rebuilt from the content's `term` nodes) |
@@ -1661,6 +1729,8 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Mute & feedback | `PUT` / `DELETE /users/{id}/mute` · `PUT` / `DELETE /me/mutes/fields/{id}` · `PUT` / `DELETE /me/mutes/topics/{id}` · `GET /me/mutes` · `PUT` / `DELETE /articles/{id}/show-less` |
 | Highlights | `GET /articles/{id}/highlights?lang=` (returns `{ articleId, language, mine[], popular[] }`) · `POST /articles/{id}/highlights` (`{ language, blockId, startOffset, endOffset, text }` → `{ highlight, replacedIds }`) · `DELETE /highlights/{id}` · `GET /me/highlights?cursor=&limit=` (groups per article version) — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) ("Highlights (F30)") |
 | Comments | `GET /articles/{id}/comments?sort=top\|new` · `POST /articles/{id}/comments` · `GET /comments/{id}` · `GET /comments/{id}/replies` · `POST /comments/{id}/replies` · `PATCH /comments/{id}` · `DELETE /comments/{id}` · `PUT/DELETE /comments/{id}/like` · `POST/DELETE /comments/{id}/pin` · `GET /users/mention-suggestions?q=` |
+| Block (F36) | `PUT /users/{id}/block` · `DELETE /users/{id}/block` · `GET /me/blocked` |
+| Legal & content filter (F37) | `GET /legal` (terms version, page links) · `POST /me/terms/accept` · `GET/PUT /admin/content-filter` (`system.settings`); `POST /auth/register` and new Google/Apple accounts require `acceptTerms: true` |
 | Follow | `PUT /users/{id}/follow` · `DELETE /users/{id}/follow` · `GET /users/{id}/followers` · `GET /users/{id}/following` · `GET /users/suggested` · `PUT/DELETE /me/interests/fields/{id}` · `PUT/DELETE /me/interests/topics/{id}` |
 | Saved | `GET /me/saved` · `PUT /me/saved/{articleId}` · `DELETE /me/saved/{articleId}` · `CRUD /me/collections` · `PUT/DELETE /me/collections/{id}/articles/{articleId}` |
 | Users | `GET /users/{username}` · `GET /users/{username}/articles` · `GET /users/{username}/stats` · `GET /users/{username}/stats/heatmap` (public reading stats only, F18) · `GET /me/stats` · `GET /me/stats/heatmap` |
@@ -1727,6 +1797,8 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 **Dev login panel (debug builds only):** lists the seed users with a PIN ✅/❌ indicator and signs in with one tap. It is compiled out / tree-shaken from production builds.
 
 Demo users get realistic profiles (bios mixing Arabic and English, interests, avatars), follow relationships, reading history with streaks (e.g. `reader1` has a 12-day streak), comments and replies, reactions and saved articles, so every screen looks real in development.
+
+**App Review account (production only, §32):** one Member account for Apple and Google reviewers, seeded from `Seed:ReviewerPhone`, `Seed:ReviewerPassword` and `Seed:ReviewerPin` (secrets; never committed; skipped when unset). Display name "App Review", `@appreview`, `IsReviewAccount = true`: hidden from search, suggestions, follower counts and analytics, never seeded with articles or interactions, interests set to two software fields so Home isn't empty. It is a real, usable account, not a persona: it doesn't write content. Its terms are accepted at seeding. Rotate its password after each review.
 
 > **No fake personas in production.** All seeded articles are published under the official **ReadIn** account with the "AI-assisted" label. There is no review ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
 
@@ -2049,7 +2121,8 @@ The API host and `backend.yml` need Chromium and its system libraries for F33, i
 |---|---|
 | **0 — Foundation** | Repo, solution skeleton, CI, design tokens, RDoc schema, Firebase project + emulators, seeders for roles/fields/users |
 | **1 — MVP** | F01–F07, F10–F14, F18, F26–F32, F34 · phone + password auth with recovery PIN · all fields open to any topic · 300 seeded articles · Web + Mobile beta |
-| **2 — Growth** | F08, F09, F15–F17, F19, F22–F24, F33, F35 |
+| **1 — Store launch** (blocks App Store / Play submission) | F22, F35, F36, F37 · in-app account deletion (§9.6) · production API online · review account and everything in [§32](#32-app-store--google-play-review-readiness) |
+| **2 — Growth** | F08, F09, F15–F17, F19, F23, F24, F33 |
 | **3 — Depth** | F21, F25, email digest, quizzes at the end of articles, text-to-speech, AI translation for user articles |
 
 ---
@@ -2068,3 +2141,78 @@ A feature is **done** only when:
 - [ ] Seed data updated so the feature is visible in development.
 - [ ] API documented in OpenAPI, ADR added if an architectural decision was made.
 - [ ] The local gates in [§29](#29-git-workflow--conventions) pass (pushes to `dev` run no CI; see [§28.4](#284-cicd-github-actions)).
+
+---
+
+## 32. App Store & Google Play Review Readiness
+
+**Why this section exists:** on 2026-11-07 App Review returned build 1.0 (3) with **Guideline 2.1 – Information Needed**. Apple asks for a screen recording, a demo account and app details, and checks user-generated content (Guideline 1.2), account deletion (5.1.1(v)) and screenshots (2.3.3). Nothing is submitted again until every item below is done. iOS builds still run only when the user asks ([§28.4](#284-cicd-github-actions)).
+
+### 32.1 Launch blockers (both stores)
+| # | Requirement | Where |
+|---|---|---|
+| 1 | **Production API online** at its public domain over HTTPS, with the 300 seeded articles. The store builds use `config/prod.json` and never point at localhost or a dev server. | §28 |
+| 2 | **Account creation, sign in and in-app account deletion** work end to end on a real device. | §9, §9.6 |
+| 3 | **Report** on articles, comments, replies, profiles and reposts; the reporter stops seeing it at once; staff act within 24 hours. | F22 |
+| 4 | **Block** users, both ways. | F36 |
+| 5 | **Terms with zero tolerance** accepted at sign up, and the **content filter** on all user text. | F37 |
+| 6 | **Support URL** (`/support`) and **Privacy Policy URL** (`/privacy`) public and reachable without signing in. | F35 |
+| 7 | **Sign in with Apple** offered on iOS wherever Google sign-in is offered (Guideline 4.8), with Apple token revocation on deletion. | §9, §9.6 |
+| 8 | **App Review account** seeded in production and tested on a real device the same day as submission. | §18.3 |
+| 9 | **Screenshots of the real app** (below). | 32.3 |
+| 10 | The release build tested on a real iPhone through TestFlight (and on Android through an internal testing track) with no crashes. | §28 |
+
+### 32.2 Screen recording (App Review asks for it)
+Recorded on a **physical iPhone running the latest iOS**, using the production build from TestFlight. It starts from launching the app and shows, in order:
+1. Create an account (phone + password + PIN, then terms acceptance), and sign out.
+2. Sign in, including Continue with Apple.
+3. Home, open an article, react, comment, save.
+4. Publish a short article from Write (+).
+5. Report an article and a comment: show the report sheet, the "Also block" checkbox, and the content disappearing for the reporter.
+6. Block a user from their profile, show their content gone, then Settings → Blocked accounts → Unblock.
+7. Settings → Account → Delete account, through to "Your account was deleted".
+
+Upload it as an unlisted video or a file link, and put the link in the Notes.
+
+### 32.3 Store screenshots (Guideline 2.3.3)
+- They must show the **real app in use**, not the design mockup. The first set (`tools/app-store-assets`, generated from the mockup) is replaced before resubmitting.
+- **Capture** real screens from the release build (iPhone 6.9" and 6.3", Arabic and English, light, plus one dark), then frame them with the same template: replace the mockup phone content in `screenshots.html` with the captured PNG.
+- The app supports iPad (`TARGETED_DEVICE_FAMILY = 1,2`), so iPad 13" screenshots are required too, unless the iOS target is limited to iPhone. That is a product decision for the user.
+
+### 32.4 App Review notes (App Store Connect → App Review Information → Notes)
+Keep the English template below up to date with the app, and fill the brackets at submission:
+
+```text
+1. Screen recording: [link]
+
+2. Purpose and audience
+ReadIn is a bilingual (Arabic + English) knowledge platform. Readers get one high-quality article per day in the fields they choose (AI, software engineering, mobile and more), and writers publish articles that mix Arabic and English correctly. Audience: Arabic-speaking developers, students and professionals aged 18-35 who want to keep learning daily.
+
+3. Demo account and instructions
+Sign in with phone number: [Seed:ReviewerPhone]  Password: [Seed:ReviewerPassword]
+- Home shows "Today's article" and the feed. Tap an article to read, react, comment or save it.
+- Write (+) publishes an article.
+- Every article, comment, reply, profile and repost has a "⋯" menu with Report and Block. Reported content is hidden for the reporter at once; our team reviews reports within 24 hours.
+- Settings > Blocked accounts lists blocked users. Settings > Account > Delete account deletes the account permanently.
+- Users accept our Terms of Use and Community Guidelines (zero tolerance for objectionable content) when they sign up, and text is filtered for objectionable words.
+
+4. External services
+- Our own backend API (ASP.NET Core) at [domain]: accounts, articles, comments, moderation.
+- Firebase Cloud Messaging (push notifications) and Firebase Realtime Database (live counters and new-comment updates).
+- Sign in with Apple and Google Sign-In.
+- The official @readin articles were written with AI assistance (Anthropic Claude) and are labeled "AI-assisted". No AI runs inside the app.
+- No payments or in-app purchases.
+
+5. Regional differences
+The app works the same in all regions.
+
+6. Regulated content
+None. The app has no regulated services or third-party protected content.
+```
+
+### 32.5 Google Play
+- **Data safety form** matching the §9.6 data map (phone number, email if linked, name, photos, user content, device push token; nothing sold or shared for ads).
+- **Account deletion:** the in-app flow and the public URL `/delete-account`.
+- **Content rating questionnaire:** user-generated content with reporting and blocking.
+- **Target audience:** 18+ (or 13+ if decided later; then the Families policies apply).
+- **App access:** the same review account as Apple, given in Play Console → App content → App access.
