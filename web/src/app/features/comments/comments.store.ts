@@ -1,4 +1,5 @@
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import type { BlockedPersonRef } from '../../core/social/block.store';
 import { firstValueFrom } from 'rxjs';
 import { isApiError } from '../../core/api/api.config';
 import { CommentsApi } from '../../core/api/comments.api';
@@ -225,6 +226,7 @@ export class CommentsStore {
   private readonly _highlighted = signal<ReadonlySet<string>>(new Set());
   private readonly _composer = signal<ComposerTarget | null>(null);
   private readonly _dialog = signal<CommentDialog | null>(null);
+  private readonly _blocking = signal<BlockedPersonRef | null>(null);
 
   readonly sort = this._sort.asReadonly();
   readonly status = this._status.asReadonly();
@@ -236,6 +238,8 @@ export class CommentsStore {
   readonly composer = this._composer.asReadonly();
   /** The report or delete sheet, for one comment. */
   readonly dialog = this._dialog.asReadonly();
+  /** F36: the block dialog, for one commenter. */
+  readonly blocking = this._blocking.asReadonly();
   /** New top-level comments waiting behind the "N new comments" pill. */
   readonly incomingCount = computed(() => this._incoming().length);
   /** The article's comment count: live, confirmed by REST pages and your own changes. */
@@ -572,6 +576,15 @@ export class CommentsStore {
 
   closeDialog(): void {
     this._dialog.set(null);
+  }
+
+  /** F36: "حظر" on a comment asks first (the dialog is drawn by the section). */
+  openBlock(person: BlockedPersonRef): void {
+    this._blocking.set(person);
+  }
+
+  closeBlock(): void {
+    this._blocking.set(null);
   }
 
   /**

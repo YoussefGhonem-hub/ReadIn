@@ -92,6 +92,16 @@ function plainText(n: NotificationDto, key: string, transloco: TranslocoService,
     // F35: support replied, or closed the ticket.
     case 'support_reply':
       return transloco.translate(`${key}.${n.data?.closed ? 'closed' : 'replied'}`, {}, lang);
+    // F22 (store): a new report for staff, by what was reported.
+    case 'report_new': {
+      const target = n.data?.targetType;
+      return transloco.translate(`${key}.${target === 'article' || target === 'comment' || target === 'user' || target === 'repost' ? target : 'other'}`, {}, lang);
+    }
+    // F22 (store): the outcome of your report, never who acted or what was done to a user.
+    case 'report_resolved': {
+      const outcome = n.data?.outcome === 'no_violation' ? 'noViolation' : n.data?.targetType === 'user' ? 'actionedUser' : 'actioned';
+      return transloco.translate(`${key}.${outcome}`, {}, lang);
+    }
     default:
       return transloco.translate('notifications.text.other', {}, lang);
   }
@@ -138,6 +148,10 @@ export function notificationIcon(n: NotificationDto): string {
     case 'support_reply':
     case 'support_ticket':
       return 'LifeBuoy';
+    case 'report_new':
+      return 'Flag';
+    case 'report_resolved':
+      return 'ShieldCheck';
     default:
       return 'Bell';
   }
@@ -147,9 +161,14 @@ export function notificationIcon(n: NotificationDto): string {
  * The row's second line for the F23/F35 types: an announcement's body, a ticket's "#12 · subject"; null for the others.
  */
 export function notificationDetail(n: Pick<NotificationDto, 'type' | 'data'>): string | null {
+  // F37: a report the content filter filed says so first.
+  if (n.type === 'report_new' && n.data?.system) return null;
   switch (n.type) {
     case 'announcement':
       return n.data?.body?.trim() || null;
+    case 'report_new':
+    case 'report_resolved':
+      return n.data?.targetLabel?.trim() || null;
     case 'support_reply':
     case 'support_ticket': {
       const subject = n.data?.subject?.trim();

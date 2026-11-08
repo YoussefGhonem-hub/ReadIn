@@ -132,7 +132,7 @@ describe('Moderation (F22)', () => {
 
       expect(t.$('[data-moderation-tab="open"]')!.getAttribute('aria-current')).toBe('page');
       expect(t.$$('[data-moderation-tab]').map((tab) => tab.textContent!.trim())).toEqual(['مفتوحة', 'محلولة', 'مرفوضة', 'السجل']);
-      expect(t.$$('[data-type-chip]').map((chip) => chip.textContent!.replace(/\s+/g, ' ').trim())).toEqual(['الكل 3', 'مقالات 1', 'تعليقات 1', 'مستخدمون 1']);
+      expect(t.$$('[data-type-chip]').map((chip) => chip.textContent!.replace(/\s+/g, ' ').trim())).toEqual(['الكل 3', 'مقالات 1', 'تعليقات 1', 'مستخدمون 1', 'إعادات النشر']);
       expect(t.$('[data-type-chip="all"]')!.getAttribute('aria-pressed')).toBe('true');
 
       const cards = t.$$('[data-case]');

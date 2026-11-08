@@ -13,6 +13,8 @@ import { AdminSummaryStore } from '../../core/admin/admin-summary.store';
 import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../core/theme/reader-prefs.service';
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
+import { BLOCK_ICON } from '../../shared/blocks/block-icons';
+import { environment } from '../../../environments/environment';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { Switch } from '../../shared/ui/switch';
 import { ToastService } from '../../shared/ui/toast/toast.service';
@@ -127,6 +129,15 @@ import { ProfileSettings } from './profile-settings';
           </span>
           <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
         </a>
+        <!-- The people you blocked (F36), its own page -->
+        <a routerLink="/settings/blocked" class="flex min-h-14 items-center gap-3 border-t border-border pt-3 text-sm text-text-primary no-underline" data-settings-blocked>
+          <svg [lucideIcon]="blockedIcon" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+          <span class="min-w-0 flex-1">
+            <span class="block">{{ 'block.settings.title' | transloco }}</span>
+            <span class="block text-xs text-text-secondary">{{ 'block.settings.rowHint' | transloco }}</span>
+          </span>
+          <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+        </a>
       }
     </section>
 
@@ -180,6 +191,31 @@ import { ProfileSettings } from './profile-settings';
       </a>
     </section>
 
+    <!-- Legal (F18, F37): the terms, the community guidelines and the privacy policy -->
+    <section class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 p-4 lg:p-5" aria-labelledby="settings-legal" data-settings-legal>
+      <h2 id="settings-legal" class="m-0 mb-1 text-base font-semibold">{{ 'legal.settingsTitle' | transloco }}</h2>
+      <ul class="m-0 list-none divide-y divide-border p-0">
+        <li>
+          <a routerLink="/terms" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-terms>
+            <span class="flex-1">{{ 'legal.terms.title' | transloco }}</span>
+            <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/community-guidelines" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-guidelines>
+            <span class="flex-1">{{ 'legal.guidelines.title' | transloco }}</span>
+            <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+          </a>
+        </li>
+        <li>
+          <a [href]="privacyUrl" target="_blank" rel="noopener" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-privacy>
+            <span class="flex-1">{{ 'legal.privacy' | transloco }}</span>
+            <svg lucideIcon="ExternalLink" [size]="16" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+          </a>
+        </li>
+      </ul>
+    </section>
+
     <!-- Account (F18): phone, password, PIN, sign out, sign out everywhere, delete -->
     <rd-account-settings />
   `,
@@ -187,6 +223,10 @@ import { ProfileSettings } from './profile-settings';
 export class SettingsPage {
   /** The muted speaker of the F28 menus, banner and Settings → Muted (as on mobile). */
   protected readonly mutedIcon = MUTE_ICON.VolumeX;
+  /** F36: Settings → Blocked accounts. */
+  protected readonly blockedIcon = BLOCK_ICON.UserRoundX;
+  /** F37: the privacy policy is the public page next to the account deletion page (as the home footer links it). */
+  protected readonly privacyUrl = `${new URL(environment.accountDeletionUrl).origin}/privacy`;
   protected readonly theme = inject(ThemeService);
   protected readonly language = inject(LanguageService);
   protected readonly readerPrefs = inject(ReaderPrefsService);

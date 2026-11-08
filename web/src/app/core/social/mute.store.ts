@@ -7,6 +7,7 @@ import { SessionStore } from '../auth/session.store';
 import { ErrorMessages } from '../i18n/error-messages';
 import { isolate } from '../../shared/directives/bidi';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { BlockStore } from './block.store';
 import { FollowStore } from './follow.store';
 
 /**
@@ -51,6 +52,7 @@ export class MuteStore {
   private readonly errors = inject(ErrorMessages);
   private readonly transloco = inject(TranslocoService);
   private readonly session = inject(SessionStore);
+  private readonly blocks = inject(BlockStore);
 
   /** Writers muted (true) or unmuted (false) in this session. */
   private readonly authors = signal<ReadonlyMap<string, boolean>>(new Map());
@@ -93,9 +95,14 @@ export class MuteStore {
     return this.content()?.topicIds.has(topicId) ?? fallback;
   }
 
-  /** The card leaves a list in `scope`: its writer, field or topic is muted, or you pressed Show less on it. */
+  /**
+   * The card leaves a list in `scope`: its writer, field or topic is muted, or you pressed Show less on it. A writer you
+   * blocked now (F36) leaves every list, the writer's own pages too.
+   */
   hides(card: ArticleCardDto, scope: MuteScope): boolean {
-    if (!scope.applies || !this.session.isAuthenticated()) return false;
+    if (!this.session.isAuthenticated()) return false;
+    if (card.author && this.blocks.isBlocked(card.author.id)) return true;
+    if (!scope.applies) return false;
     if (this.less().has(card.id)) return true;
     if (card.author && this.isAuthorMuted(card.author.id, card.isAuthorMuted)) return true;
     if (card.field.id !== scope.shownFieldId?.() && this.isFieldMuted(card.field.id, card.isFieldMuted)) return true;

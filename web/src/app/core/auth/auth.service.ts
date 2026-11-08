@@ -100,7 +100,7 @@ export class AuthService {
   }
 
   /** Sends the UI language and time zone along, so the new profile starts with them. */
-  async register(request: Pick<RegisterRequest, 'phoneNumber' | 'password' | 'recoveryPin'>): Promise<MeDto> {
+  async register(request: Pick<RegisterRequest, 'phoneNumber' | 'password' | 'recoveryPin' | 'acceptTerms'>): Promise<MeDto> {
     const session = await firstValueFrom(
       this.api.register({ ...request, uiLanguage: this.language.lang(), timeZone: localTimeZone() }),
     );

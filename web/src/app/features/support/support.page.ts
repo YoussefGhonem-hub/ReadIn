@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { SupportConfigDto } from '../../core/api/models';
 import { SupportApi } from '../../core/api/support.api';
 import { SessionStore } from '../../core/auth/session.store';
+import { bindPageLanguage } from '../../core/i18n/language-alternates';
 import { environment } from '../../../environments/environment';
 import { NewTicketForm } from './new-ticket-form';
 
@@ -13,7 +14,8 @@ import { NewTicketForm } from './new-ticket-form';
  * Help & support (F35), `/support`: public, server-rendered and indexable (it is the App Store support URL). How to reach
  * support and the support email (`GET /support/config`; hidden when the API has none). Signed-in members get the "New
  * ticket" form and a link to "My tickets"; guests get "Sign in to send a ticket". Until the browser knows who is signed
- * in (and on the server), the form's place shows a placeholder.
+ * in (and on the server), the form's place shows a placeholder. The apps open it as `?lang=ar|en` (F37): that language
+ * shows without being saved, with canonical and hreflang links for both.
  */
 @Component({
   selector: 'rd-support-page',
@@ -76,7 +78,11 @@ export class SupportPage {
   /** The route the member opened support from (the ticket's "screen"). */
   protected readonly cameFrom = inject(Router).currentNavigation()?.previousNavigation?.finalUrl?.toString() ?? '/support';
 
+  /** `?lang=ar|en` (component input binding): the apps open support in their language (F37). */
+  readonly lang = input<string | null>();
+
   constructor() {
+    bindPageLanguage(() => '/support', this.lang);
     void firstValueFrom(this.api.config()).then(
       (config) => this.config.set(config),
       () => this.failed.set(true),

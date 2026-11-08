@@ -79,6 +79,7 @@ export function insertMention(text: string, at: MentionQuery, username: string):
 }
 
 /** A deleted comment, or one hidden from you: no body, no author, no actions. */
-export function isPlaceholder(comment: Pick<CommentDto, 'isDeleted' | 'isHidden' | 'body'>): boolean {
-  return comment.isDeleted || (comment.isHidden && comment.body === null);
+export function isPlaceholder(comment: Pick<CommentDto, 'isDeleted' | 'isHidden' | 'body' | 'isUnavailable'>): boolean {
+  // F36: a blocked person's comment kept for others' replies is a placeholder too.
+  return comment.isDeleted || !!comment.isUnavailable || (comment.isHidden && comment.body === null);
 }

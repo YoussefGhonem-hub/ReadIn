@@ -11,7 +11,10 @@ import { ArticleCardDto, ArticleModerationDto, ModerationActionRequest } from '.
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { FollowStore } from '../../core/social/follow.store';
+import { BlockStore, BlockedPersonRef } from '../../core/social/block.store';
 import { MuteStore } from '../../core/social/mute.store';
+import { BlockDialog } from '../../shared/blocks/block-dialog';
+import { BLOCK_ICON } from '../../shared/blocks/block-icons';
 import { ModerationActionDraft, ModerationActionSheet } from '../../shared/moderation/moderation-action-sheet';
 import { ModerationErrors } from '../../shared/moderation/moderation-errors';
 import { provideModerationIcons } from '../../shared/moderation/moderation-icons';
@@ -37,6 +40,9 @@ export type ArticleMenuAction =
   | 'hide'
   | 'unhide'
   | 'report'
+  // F36 and F22 (store)
+  | 'blockAuthor'
+  | 'reportRepost'
   // F23: admins
   | 'feature'
   | 'unfeature'
@@ -62,6 +68,10 @@ export interface ArticleMenuContext {
   featured?: boolean | null;
   /** F23: `moderation.manage` and the console (`admin.access`): "Open in console". */
   console?: boolean;
+  /** F36: you blocked the writer in this session (false for guests). */
+  authorBlocked?: boolean;
+  /** F22 (store): the repost that placed the card can be reported (a repost card, not your own repost). */
+  repost?: boolean;
 }
 
 type MenuIcon = string | LucideIconData;
@@ -128,6 +138,13 @@ export const ARTICLE_MENU: readonly ArticleMenuEntry[] = [
     labelKey: (c) => (c.authorMuted ? 'mute.menu.unmuteAuthor' : 'mute.menu.muteAuthor'),
     icon: (c) => (c.authorMuted ? MUTE_ICON.Volume2 : MUTE_ICON.VolumeX),
   },
+  // F36: Block under Mute, for the writer.
+  {
+    id: 'blockAuthor',
+    visible: hasOtherAuthor,
+    labelKey: (c) => (c.authorBlocked ? 'block.menu.unblockAuthor' : 'block.menu.blockAuthor'),
+    icon: (c) => (c.authorBlocked ? BLOCK_ICON.UserRoundCheck : BLOCK_ICON.UserRoundX),
+  },
   { id: 'muteTopics', labelKey: 'mute.menu.muteTopics', icon: MUTE_ICON.ListX },
   // F33: the published version on screen, in the reader, for every member (guests sign in first). A hidden article (F22)
   // has no PDF: a moderator reading someone else's gets no item; its author keeps it and is told why (409).
@@ -140,6 +157,8 @@ export const ARTICLE_MENU: readonly ArticleMenuEntry[] = [
   },
   // The reader's last item, in the error color; never on your own article.
   { id: 'report', visible: (c) => !c.isOwn, labelKey: 'article.menu.report', icon: 'Flag', danger: true },
+  // F22 (store): a repost card's caption is the reposter's text, reported apart from the article.
+  { id: 'reportRepost', visible: (c) => !!c.repost, labelKey: 'article.menu.reportRepost', icon: 'Flag', danger: true },
   // Moderators (F22), after a divider: hide, or unhide a hidden article.
   { id: 'hide', visible: (c) => c.isModerator && !c.article.moderation, labelKey: 'article.menu.hide', icon: 'EyeOff', moderation: true },
   { id: 'unhide', visible: (c) => c.isModerator && !!c.article.moderation, labelKey: 'article.menu.unhide', icon: 'Eye', moderation: true },
@@ -177,7 +196,7 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
  */
 @Component({
   selector: 'rd-article-menu',
-  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet, MuteTopicsSheet, BottomSheet],
+  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet, MuteTopicsSheet, BottomSheet, BlockDialog],
   providers: [provideModerationIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
@@ -220,6 +239,7 @@ export function articleMenuItems(ctx: ArticleMenuContext): ArticleMenuItem[] {
     </ng-template>
 
     <rd-report-sheet [target]="reporting()" (closed)="reporting.set(null)" />
+    <rd-block-dialog [person]="blocking()" (closed)="blocking.set(null)" />
     <rd-moderation-action-sheet [draft]="moderating()" (done)="onModerated($event)" (closed)="moderating.set(null)" />
     <!-- F23: featuring asks first -->
     <rd-bottom-sheet [open]="!!featuring()" role="alertdialog" labelledBy="feature-sheet-title" describedBy="feature-sheet-body" [dismissible]="!featureBusy()" (closed)="featuring.set(null)">
@@ -254,6 +274,7 @@ export class ArticleMenu {
   private readonly errors = inject(ModerationErrors);
   private readonly follows = inject(FollowStore);
   private readonly mutes = inject(MuteStore);
+  private readonly blocks = inject(BlockStore);
   private readonly pdfs = inject(ArticlePdfService);
   private readonly highlightPrefs = inject(HighlightsPrefs);
   // F23's two featuring calls go straight to HttpClient: the post cards' chunk shouldn't carry the console's API.
@@ -278,6 +299,7 @@ export class ArticleMenu {
   protected readonly moderating = signal<ModerationActionDraft | null>(null);
   protected readonly topics = signal<MenuArticle | null>(null);
   protected readonly topicsUsed = signal(false);
+  protected readonly blocking = signal<BlockedPersonRef | null>(null);
   /** F23: the feature dialog, and the featured state after an admin changed it here (by article id). */
   protected readonly featuring = signal<'feature' | 'unfeature' | null>(null);
   protected readonly featureBusy = signal(false);
@@ -299,6 +321,8 @@ export class ArticleMenu {
       highlights: this.highlights() ? (this.highlightPrefs.visible() ? 'shown' : 'hidden') : null,
       featured: this.session.permissions().has('articles.feature') && article.isFeatured !== undefined ? (this.featuredNow()[article.id] ?? article.isFeatured) : null,
       console: this.session.permissions().has('moderation.manage') && this.session.permissions().has('admin.access'),
+      authorBlocked: signedIn && !!author && this.blocks.isBlocked(author.id),
+      repost: !!article.repostedBy?.repostId && article.repostedBy.user.id !== this.session.me()?.id,
     };
   });
 
@@ -333,7 +357,17 @@ export class ArticleMenu {
         void this.pdfs.download(article.id, article.language);
         return;
       case 'report':
-        this.reporting.set({ type: 'article', id: article.id });
+        this.reporting.set({ type: 'article', id: article.id, author: author ? { id: author.id, displayName: author.displayName, username: author.username } : null });
+        return;
+      case 'reportRepost': {
+        const by = article.repostedBy;
+        if (by?.repostId) this.reporting.set({ type: 'repost', id: by.repostId, author: { id: by.user.id, displayName: by.user.displayName, username: by.user.username } });
+        return;
+      }
+      case 'blockAuthor':
+        if (!author) return;
+        if (this.context().authorBlocked) void this.blocks.unblock({ id: author.id, displayName: author.displayName, username: author.username });
+        else this.blocking.set({ id: author.id, displayName: author.displayName, username: author.username });
         return;
       case 'hide':
         this.moderating.set({ action: 'hide', targetType: 'article', targetId: article.id });

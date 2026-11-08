@@ -61,7 +61,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     const t = await render();
     http = t.http;
     expect(t.$('[data-profile-menu]')!.getAttribute('aria-label')).toBe('خيارات الحساب');
-    expect(await t.openMenu()).toEqual(['muteUser', 'report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'blockUser', 'report']);
     expect(document.querySelector('[data-menu-action="report"]')!.textContent!.trim()).toBe('الإبلاغ عن المستخدم');
     await t.pick('report');
     expect(t.$('[data-report-sheet]')!.getAttribute('data-report-target')).toBe('user');
@@ -78,7 +78,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
   it('guests get the sign-in prompt', async () => {
     const t = await render({ guest: true });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['muteUser', 'report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'blockUser', 'report']);
     await t.pick('report');
     expect(TestBed.inject(AuthPromptService).isOpen()).toBe(true);
   });
@@ -141,13 +141,13 @@ describe('Profile "⋯" menu (F22, F28)', () => {
   it("the official ReadIn account can't be muted: no Mute item", async () => {
     const t = await render({ profile: { isSystemAccount: true } });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['report']);
+    expect(await t.openMenu()).toEqual(['blockUser', 'report']);
   });
 
   it('moderators warn with a required note the user will see', async () => {
     const t = await render({ permissions: ['articles.read', 'moderation.manage'] });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['muteUser', 'warn', 'report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'blockUser', 'warn', 'report']);
     await t.pick('warn');
     expect(t.$('#moderation-sheet-title')!.textContent!.trim()).toBe('تحذير ⁨Karim Hassan⁩');
     expect(t.$('label[for="moderation-note"]')!.textContent!.trim()).toBe('ملاحظة');
@@ -171,7 +171,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
   it('with users.suspend: suspend for 1, 3, 7, 30 days, a custom length or permanently, with a note', async () => {
     const t = await render({ permissions: ['articles.read', 'moderation.manage', 'users.suspend'] });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['muteUser', 'warn', 'suspend', 'report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'blockUser', 'warn', 'suspend', 'report']);
     await t.pick('suspend');
     expect([...t.root.querySelectorAll('[data-duration]')].map((el) => el.getAttribute('data-duration'))).toEqual(['1', '3', '7', '30', 'custom', 'permanent']);
     expect(t.$<HTMLInputElement>('[data-duration="7"]')!.checked).toBe(true);
@@ -201,7 +201,7 @@ describe('Profile "⋯" menu (F22, F28)', () => {
     const ADMIN = ['articles.read', 'moderation.manage', 'users.suspend', 'verification.manage', 'users.read', 'admin.access'];
     const t = await render({ permissions: ADMIN, profile: { admin: { isSuspended: true, suspendedUntil: null, isStaff: false } } });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['muteUser', 'warn', 'unsuspend', 'removeBadge', 'openInConsole', 'report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'blockUser', 'warn', 'unsuspend', 'removeBadge', 'openInConsole', 'report']);
     await t.pick('removeBadge');
     t.$('[data-remove-badge-confirm]')!.click();
     t.http.expectOne({ method: 'DELETE', url: `${TEST_API}/admin/users/writer-1/verification` }).flush(null, { status: 204, statusText: 'No Content' });
@@ -214,6 +214,6 @@ describe('Profile "⋯" menu (F22, F28)', () => {
   it("staff can't be warned or suspended (ProfileDto.admin.isStaff)", async () => {
     const t = await render({ permissions: ['articles.read', 'moderation.manage', 'users.suspend', 'users.read'], profile: { admin: { isSuspended: false, suspendedUntil: null, isStaff: true } } });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['muteUser', 'report']);
+    expect(await t.openMenu()).toEqual(['muteUser', 'blockUser', 'report']);
   });
 });

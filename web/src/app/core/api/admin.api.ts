@@ -21,6 +21,9 @@ import {
   AnnouncementRequest,
   AnnouncementsDto,
   AuditEntryDto,
+  ContentFilterDto,
+  ContentFilterTestDto,
+  ContentFilterTermInput,
   CreateFieldRequest,
   CreateTopicRequest,
   PagedList,
@@ -288,5 +291,22 @@ export class AdminApi {
 
   rebuildCounters(): Observable<unknown> {
     return this.http.post(`${this.base}/admin/realtime/rebuild-counters`, null, { context: this.silent() });
+  }
+
+  // ── Content filter (F37, `system.settings`) ──
+
+  /** Every term, enabled or not, by language and level. */
+  contentFilter(): Observable<ContentFilterDto> {
+    return this.http.get<ContentFilterDto>(`${this.base}/admin/content-filter`, { context: this.personal() });
+  }
+
+  /** The whole enabled list (≤ 5,000); terms left out are disabled. Audited. */
+  saveContentFilter(terms: ContentFilterTermInput[]): Observable<ContentFilterDto> {
+    return this.http.put<ContentFilterDto>(`${this.base}/admin/content-filter`, { terms }, { context: this.silent() });
+  }
+
+  /** Tries a text against the enabled terms (staff see the matches). */
+  testContentFilter(text: string): Observable<ContentFilterTestDto> {
+    return this.http.post<ContentFilterTestDto>(`${this.base}/admin/content-filter/test`, { text }, { context: this.silent() });
   }
 }

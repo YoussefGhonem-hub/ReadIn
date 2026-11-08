@@ -7,7 +7,11 @@ import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
 import { LanguageService } from '../../core/i18n/language.service';
 import { FollowStore } from '../../core/social/follow.store';
+import { ReportedStore } from '../../core/moderation/reported.store';
+import { BlockStore } from '../../core/social/block.store';
 import { MuteStore } from '../../core/social/mute.store';
+import { BLOCK_ICON } from '../../shared/blocks/block-icons';
+import { ReportedNotice } from '../../shared/moderation/reported-notice';
 import { BdiText } from '../../shared/directives/bdi-text';
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { CompactNumberPipe, LocalizedDatePipe, RelativeTimePipe } from '../../shared/pipes/format.pipes';
@@ -21,7 +25,7 @@ import { CommentErrors } from './comment-errors';
 import { commentDir, commentSegments, isPlaceholder } from './comment-text';
 import { CommentView, CommentsStore } from './comments.store';
 
-type MenuAction = 'edit' | 'delete' | 'pin' | 'unpin' | 'muteCommenter' | 'report' | 'hide' | 'unhide' | 'moderatorDelete';
+type MenuAction = 'edit' | 'delete' | 'pin' | 'unpin' | 'muteCommenter' | 'blockCommenter' | 'report' | 'hide' | 'unhide' | 'moderatorDelete';
 
 interface MenuItem {
   action: MenuAction;
@@ -60,6 +64,7 @@ interface MenuItem {
     FollowButton,
     ProfileCardTrigger,
     VerifiedBadge,
+    ReportedNotice,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -92,8 +97,21 @@ interface MenuItem {
           <svg lucideIcon="MessageCircle" [size]="iconSize()"></svg>
         </span>
         <p class="bubble m-0 min-w-0 flex-1 bg-surface-variant px-3 py-2 text-sm italic text-text-secondary">
-          {{ (c.isDeleted ? 'comments.deleted' : 'comments.hidden') | transloco }}
+          {{ (c.isDeleted ? 'comments.deleted' : c.isUnavailable || commenterBlocked() ? 'comments.unavailable' : 'comments.hidden') | transloco }}
         </p>
+      </div>
+    } @else if (reportedCollapsed()) {
+      <!-- F22 (store): you reported it: hidden for you, with "Show" -->
+      <div class="flex items-start gap-2 py-1.5" data-comment-reported>
+        <span
+          class="grid shrink-0 place-items-center rounded-full bg-surface-variant text-text-secondary"
+          [style.width.px]="avatarSize()"
+          [style.height.px]="avatarSize()"
+          aria-hidden="true"
+        >
+          <svg lucideIcon="Flag" [size]="iconSize()"></svg>
+        </span>
+        <rd-reported-notice class="bubble min-w-0 flex-1 bg-surface-variant px-3 py-2" (show)="reported.show('comment', c.id)" />
       </div>
     } @else if (mutedCollapsed()) {
       <div class="flex items-start gap-2 py-1.5" data-comment-muted>
@@ -311,6 +329,8 @@ export class CommentItem {
   private readonly transloco = inject(TranslocoService);
   private readonly errors = inject(CommentErrors);
   private readonly mutes = inject(MuteStore);
+  private readonly blocks = inject(BlockStore);
+  protected readonly reported = inject(ReportedStore);
   private readonly follows = inject(FollowStore);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
@@ -324,7 +344,8 @@ export class CommentItem {
   protected readonly saving = signal(false);
   protected readonly editError = signal<string | null>(null);
 
-  protected readonly placeholder = computed(() => isPlaceholder(this.comment()));
+  /** Deleted, hidden for you, unavailable (F36), or by someone you blocked now: a placeholder; replies under it stay. */
+  protected readonly placeholder = computed(() => isPlaceholder(this.comment()) || this.commenterBlocked());
   /** "عرض" was pressed on this collapsed comment (F28): it stays open here only. */
   private readonly revealed = signal(false);
   /** By a writer you muted (the API's flag, or a mute or unmute since the page loaded): collapsed until "عرض". */
@@ -332,6 +353,16 @@ export class CommentItem {
     const c = this.comment();
     if (this.revealed() || c.pending || !c.author || !this.session.isAuthenticated()) return false;
     return this.mutes.isAuthorMuted(c.author.id, c.isAuthorMuted ?? false);
+  });
+  /** F22 (store): you reported it (the API's flag, or a report now): collapsed until "عرض". */
+  protected readonly reportedCollapsed = computed(() => {
+    const c = this.comment();
+    return !c.pending && this.reported.isCollapsed('comment', c.id, c.reportedByMe ?? false);
+  });
+  /** F36: you blocked the commenter now (the API already leaves out people blocked before). */
+  protected readonly commenterBlocked = computed(() => {
+    const c = this.comment();
+    return !!c.author && this.session.isAuthenticated() && this.blocks.isBlocked(c.author.id);
   });
   /** You (signed in), for the commenter's Mute item. */
   private readonly myId = computed(() => (this.session.isAuthenticated() ? (this.session.me()?.id ?? null) : null));
@@ -388,6 +419,14 @@ export class CommentItem {
           : { action: 'muteCommenter', label: 'mute.menu.muteCommenter', icon: MUTE_ICON.VolumeX },
       );
     }
+    // F36: Block under Mute (not yourself, not a deleted account).
+    if (c.author && c.author.id !== this.myId()) {
+      items.push(
+        this.commenterBlocked()
+          ? { action: 'blockCommenter', label: 'block.menu.unblockCommenter', icon: BLOCK_ICON.UserRoundCheck }
+          : { action: 'blockCommenter', label: 'block.menu.blockCommenter', icon: BLOCK_ICON.UserRoundX },
+      );
+    }
     // Guests may report too: they get the sign-in prompt first.
     if (c.canReport || !this.session.isAuthenticated()) items.push({ action: 'report', label: 'comments.report', icon: 'Flag' });
     if (c.canModerate) {
@@ -432,6 +471,11 @@ export class CommentItem {
         return;
       case 'report':
         if (this.prompt.requireAuth()) this.store.openDialog({ kind: 'report', comment: c });
+        return;
+      case 'blockCommenter':
+        if (!this.prompt.requireAuth() || !c.author) return;
+        if (this.commenterBlocked()) void this.blocks.unblock({ id: c.author.id, displayName: c.author.displayName, username: c.author.username });
+        else this.store.openBlock({ id: c.author.id, displayName: c.author.displayName, username: c.author.username });
         return;
       case 'pin':
       case 'unpin':

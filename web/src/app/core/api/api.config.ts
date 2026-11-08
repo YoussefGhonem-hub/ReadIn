@@ -48,8 +48,14 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 
+  /**
+   * The codes per request field. A `422 content.objectionable` (F37) names its one field in `field`, so it is listed
+   * under that field too: every form that shows field errors puts it on the right input.
+   */
   get validationErrors(): Record<string, string[]> {
-    return this.problem?.errors ?? {};
+    const errors = this.problem?.errors ?? {};
+    const field = this.code === 'content.objectionable' && this.problem?.field;
+    return field ? { ...errors, [field]: [...(errors[field] ?? []), this.code] } : errors;
   }
 
   static from(error: HttpErrorResponse): ApiError {

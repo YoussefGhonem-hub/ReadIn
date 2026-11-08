@@ -52,7 +52,9 @@ export function sheetCopy(draft: Pick<ModerationActionDraft, 'action' | 'targetT
     case 'unhide':
       return { key: `unhide${on}`, confirm: `moderation.actions.unhide.${draft.targetType}`, note: 'optional', danger: false, duration: false };
     case 'delete':
-      return { key: 'delete', confirm: 'moderation.actions.delete', note: 'optional', danger: true, duration: false };
+      return draft.targetType === 'repost'
+        ? { key: 'deleteRepost', confirm: 'moderation.actions.deleteRepost', note: 'optional', danger: true, duration: false }
+        : { key: 'delete', confirm: 'moderation.actions.delete', note: 'optional', danger: true, duration: false };
     case 'warn':
       return { key: 'warn', confirm: 'moderation.actions.warn', note: 'required', danger: false, duration: false };
     case 'suspend':
@@ -290,7 +292,8 @@ export class ModerationActionSheet {
     try {
       await firstValueFrom(this.api.act(request));
       this.busy.set(false);
-      this.toasts.success(this.transloco.translate(`moderation.actions.done.${draft.action}`));
+      const doneKey = draft.action === 'delete' && draft.targetType === 'repost' ? 'delete_repost' : draft.action;
+      this.toasts.success(this.transloco.translate(`moderation.actions.done.${doneKey}`));
       this.done.emit(request);
       this.closed.emit();
     } catch (error) {

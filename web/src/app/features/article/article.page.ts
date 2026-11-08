@@ -17,6 +17,10 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { ReportedStore } from '../../core/moderation/reported.store';
+import { BlockStore, BlockedPersonRef } from '../../core/social/block.store';
+import { BlockedState } from '../../shared/blocks/blocked-state';
+import { ReportedNotice } from '../../shared/moderation/reported-notice';
 import { NgComponentOutlet, isPlatformBrowser } from '@angular/common';
 import { HttpContext, httpResource } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
@@ -99,8 +103,7 @@ const TOC_MIN_HEADINGS = 3;
     MutedBanner,
     ReaderHighlights,
     ReadingMode,
-    VerifiedBadge,
-  ],
+    VerifiedBadge, BlockedState, ReportedNotice],
   providers: [ArticleHighlightsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -153,10 +156,22 @@ const TOC_MIN_HEADINGS = 3;
         </div>
       }
 
-      @if (article(); as a) {
+      @if (blockedUser(); as blocked) {
+        <!-- F36: you blocked the writer: the content isn't available, with Unblock (the blocked person gets a 404) -->
+        <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+          <rd-blocked-state kind="content" [user]="blocked" (unblocked)="resource.reload()" />
+        </div>
+      } @else if (article(); as a) {
+        @if (reportedCollapsed()) {
+          <!-- F22 (store): you reported it: hidden for you until "Show" -->
+          <div class="rd-card mb-2 flex items-center gap-2 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0" data-article-reported>
+            <svg lucideIcon="EyeOff" [size]="18" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+            <rd-reported-notice (show)="reported.show('article', a.id)" />
+          </div>
+        }
         <!-- The article card, from the notices to the tags. The sources close it (the card's bottom part, below), as their
              own element so Next in path stays right after them. -->
-        <div class="rd-card rounded-b-none border-b-0 p-4 pb-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0" data-article-card>
+        <div class="rd-card rounded-b-none border-b-0 p-4 pb-0 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:p-6 sm:pb-0 lg:p-8 lg:pb-0" [class.hidden]="reportedCollapsed()" data-article-card>
           @if (a.language !== requestedLanguage()) {
             <p class="mb-4 rounded-md bg-callout-info p-3 text-sm" role="status">{{ 'article.fallbackNotice' | transloco }}</p>
           }
@@ -261,7 +276,7 @@ const TOC_MIN_HEADINGS = 3;
 
           <!-- Highlights (F30): yours and the popular ones are drawn in the text; selecting text offers the toolbar, with
                Share quote (F24) unless moderators hid the article -->
-          <rd-rdoc [doc]="a.content" [articleId]="a.id" [marks]="highlights.marks()" [style.--rd-article-size]="prefs.cssSize()" />
+          <rd-rdoc [doc]="a.content" [articleId]="a.id" [marks]="highlights.marks()" [unlinkedMentions]="a.unlinkedMentionIds ?? null" [style.--rd-article-size]="prefs.cssSize()" />
           <rd-reader-highlights [content]="rdocElement()" [quoteArticle]="a.moderation ? null : { id: a.id, language: a.language, url: shareUrl() }" />
 
           <!-- Post attachments (F26): after the content, before the sources -->
@@ -284,6 +299,7 @@ const TOC_MIN_HEADINGS = 3;
         <!-- Sources (mandatory for technical content, SPEC §20): the article card's bottom part -->
         <rd-article-sources
           class="rd-card rounded-t-none border-t-0 px-4 pb-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8"
+          [class.hidden]="reportedCollapsed()"
           [sources]="a.sources"
         />
         <!-- Comments (F11), in their own card right under the article: the first 5, then "Show more comments". Their code
@@ -292,6 +308,7 @@ const TOC_MIN_HEADINGS = 3;
           #commentsAnchor
           id="comments"
           class="rd-card mt-2 p-4 shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0 sm:p-6 lg:p-8"
+          [class.hidden]="reportedCollapsed()"
           style="scroll-margin-top: 5rem"
           aria-labelledby="comments-title"
         >
@@ -327,7 +344,7 @@ const TOC_MIN_HEADINGS = 3;
       }
     </article>
 
-    @if (article(); as a) {
+    @if (blockedUser() ? null : article(); as a) {
       <rd-article-action-bar [article]="a" [url]="shareUrl()" (commentsOpen)="openComments()" (moderationChange)="setModeration($event)" />
       <rd-collection-picker-sheet [open]="collectionsOpen()" [article]="a" (closed)="collectionsOpen.set(false)" />
     }
@@ -363,6 +380,27 @@ export class ArticlePage {
   /** You wrote it: the "hidden" banner speaks to you (F22). */
   protected readonly isAuthor = computed(() => this.session.isAuthenticated() && this.session.me()?.id === this.article()?.author?.id);
   private readonly mutes = inject(MuteStore);
+  private readonly blocks = inject(BlockStore);
+  protected readonly reported = inject(ReportedStore);
+  /**
+   * F36: the writer you blocked (`403 block.blocked` with `blockedUser`, or a block from the "⋯" menu now): the page
+   * shows "This content isn't available" with Unblock.
+   */
+  protected readonly blockedUser = computed<BlockedPersonRef | null>(() => {
+    const error = this.resource.error();
+    if (isApiError(error) && error.code === 'block.blocked' && error.problem?.blockedUser) {
+      // Shown until the reload after Unblock replaces the error (the unblock itself is optimistic, so the state must not
+      // disappear before it can ask for the reload).
+      return error.problem.blockedUser;
+    }
+    const author = this.article()?.author;
+    return author && this.session.isAuthenticated() && this.blocks.isBlocked(author.id) ? { id: author.id, displayName: author.displayName, username: author.username } : null;
+  });
+  /** F22 (store): you reported it (the API's flag, or a report now): collapsed until "Show". */
+  protected readonly reportedCollapsed = computed(() => {
+    const a = this.article();
+    return !!a && this.reported.isCollapsed('article', a.id, a.reportedByMe ?? false);
+  });
   /** You muted the writer (F28): the "انت كاتم الكاتب ده" banner, also right after Mute author from the "⋯" menu. */
   protected readonly mutedAuthor = computed(() => {
     const article = this.article();

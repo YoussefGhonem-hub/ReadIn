@@ -254,6 +254,15 @@ export const CONTRACT_ERROR_CODES = [
   'support.attachment_invalid',
   'support.too_many_attachments',
   'support.category_invalid',
+  // Report additions (F22, store), Block (F36), terms and the content filter (F37)
+  'repost.not_found',
+  'block.self',
+  'block.limit',
+  'block.blocked',
+  'auth.terms_required',
+  'content.objectionable',
+  'content.too_many',
+  'content_filter.term_invalid',
 ] as const;
 
 /** Translates stable API error codes (e.g. `user.suspended`) into the active UI language. */
@@ -262,17 +271,24 @@ export class ErrorMessages {
   private readonly transloco = inject(TranslocoService);
 
   forCode(code: string, fallback?: string | null): string {
-    const key = `errors.${code}`;
-    const text = this.transloco.translate(key);
-    if (text && text !== key) return text;
-    return fallback || this.transloco.translate('errors.unknown');
+    return this.known(`errors.${code}`) || fallback || this.transloco.translate('errors.unknown');
   }
 
-  /** Like {@link forCode}; a suspended account (`user.suspended`) also says until when, or that it is permanent. */
+  /**
+   * Like {@link forCode}; a suspended account (`user.suspended`) also says until when, or that it is permanent, and
+   * `content.too_many` (F37) which limit was reached (`limit`). A `content.objectionable` is listed under the field it
+   * names (ApiError.validationErrors), so forms show it there; it never says the matched words.
+   */
   forError(error: unknown): string {
     if (!isApiError(error)) return this.transloco.translate('errors.unknown');
     if (error.code === 'user.suspended') return this.suspended(error.problem);
-    return this.forCode(error.code, error.problem?.title);
+    return (error.code === 'content.too_many' && this.known(`errors.contentLimits.${error.problem?.limit}`)) || this.forCode(error.code, error.problem?.title);
+  }
+
+  /** The text of a key this version has (a missing or partial key gives null). */
+  private known(key: string): string | null {
+    const text: unknown = this.transloco.translate(key);
+    return typeof text === 'string' && text && text !== key ? text : null;
   }
 
   /**

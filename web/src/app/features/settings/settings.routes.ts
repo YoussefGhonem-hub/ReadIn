@@ -28,4 +28,11 @@ export default [
     loadComponent: () => import('./muted/muted.page').then((m) => m.MutedPage),
     title: 'mute.settings.title',
   },
+  // The people you blocked (F36), with Unblock.
+  {
+    path: 'blocked',
+    canActivate: [authGuard],
+    loadComponent: () => import('./blocked/blocked.page').then((m) => m.BlockedPage),
+    title: 'block.settings.title',
+  },
 ] satisfies Routes;

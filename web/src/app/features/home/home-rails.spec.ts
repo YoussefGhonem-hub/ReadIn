@@ -223,9 +223,12 @@ describe('Home columns', () => {
       expect(path.textContent).toContain('البدء');
 
       const footer = [...root.querySelectorAll<HTMLAnchorElement>('[data-home-footer] a')];
-      expect(footer.map((a) => a.textContent!.trim())).toEqual(['عن ReadIn', 'الخصوصية', 'الشروط', 'المساعدة والتواصل']);
+      expect(footer.map((a) => a.textContent!.trim())).toEqual(['عن ReadIn', 'الخصوصية', 'الشروط', 'قواعد المجتمع', 'المساعدة والتواصل']);
       expect(footer[1].getAttribute('href')).toMatch(/^https:\/\/.+\/privacy$/);
-      expect(footer[3].getAttribute('href')).toMatch(/^mailto:/);
+      // F37: the terms and the guidelines are the app's own SSR pages.
+      expect(footer[2].getAttribute('href')).toBe('/terms');
+      expect(footer[3].getAttribute('href')).toBe('/community-guidelines');
+      expect(footer[4].getAttribute('href')).toMatch(/^mailto:/);
       expect(root.textContent).toContain('ReadIn ©');
     });
 

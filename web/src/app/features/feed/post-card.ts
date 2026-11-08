@@ -18,6 +18,8 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { ReportedStore } from '../../core/moderation/reported.store';
+import { ReportedNotice } from '../../shared/moderation/reported-notice';
 import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -126,6 +128,7 @@ function injectMediaQuery(query: string): Signal<boolean> {
     ReadingTimePipe,
     RelativeTimePipe,
     LocalizedDatePipe,
+    ReportedNotice,
   ],
   providers: [providePostBarIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -162,7 +165,14 @@ function injectMediaQuery(query: string): Signal<boolean> {
     }
   `,
   template: `
-    <article [attr.aria-labelledby]="titleId">
+    @if (reportedCollapsed()) {
+      <!-- F22 (store): you reported it: hidden for you until "Show" (the card keeps its place and its parts) -->
+      <div class="flex items-center gap-2 px-4 py-3" data-card-reported>
+        <svg lucideIcon="EyeOff" [size]="16" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
+        <rd-reported-notice (show)="reported.show('article', article().id)" />
+      </div>
+    }
+    <article [attr.aria-labelledby]="titleId" [class.hidden]="reportedCollapsed()">
       @if (label(); as labelKey) {
         <div class="flex items-center gap-1.5 border-b border-border px-4 py-2 text-xs font-bold text-primary" data-card-label>
           <svg lucideIcon="Sparkles" [size]="14" aria-hidden="true"></svg>
@@ -183,7 +193,10 @@ function injectMediaQuery(query: string): Signal<boolean> {
               >{{ repost.after }}</span
             >
           </div>
-          @if (repostCaption(); as caption) {
+          @if (repostCaption() && captionReported()) {
+            <!-- F22 (store): you reported this repost: its caption (the reposter's text) is hidden for you -->
+            <rd-reported-notice class="px-4 pb-3" (show)="reported.show('repost', article().repostedBy!.repostId!)" />
+          } @else if (repostCaption(); as caption) {
             <div class="excerpt-box px-4 pb-3">
               <div
                 #captionEl
@@ -483,6 +496,7 @@ export class PostCard {
   private readonly sharing = inject(ShareService);
   private readonly memory = inject(FeedMemory);
   private readonly mutes = inject(MuteStore);
+  protected readonly reported = inject(ReportedStore);
   private readonly muteScope = inject(MUTE_SCOPE);
   private readonly injector = inject(Injector);
   private readonly document = inject(DOCUMENT);
@@ -596,6 +610,13 @@ export class PostCard {
    * before it folds away: a toggle can mute the card itself, and toggling back must stay possible (F28).
    */
   protected readonly sheetOpen = signal(false);
+  /** F22 (store): you reported the article (the API's flag, or a report now): collapsed until "Show". */
+  protected readonly reportedCollapsed = computed(() => this.reported.isCollapsed('article', this.article().id, this.article().reportedByMe ?? false));
+  /** F22 (store): you reported the repost that placed the card: its caption is hidden for you. */
+  protected readonly captionReported = computed(() => {
+    const by = this.article().repostedBy;
+    return !!by?.repostId && this.reported.isCollapsed('repost', by.repostId, by.reportedByMe ?? false);
+  });
   /** You muted its writer, field or topic, or pressed Show less on it, in a list that applies mutes (F28). */
   private readonly muted = computed(() => !this.sheetOpen() && this.mutes.hides(this.article(), this.muteScope));
   /** Out of the list, once it folded away. */

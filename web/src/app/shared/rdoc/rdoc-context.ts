@@ -14,6 +14,8 @@ export class RDocContext {
   private doc: Signal<RDoc | null | undefined> = signal(null);
   private articleId: Signal<string | null> = signal(null);
   private embedsLinks: Signal<boolean> = signal(false);
+  private unlinked: Signal<readonly string[] | null> = signal(null);
+  private readonly unlinkedSet = computed(() => new Set(this.unlinked() ?? []));
 
   /** Direction used when a block has no strong characters: the article language's direction. */
   readonly fallbackDir = computed<TextDir>(() => languageDir(this.doc()?.language ?? 'ar-EG'));
@@ -22,6 +24,15 @@ export class RDocContext {
     this.doc = doc;
     this.articleId = articleId;
     this.embedsLinks = embedsAsLinks;
+  }
+
+  bindUnlinkedMentions(ids: Signal<readonly string[] | null>): void {
+    this.unlinked = ids;
+  }
+
+  /** F36: a mention of someone the reader is blocked with stays plain text, without a link. */
+  isMentionLinked(userId: string): boolean {
+    return !this.unlinkedSet().has(userId);
   }
 
   /** Embeds show as a link, never a player (a post card's preview, F34). */

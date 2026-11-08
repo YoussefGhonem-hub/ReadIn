@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { TermsCheckbox } from '../../shared/legal/terms-checkbox';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -24,7 +25,7 @@ type Stage = 'choose' | 'link';
  */
 @Component({
   selector: 'rd-external-sign-in',
-  imports: [ReactiveFormsModule, TranslocoPipe, BottomSheet, ExternalButtons, PhoneField, PasswordField, SubmitButton],
+  imports: [ReactiveFormsModule, TranslocoPipe, BottomSheet, ExternalButtons, PhoneField, PasswordField, SubmitButton, TermsCheckbox],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // No providers: not even a flex item, so Welcome's spacing stays the same.
   host: { class: 'block', '[class.hidden]': '!available() && !pending()' },
@@ -49,7 +50,9 @@ type Stage = 'choose' | 'link';
         </p>
         @if (stage() === 'choose') {
           <div class="flex flex-col gap-2">
-            <button type="button" class="rd-btn rd-btn-primary w-full" [disabled]="busy()" [attr.aria-busy]="busy()" (click)="create()" data-create>
+            <!-- F37: a new account needs the terms checkbox -->
+            <rd-terms-checkbox class="mb-1" [(checked)]="acceptTerms" [disabled]="busy()" />
+            <button type="button" class="rd-btn rd-btn-primary w-full" [disabled]="busy() || !acceptTerms()" [attr.aria-busy]="busy()" (click)="create()" data-create>
               {{ 'auth.external.notLinked.create' | transloco }}
             </button>
             <button type="button" class="rd-btn rd-btn-outline w-full" [disabled]="busy()" (click)="stage.set('link')" data-have-account>
@@ -96,6 +99,8 @@ export class ExternalSignIn {
   protected readonly sheetError = signal<string | null>(null);
   protected readonly stage = signal<Stage>('choose');
   protected readonly linkSubmitted = signal(false);
+  /** F37: "Create a new account" needs the terms checkbox. */
+  protected readonly acceptTerms = signal(false);
   /** The credential waiting for "create" or "link". Memory only, dropped when the sheet closes. */
   protected readonly pending = signal<ExternalResult | null>(null);
   protected readonly providerName = computed(() => (this.pending()?.provider === 'apple' ? 'Apple' : 'Google'));
@@ -121,6 +126,7 @@ export class ExternalSignIn {
         this.sheetError.set(null);
         this.linkForm.reset();
         this.linkSubmitted.set(false);
+        this.acceptTerms.set(false);
         this.pending.set(result);
       } else {
         this.error.set(this.message(error));
@@ -131,7 +137,8 @@ export class ExternalSignIn {
   }
 
   protected create(): Promise<void> {
-    return this.retry({ createAccount: true });
+    if (!this.acceptTerms()) return Promise.resolve();
+    return this.retry({ createAccount: true, acceptTerms: true });
   }
 
   protected link(): Promise<void> {
@@ -147,7 +154,7 @@ export class ExternalSignIn {
     this.linkForm.reset();
   }
 
-  private async retry(extra: Pick<ExternalSignInRequest, 'createAccount' | 'link'>): Promise<void> {
+  private async retry(extra: Pick<ExternalSignInRequest, 'createAccount' | 'link' | 'acceptTerms'>): Promise<void> {
     const result = this.pending();
     if (!result || this.busy()) return;
     this.busy.set(true);

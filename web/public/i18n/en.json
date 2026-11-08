@@ -119,7 +119,8 @@
       "phone_sign_in_exists": "This account already signs in with a phone number.",
       "confirmation_required": "Confirm it's you with your password, or with Google or Apple.",
       "external_mismatch": "Use the Google or Apple account that is linked to ReadIn.",
-      "apple_confirmation_required": "This account is linked to Apple. Confirm with Apple to delete it."
+      "apple_confirmation_required": "This account is linked to Apple. Confirm with Apple to delete it.",
+      "terms_required": "You must agree to the Terms of Use and Community Guidelines to create an account."
     },
     "account": {
       "deletion_unavailable": "We couldn't finish deleting your account, so nothing was deleted. Try again in a few minutes."
@@ -261,7 +262,8 @@
     },
     "repost": {
       "own_article": "You can't repost your own article.",
-      "caption_too_long": "Your thoughts must be 500 characters or fewer."
+      "caption_too_long": "Your thoughts must be 500 characters or fewer.",
+      "not_found": "This repost no longer exists."
     },
     "highlight": {
       "text_mismatch": "This text has changed in the article. Reload and try again.",
@@ -376,6 +378,22 @@
       "attachment_invalid": "Screenshots must be JPEG, PNG or WebP, up to 5 MB each.",
       "too_many_attachments": "You can attach up to 3 images.",
       "category_invalid": "Choose a category from the list."
+    },
+    "block": {
+      "self": "You can't block yourself.",
+      "limit": "You've reached the limit of 1,000 blocked accounts.",
+      "blocked": "You blocked this account. Unblock it first."
+    },
+    "content": {
+      "objectionable": "This text breaks our Community Guidelines. Edit it and try again.",
+      "too_many": "You've reached the limit: 5 articles a day and 60 comments an hour."
+    },
+    "content_filter": {
+      "term_invalid": "Enter a valid term of at least 2 characters."
+    },
+    "contentLimits": {
+      "articles_per_day": "You can publish 5 new articles a day. Try again tomorrow.",
+      "comments_per_hour": "You can write 60 comments an hour. Try again a little later."
     }
   },
   "auth": {
@@ -872,7 +890,8 @@
       "unhide": "Unhide article",
       "feature": "Feature",
       "unfeature": "Unfeature",
-      "openInConsole": "Open in console"
+      "openInConsole": "Open in console",
+      "reportRepost": "Report repost"
     },
     "hiddenBanner": {
       "title": "Hidden by moderators",
@@ -1021,6 +1040,10 @@
         "support_ticket": {
           "label": "Support tickets",
           "hint": "New tickets and members' replies"
+        },
+        "report_new": {
+          "label": "New reports",
+          "hint": "When someone reports content or an account"
         }
       },
       "alwaysOn": "Security alerts and moderation notices can't be turned off, and security alerts arrive even during quiet hours.",
@@ -2098,7 +2121,8 @@
     },
     "errors": {
       "tooFast": "You're commenting too fast. Wait a minute and try again."
-    }
+    },
+    "unavailable": "This comment isn't available"
   },
   "mute": {
     "menu": {
@@ -2155,12 +2179,14 @@
     "title": {
       "article": "Report article",
       "comment": "Report comment",
-      "user": "Report user"
+      "user": "Report user",
+      "repost": "Report repost"
     },
     "body": {
       "article": "What's wrong with this article?",
       "comment": "What's wrong with this comment?",
-      "user": "What's wrong with this account?"
+      "user": "What's wrong with this account?",
+      "repost": "What's wrong with this repost?"
     },
     "reasons": {
       "spam": "Spam or advertising",
@@ -2172,7 +2198,11 @@
     "details": "Details (optional)",
     "detailsPlaceholder": "Tell us more if you like",
     "submit": "Send report",
-    "thanks": "Thanks, we'll review it"
+    "thanks": "Thanks, we'll review it",
+    "alsoBlock": "Also block",
+    "thanksBlocked": "Thanks, we'll review the report. You blocked them too.",
+    "hiddenForYou": "You reported this. It's hidden for you.",
+    "show": "Show"
   },
   "moderation": {
     "title": "Moderation",
@@ -2194,12 +2224,14 @@
       "all": "All",
       "article": "Articles",
       "comment": "Comments",
-      "user": "Users"
+      "user": "Users",
+      "repost": "Reposts"
     },
     "type": {
       "article": "Article",
       "comment": "Comment",
-      "user": "User"
+      "user": "User",
+      "repost": "Repost"
     },
     "reasons": {
       "spam": "Spam",
@@ -2256,12 +2288,14 @@
       "title": {
         "article": "Reported article",
         "comment": "Reported comment",
-        "user": "Reported user"
+        "user": "Reported user",
+        "repost": "Reported repost"
       },
       "open": {
         "article": "Open the article",
         "comment": "Open the article with this comment",
-        "user": "Open the profile"
+        "user": "Open the profile",
+        "repost": "Open the reposted article"
       },
       "author": "Author",
       "reports": "Reports",
@@ -2321,10 +2355,12 @@
         "clear_headline": "Title cleared",
         "dismiss": "Reports dismissed",
         "hide_content": "Their content is hidden",
-        "unhide_content": "Their content is back"
+        "unhide_content": "Their content is back",
+        "delete_repost": "Repost deleted"
       },
       "hideContent": "Hide all their content",
-      "unhideContent": "Restore their content"
+      "unhideContent": "Restore their content",
+      "deleteRepost": "Delete repost"
     },
     "sheet": {
       "title": {
@@ -2341,7 +2377,8 @@
         "unhideArticle": "Unhide this article?",
         "unhideComment": "Unhide this comment?",
         "hideContent": "Hide all of {{name}}'s content?",
-        "unhideContent": "Restore {{name}}'s content?"
+        "unhideContent": "Restore {{name}}'s content?",
+        "deleteRepost": "Delete this repost?"
       },
       "body": {
         "hideArticle": "It disappears from every list and from search; only its author and moderators can open it. The author gets a notice with your note.",
@@ -2357,7 +2394,8 @@
         "unhideArticle": "Readers can see it everywhere again.",
         "unhideComment": "Everyone can see it again.",
         "hideContent": "Every article and comment of theirs is hidden, and its open reports are resolved. They aren't notified. You can restore it later.",
-        "unhideContent": "What was hidden with the account comes back. Content hidden one by one stays hidden."
+        "unhideContent": "What was hidden with the account comes back. Content hidden one by one stays hidden.",
+        "deleteRepost": "It's removed, as if its owner had undone it. Its open reports are resolved."
       },
       "note": "Note",
       "noteOptional": "Note (optional)",
@@ -2403,7 +2441,8 @@
         "user.clear_headline": "cleared a user's title",
         "reports.dismiss": "dismissed reports",
         "user.hide_content": "hid all of a user's content",
-        "user.unhide_content": "restored a user's content"
+        "user.unhide_content": "restored a user's content",
+        "repost.delete": "deleted a repost"
       },
       "until": "until {{date}}",
       "permanent": "permanently",
@@ -2415,7 +2454,16 @@
     },
     "settings": {
       "body": "Open reports and the moderation log"
-    }
+    },
+    "age": {
+      "zero": "Open for less than an hour",
+      "one": "Open for 1 hour",
+      "other": "Open for {{count}} hours"
+    },
+    "urgent": "Urgent",
+    "contentFilter": "Content filter",
+    "matchedTerms": "Matched:",
+    "repostOf": "reposted {{title}}"
   },
   "notifications": {
     "title": "Notifications",
@@ -2531,6 +2579,19 @@
           "one": "New support messages from {{name}} and 1 other",
           "other": "New support messages from {{name}} and {{count}} others"
         }
+      },
+      "report_new": {
+        "article": "New report: article",
+        "comment": "New report: comment",
+        "user": "New report: account",
+        "repost": "New report: repost",
+        "other": "New report",
+        "system": "Caught by the content filter"
+      },
+      "report_resolved": {
+        "actioned": "We reviewed your report and removed the content",
+        "actionedUser": "We reviewed your report and took action",
+        "noViolation": "We reviewed your report; the content doesn't break our guidelines"
       }
     }
   },
@@ -2895,7 +2956,8 @@
         "suspendedNow": "Accounts suspended",
         "openReports": "Open reports",
         "openTickets": "Open tickets",
-        "pendingVerifications": "Pending verification requests"
+        "pendingVerifications": "Pending verification requests",
+        "openReportsOver24h": "Reports past 24 hours"
       },
       "last30": "Last 30 days",
       "charts": {
@@ -3447,6 +3509,57 @@
         "closed": "Ticket closed",
         "category": "Category changed"
       }
+    },
+    "overdueReports": {
+      "one": "1 report waiting more than 24 hours",
+      "other": "{{count}} reports waiting more than 24 hours"
+    },
+    "filter": {
+      "title": "Content filter",
+      "rowHint": "The words that are refused or sent to the moderators, by language",
+      "subtitle": "Block refuses the text; Flag publishes it and sends a report to the moderation queue. Whole words only, after normalizing letters.",
+      "unsaved": "You have unsaved changes.",
+      "test": "Try a text",
+      "testText": "Type a text to check",
+      "testRun": "Check",
+      "testHint": "It checks against the saved lists, not unsaved changes.",
+      "results": {
+        "none": "Allowed",
+        "flag": "Flagged",
+        "block": "Refused"
+      },
+      "lists": "Lists",
+      "languages": {
+        "ar": "Arabic",
+        "en": "English"
+      },
+      "levels": {
+        "block": "Block",
+        "flag": "Flag"
+      },
+      "levelHints": {
+        "block": "Slurs, explicit sexual terms and threats: the text is refused with “This text breaks our Community Guidelines”.",
+        "flag": "Insults and likely spam: the text is published and a report from the content filter goes to the moderation queue."
+      },
+      "level": "Level",
+      "newTerm": "A word or phrase",
+      "add": "Add",
+      "remove": "Remove {{term}}",
+      "fromFile": "From the file",
+      "fromConsole": "Added here",
+      "empty": "No words in this list",
+      "disabled": {
+        "zero": "No removed words",
+        "one": "1 removed word from the files",
+        "other": "{{count}} removed words from the files"
+      },
+      "restore": "Restore",
+      "problems": {
+        "length": "Enter 2 to {{max}} characters.",
+        "letter": "A word needs at least one letter.",
+        "duplicate": "It's already in this language's list ({{level}})."
+      },
+      "tooMany": "The lists can hold up to {{max}} words."
     }
   },
   "support": {
@@ -3534,5 +3647,66 @@
     "reopened": "Ticket reopened",
     "closedCanReopen": "This ticket is closed. Reopen it to write again.",
     "closedExpired": "This ticket was closed more than 30 days ago. Send a new one."
+  },
+  "block": {
+    "menu": {
+      "blockUser": "Block user",
+      "blockAuthor": "Block author",
+      "unblockAuthor": "Unblock author",
+      "blockCommenter": "Block commenter",
+      "unblockCommenter": "Unblock commenter",
+      "unblock": "Unblock"
+    },
+    "dialog": {
+      "title": "Block",
+      "titleEnd": "?",
+      "body": "You won't see each other's articles or comments, and neither of you can follow, mention or comment on the other's content. They won't be notified.",
+      "confirm": "Block"
+    },
+    "toast": {
+      "blocked": "You blocked {{name}}.",
+      "unblocked": "You unblocked {{name}}."
+    },
+    "undo": "Undo",
+    "unblock": "Unblock",
+    "unavailable": {
+      "account": "This account isn't available",
+      "content": "This content isn't available",
+      "youBlocked": "You blocked"
+    },
+    "settings": {
+      "title": "Blocked accounts",
+      "rowHint": "People you blocked, with Unblock",
+      "subtitle": "You and they can't see each other's articles or comments, follow or mention each other.",
+      "since": "blocked on {{date}}",
+      "emptyTitle": "You haven't blocked anyone",
+      "emptyBody": "Block someone from the ⋯ menu on their profile, article or comment.",
+      "loadError": "We couldn't load the people you blocked."
+    }
+  },
+  "legal": {
+    "settingsTitle": "Legal",
+    "terms": {
+      "title": "Terms of Use"
+    },
+    "guidelines": {
+      "title": "Community Guidelines"
+    },
+    "privacy": "Privacy Policy",
+    "checkbox": {
+      "agree": "I agree to the",
+      "and": " and the ",
+      "zeroTolerance": ". There is zero tolerance for objectionable content or abusive users."
+    },
+    "accept": {
+      "pageTitle": "New terms",
+      "title": "We've updated our terms",
+      "subtitle": "Please read and accept them to go on using ReadIn.",
+      "generic": "We changed the Terms of Use and the Community Guidelines. Read them before you go on.",
+      "effective": "In effect since {{date}}",
+      "zeroTolerance": "There is zero tolerance for objectionable content or abusive users.",
+      "agree": "I agree",
+      "delete": "Delete my account"
+    }
   }
 }

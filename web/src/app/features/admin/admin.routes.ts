@@ -98,6 +98,13 @@ export default [
         title: 'admin.nav.system',
         loadComponent: () => import('./system/system.page').then((m) => m.AdminSystemPage),
       },
+      // F37: the content filter's word lists, edited without a release.
+      {
+        path: 'system/content-filter',
+        canActivate: [permissionGuard('system.settings')],
+        title: 'admin.filter.title',
+        loadComponent: () => import('./system/content-filter.page').then((m) => m.AdminContentFilterPage),
+      },
       { path: '**', loadComponent: () => import('../../shared/ui/not-found.page').then((m) => m.NotFoundPage) },
     ],
   },

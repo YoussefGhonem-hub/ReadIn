@@ -5,6 +5,8 @@ import { firstValueFrom } from 'rxjs';
 import { ModerationApi } from '../../core/api/moderation.api';
 import { ModerationTargetType, REPORT_REASONS, ReportReason } from '../../core/api/models';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
+import { ReportedStore } from '../../core/moderation/reported.store';
+import { BlockStore, BlockedPersonRef } from '../../core/social/block.store';
 import { BottomSheet } from '../ui/bottom-sheet';
 import { ToastService } from '../ui/toast/toast.service';
 import { ModerationErrors } from './moderation-errors';
@@ -12,15 +14,18 @@ import { ModerationErrors } from './moderation-errors';
 /** Optional report details (contract: ≤ 500). */
 export const REPORT_DETAILS_MAX_LENGTH = 500;
 
-/** What is being reported: an article, a comment or a user, by id. */
+/** What is being reported: an article, a comment, a user or a repost (F22, store), by id. */
 export interface ReportTarget {
   type: ModerationTargetType;
   id: string;
+  /** Who wrote it (the user itself for a user): the "Also block @username" checkbox (F36). None for a deleted account. */
+  author?: BlockedPersonRef | null;
 }
 
 /**
- * The one report sheet (F22) for articles, comments and users: a reason, optional details (≤ 500, with a counter) and
- * Send. Reporting the same target again succeeds too (the API treats it as a no-op), so a success always closes the
+ * The one report sheet (F22) for articles, comments, users and reposts: a reason, optional details (≤ 500, with a
+ * counter), "Also block @username" (F36, off by default) and Send. A sent report collapses the content for you at once
+ * (ReportedStore). Reporting the same target again succeeds too (the API treats it as a no-op), so a success always closes the
  * sheet with the thanks toast; a failure stays in the sheet with its message. Guests get the sign-in prompt instead.
  */
 @Component({
@@ -69,6 +74,13 @@ export interface ReportTarget {
               {{ details().length }}/{{ detailsMax }}
             </p>
           </div>
+          @if (t.author; as author) {
+            <!-- F36: report and block in one step (off by default). -->
+            <label class="flex min-h-11 cursor-pointer items-center gap-3 text-sm" data-also-block>
+              <input type="checkbox" class="h-5 w-5 shrink-0 accent-primary" [checked]="alsoBlock()" [disabled]="busy()" (change)="alsoBlock.set($any($event.target).checked)" />
+              <span>{{ 'report.alsoBlock' | transloco }} <bdi dir="ltr">&#64;{{ author.username }}</bdi></span>
+            </label>
+          }
           @if (error()) {
             <p class="rd-alert rd-alert-error m-0" role="alert" data-report-error>{{ error() }}</p>
           }
@@ -92,6 +104,8 @@ export class ReportSheet {
   private readonly toasts = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
   private readonly errors = inject(ModerationErrors);
+  private readonly reportedStore = inject(ReportedStore);
+  private readonly blocks = inject(BlockStore);
 
   /** Opens the sheet for this target; null closes it. */
   readonly target = input<ReportTarget | null>(null);
@@ -104,6 +118,8 @@ export class ReportSheet {
   protected readonly detailsMax = REPORT_DETAILS_MAX_LENGTH;
   protected readonly reason = signal<ReportReason | null>(null);
   protected readonly details = signal('');
+  /** F36: also block the author (default off). */
+  protected readonly alsoBlock = signal(false);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   /** Guests never see the form: they get the sign-in prompt. */
@@ -118,6 +134,7 @@ export class ReportSheet {
       untracked(() => {
         this.reason.set(null);
         this.details.set('');
+        this.alsoBlock.set(false);
         this.error.set(null);
         this.busy.set(false);
         this.guest.set(false);
@@ -146,9 +163,13 @@ export class ReportSheet {
     this.busy.set(true);
     this.error.set(null);
     try {
-      await firstValueFrom(this.api.report(target.type, target.id, reason, this.details()));
+      const alsoBlock = this.alsoBlock() && !!target.author;
+      await firstValueFrom(this.api.report(target.type, target.id, reason, this.details(), alsoBlock));
       this.busy.set(false);
-      this.toasts.success(this.transloco.translate('report.thanks'));
+      // F22 (store): the reported content collapses for you at once; F36: the author is blocked too.
+      this.reportedStore.markReported(target.type, target.id);
+      if (alsoBlock && target.author) this.blocks.learnBlocked(target.author.id);
+      this.toasts.success(this.transloco.translate(alsoBlock ? 'report.thanksBlocked' : 'report.thanks'));
       this.reported.emit(target);
       this.closed.emit();
     } catch (error) {

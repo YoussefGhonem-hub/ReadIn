@@ -15,7 +15,7 @@ import { BdiText } from '../../shared/directives/bdi-text';
 import { isolate } from '../../shared/directives/bidi';
 import { ModerationActionDraft, ModerationActionSheet } from '../../shared/moderation/moderation-action-sheet';
 import { provideModerationIcons } from '../../shared/moderation/moderation-icons';
-import { LocalizedDatePipe, PluralPipe, RelativeTimePipe } from '../../shared/pipes/format.pipes';
+import { LocalizedDatePipe, PluralPipe, RelativeTimePipe, translatePlural } from '../../shared/pipes/format.pipes';
 import { Avatar } from '../../shared/ui/avatar';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { categoryLink } from '../categories/category-rules';
@@ -80,6 +80,12 @@ export interface CaseAction {
               <span class="rd-tag" [class]="c.item.status === 'open' ? 'bg-callout-warning text-text-primary' : 'rd-tag-neutral'" data-case-status>
                 {{ 'moderation.case.status.' + c.item.status | transloco }}
               </span>
+              @if (c.item.status === 'open' && c.item.ageHours !== null && c.item.ageHours !== undefined) {
+                <span class="text-sm" [class.font-semibold]="c.item.urgent" [class.text-error]="c.item.urgent" data-case-age>{{ ageLabel(c.item.ageHours) }}</span>
+                @if (c.item.urgent) {
+                  <span class="rd-tag bg-callout-danger text-error" data-case-urgent>{{ 'moderation.urgent' | transloco }}</span>
+                }
+              }
             </header>
 
             <section data-case-target>
@@ -257,6 +263,9 @@ export interface CaseAction {
                       @if (report.reporter; as r) {
                         <span class="font-semibold"><rd-bdi-text [text]="r.displayName" /></span>
                         <bdi dir="ltr" class="text-xs text-text-secondary">&#64;{{ r.username }}</bdi>
+                      } @else if (report.isSystem) {
+                        <!-- F37: filed by the content filter -->
+                        <span class="font-semibold" data-report-system>{{ 'moderation.contentFilter' | transloco }}</span>
                       } @else {
                         <span class="font-semibold text-text-secondary">{{ 'moderation.deletedUser' | transloco }}</span>
                       }
@@ -267,6 +276,14 @@ export interface CaseAction {
                     </p>
                     @if (report.details) {
                       <p class="m-0 mt-1 whitespace-pre-line [overflow-wrap:anywhere]" [attr.dir]="textDir(report.details)" data-report-details><rd-bdi-text [text]="report.details" /></p>
+                    }
+                    @if (report.matchedTerms?.length) {
+                      <p class="m-0 mt-1 flex flex-wrap items-center gap-1.5 text-xs" data-report-terms>
+                        <span class="text-text-secondary">{{ 'moderation.matchedTerms' | transloco }}</span>
+                        @for (term of report.matchedTerms; track term) {
+                          <span class="rd-tag bg-callout-danger text-text-primary" dir="auto">{{ term }}</span>
+                        }
+                      </p>
                     }
                     <p class="m-0 mt-1 text-xs text-text-secondary">
                       <time [attr.datetime]="report.createdAt" [title]="report.createdAt | rdDate: lang() : 'long'">{{ report.createdAt | rdRelativeTime: lang() }}</time>
@@ -365,7 +382,13 @@ export class ModerationCasePage {
     const actions: CaseAction[] = [];
     const on = { targetType: type, targetId: id };
 
-    if (type === 'user') {
+    if (type === 'repost') {
+      // F22 (store): a repost is deleted (as if its owner had undone it) or the reports dismissed; the reposter is warned
+      // or suspended from their own case.
+      if (target.state !== 'deleted') {
+        actions.push({ id: 'delete', labelKey: 'moderation.actions.deleteRepost', icon: 'Trash2', danger: true, draft: { action: 'delete', ...on } });
+      }
+    } else if (type === 'user') {
       const name = target.author?.displayName ?? null;
       if (target.state !== 'deleted') {
         actions.push({ id: 'warn', labelKey: 'moderation.actions.warn', icon: 'TriangleAlert', draft: { action: 'warn', ...on, name } });
@@ -411,6 +434,11 @@ export class ModerationCasePage {
       const name = this.transloco.translate(data ? `moderation.case.title.${data.item.targetType}` : 'moderation.title');
       this.title.setTitle(`${name} — ReadIn`);
     });
+  }
+
+  /** "Open for 5 hours" (F22, store): whole hours since the oldest open report. */
+  protected ageLabel(hours: number): string {
+    return translatePlural(this.transloco, 'moderation.age', hours, this.lang());
   }
 
   async load(): Promise<void> {

@@ -45,6 +45,9 @@ export function targetLink(item: Pick<ModerationQueueItemDto, 'targetType' | 'ta
       return t.articleSlug ? `/${uiLang}/a/${t.articleSlug}` : null;
     case 'user':
       return t.author ? `/@${t.author.username}` : null;
+    case 'repost':
+      // F22 (store): the reposted article (the caption is shown in the case itself).
+      return t.articleSlug ? `/${uiLang}/a/${t.articleSlug}` : null;
   }
 }
 
@@ -141,6 +144,20 @@ export class ReasonChips {
         </p>
         <p class="m-0 mt-1 text-xs text-text-secondary">
           {{ 'moderation.case.author' | transloco }}: <ng-container *ngTemplateOutlet="author" />
+        </p>
+      }
+      @case ('repost') {
+        <!-- F22 (store): the reposter's caption and the article they reposted -->
+        @if (t.body) {
+          <p class="comment-body m-0 text-[15px] leading-relaxed" [class.line-clamp-3]="compact()" [attr.dir]="dirOf(t.body)" data-target-caption>
+            <rd-bdi-text [text]="t.body" />
+          </p>
+        }
+        <p class="m-0 mt-1 text-xs text-text-secondary">
+          <ng-container *ngTemplateOutlet="author" />
+          @if (t.articleTitle) {
+            · <span>{{ 'moderation.repostOf' | transloco: { title: isolate(t.articleTitle) } }}</span>
+          }
         </p>
       }
       @case ('comment') {
@@ -284,6 +301,7 @@ export class ModerationLogEntry {
       case 'user.unhide_content':
         return 'Eye';
       case 'comment.delete':
+      case 'repost.delete':
         return 'Trash2';
       case 'user.warn':
         return 'TriangleAlert';

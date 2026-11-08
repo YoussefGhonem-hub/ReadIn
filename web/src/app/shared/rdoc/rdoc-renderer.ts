@@ -109,10 +109,14 @@ export class RDocRenderer {
   readonly embedsAsLinks = input(false);
   /** Highlights to draw (F30), by block id; the reader's only. */
   readonly marks = input<BlockMarks | null>(null);
+  /** F36: users the reader is blocked with: their mentions render as plain text (`ArticleDetailsDto.unlinkedMentionIds`). */
+  readonly unlinkedMentions = input<readonly string[] | null>(null);
   protected readonly dir = computed(() => languageDir(this.doc()?.language ?? 'ar-EG'));
 
   constructor() {
-    inject(RDocContext).bind(this.doc, this.articleId, this.embedsAsLinks);
+    const ctx = inject(RDocContext);
+    ctx.bind(this.doc, this.articleId, this.embedsAsLinks);
+    ctx.bindUnlinkedMentions(this.unlinkedMentions);
     inject(RDocMarks).bind(this.marks);
   }
 }

@@ -137,7 +137,11 @@ type State = { status: 'loading' } | { status: 'loaded'; data: AdminDashboardDto
           <section class="cards mt-2" [attr.aria-label]="'admin.dashboard.queues' | transloco">
             @for (q of queues(); track q.key) {
               <a [class]="card + ' flex items-center gap-3 p-4 text-inherit no-underline hover:bg-surface-variant'" [routerLink]="q.path" [attr.data-queue]="q.key">
-                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-container text-on-primary-container" aria-hidden="true">
+                <span
+                  class="grid h-10 w-10 shrink-0 place-items-center rounded-full"
+                  [class]="q.key === 'openReportsOver24h' && q.value > 0 ? 'bg-callout-danger text-error' : 'bg-primary-container text-on-primary-container'"
+                  aria-hidden="true"
+                >
                   <svg [lucideIcon]="q.icon" [size]="18"></svg>
                 </span>
                 <span class="min-w-0 flex-1">
@@ -315,6 +319,8 @@ export class AdminDashboardPage {
     if (!c) return [];
     const all = [
       { key: 'openReports', value: c.openReports, path: '/admin/reports', icon: 'Flag' },
+      // F22 (store): open cases past the 24-hour target (target: 0).
+      { key: 'openReportsOver24h', value: c.openReportsOver24h ?? null, path: '/admin/reports', icon: 'TriangleAlert' },
       { key: 'openTickets', value: c.openTickets, path: '/admin/tickets', icon: 'LifeBuoy' },
       { key: 'pendingVerifications', value: c.pendingVerifications, path: '/admin/verification', icon: 'BadgeCheck' },
     ];

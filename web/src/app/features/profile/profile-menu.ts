@@ -12,13 +12,16 @@ import { BottomSheet } from '../../shared/ui/bottom-sheet';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { AuthPromptService } from '../../core/auth/auth-prompt.service';
 import { SessionStore } from '../../core/auth/session.store';
+import { BlockStore, BlockedPersonRef } from '../../core/social/block.store';
 import { MuteStore } from '../../core/social/mute.store';
+import { BlockDialog } from '../../shared/blocks/block-dialog';
+import { BLOCK_ICON } from '../../shared/blocks/block-icons';
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { ModerationActionDraft, ModerationActionSheet } from '../../shared/moderation/moderation-action-sheet';
 import { provideModerationIcons } from '../../shared/moderation/moderation-icons';
 import { ReportSheet, ReportTarget } from '../../shared/moderation/report-sheet';
 
-type ProfileMenuAction = 'muteUser' | 'report' | 'warn' | 'suspend' | 'unsuspend' | 'removeBadge' | 'openInConsole';
+type ProfileMenuAction = 'muteUser' | 'blockUser' | 'report' | 'warn' | 'suspend' | 'unsuspend' | 'removeBadge' | 'openInConsole';
 
 interface ProfileMenuItem {
   id: ProfileMenuAction;
@@ -38,7 +41,7 @@ interface ProfileMenuItem {
  */
 @Component({
   selector: 'rd-profile-menu',
-  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet, BottomSheet],
+  imports: [TranslocoPipe, LucideDynamicIcon, CdkMenu, CdkMenuItem, CdkMenuTrigger, ReportSheet, ModerationActionSheet, BottomSheet, BlockDialog],
   providers: [provideModerationIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'contents' },
@@ -72,6 +75,7 @@ interface ProfileMenuItem {
     </ng-template>
 
     <rd-report-sheet [target]="reporting()" (closed)="reporting.set(null)" />
+    <rd-block-dialog [person]="blocking()" (closed)="blocking.set(null)" />
     <rd-moderation-action-sheet [draft]="moderating()" (done)="onModerated($event)" (closed)="moderating.set(null)" />
     <!-- F23: removing the Verified badge asks first -->
     <rd-bottom-sheet [open]="removingBadge()" role="alertdialog" labelledBy="remove-badge-title" describedBy="remove-badge-body" [dismissible]="!badgeBusy()" (closed)="removingBadge.set(false)">
@@ -95,6 +99,7 @@ export class ProfileMenu {
   private readonly session = inject(SessionStore);
   private readonly prompt = inject(AuthPromptService);
   private readonly mutes = inject(MuteStore);
+  private readonly blocks = inject(BlockStore);
   private readonly router = inject(Router);
   private readonly verification = inject(VerificationApi);
   private readonly toasts = inject(ToastService);
@@ -116,6 +121,10 @@ export class ProfileMenu {
   protected readonly badgeError = signal<string | null>(null);
   protected readonly isolate = isolate;
 
+  /** F36: you blocked them (in this session); the dialog is open for this person. */
+  protected readonly blocked = computed(() => this.session.isAuthenticated() && this.blocks.isBlocked(this.profile().id));
+  protected readonly blocking = signal<BlockedPersonRef | null>(null);
+
   /** You muted this user (false for guests). */
   private readonly muted = computed(() => {
     const p = this.profile();
@@ -131,6 +140,14 @@ export class ProfileMenu {
         this.muted()
           ? { id: 'muteUser', labelKey: 'mute.menu.unmuteUser', icon: MUTE_ICON.Volume2 }
           : { id: 'muteUser', labelKey: 'mute.menu.muteUser', icon: MUTE_ICON.VolumeX },
+      );
+    }
+    // F36: Block under Mute; the official account can be blocked too.
+    if (!p.isMe) {
+      items.push(
+        this.blocked()
+          ? { id: 'blockUser', labelKey: 'block.menu.unblock', icon: BLOCK_ICON.UserRoundCheck }
+          : { id: 'blockUser', labelKey: 'block.menu.blockUser', icon: BLOCK_ICON.UserRoundX, danger: true },
       );
     }
     // F23: staff (admins, moderators, the official account) can't be warned or suspended; `admin` comes with users.read.
@@ -161,7 +178,12 @@ export class ProfileMenu {
     const p = this.profile();
     const user = { id: p.id, displayName: p.displayName };
     if (action === 'muteUser') void (this.muted() ? this.mutes.unmuteAuthor(user) : this.mutes.muteAuthor(user));
-    else if (action === 'report') this.reporting.set({ type: 'user', id: p.id });
+    else if (action === 'report') this.reporting.set({ type: 'user', id: p.id, author: { id: p.id, displayName: p.displayName, username: p.username } });
+    else if (action === 'blockUser') {
+      const person = { id: p.id, displayName: p.displayName, username: p.username };
+      if (this.blocked()) void this.blocks.unblock(person);
+      else this.blocking.set(person);
+    }
     else if (action === 'openInConsole') void this.router.navigate(['/admin/users', p.id]);
     else if (action === 'removeBadge') {
       this.badgeError.set(null);

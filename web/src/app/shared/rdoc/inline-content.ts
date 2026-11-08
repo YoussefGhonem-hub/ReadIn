@@ -14,7 +14,7 @@ type Segment = BidiSegment & { pieces: MarkedPiece[] | null };
 type InlineVm =
   | { kind: 'text'; segments: Segment[]; marks: Mark[] }
   | { kind: 'term'; termId: string; text: string; segments: Segment[] }
-  | { kind: 'mention'; handle: string; text: string; pieces: MarkedPiece[] | null }
+  | { kind: 'mention'; handle: string; userId: string; text: string; pieces: MarkedPiece[] | null }
   | { kind: 'break' };
 
 /**
@@ -74,9 +74,14 @@ type InlineVm =
           </button>
         }
         @case ('mention') {
+          @if (!ctx.isMentionLinked(node.userId)) {
+            <!-- F36: someone you are blocked with: plain text -->
+            <bdi data-unlinked-mention>@if (node.pieces) {<ng-container *ngTemplateOutlet="pieces; context: { pieces: node.pieces }" />} @else {{{ node.text }}}</bdi>
+          } @else {
           <a class="rd-mention" [routerLink]="'/@' + node.handle" [rdProfileCard]="node.handle"
             ><bdi>@if (node.pieces) {<ng-container *ngTemplateOutlet="pieces; context: { pieces: node.pieces }" />} @else {{{ node.text }}}</bdi></a
           >
+          }
         }
         @case ('break') {
           <br />
@@ -189,7 +194,7 @@ export class InlineContentView {
         case 'mention': {
           const pieces = highlights.length ? markPieces(node.text, offset, highlights) : null;
           offset += node.text.length;
-          return { kind: 'mention', handle: node.text.replace(/^@/, ''), text: node.text, pieces };
+          return { kind: 'mention', handle: node.text.replace(/^@/, ''), userId: node.userId, text: node.text, pieces };
         }
         default:
           offset += 1; // a hard break is "\n" in the plain text

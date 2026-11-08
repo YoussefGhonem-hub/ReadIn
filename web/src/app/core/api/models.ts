@@ -113,6 +113,10 @@ export interface MeDto {
   privacy?: PrivacySettingsDto;
   /** F30: draw highlight marks in the reader (default true; missing from an older API means true). */
   showHighlights?: boolean;
+  /** F37: the terms version the account accepted; null = none yet. Missing from an older API. */
+  termsVersion?: string | null;
+  /** F37: a newer terms version waits: the blocking terms screen (after password and PIN). */
+  mustAcceptTerms?: boolean;
 }
 
 // ── Auth (SPEC §9, ADR 0007, ADR 0009, ADR 0012) ────────────────
@@ -163,6 +167,8 @@ export interface ExternalSignInRequest extends ExternalCredential {
   link?: { phoneNumber: string; password: string };
   /** "Create a new account" (never together with `link`). */
   createAccount?: boolean;
+  /** F37: must be true with `createAccount` (`400 auth.terms_required`). */
+  acceptTerms?: boolean;
 }
 
 /** Confirms a sensitive action: exactly one of the password or a fresh sign in of a linked provider. */
@@ -179,6 +185,8 @@ export interface RegisterRequest {
   uiLanguage?: UiLanguage;
   /** IANA, e.g. "Africa/Cairo". */
   timeZone?: string;
+  /** F37: the sign-up checkbox; must be true (`400 auth.terms_required`). */
+  acceptTerms?: boolean;
 }
 
 export interface LoginRequest {
@@ -338,6 +346,10 @@ export interface RepostLabelDto {
    * Missing from an API older than repost captions.
    */
   caption?: string | null;
+  /** The repost itself: what a repost card's "⋯" reports (F22, store requirements). Missing from an older API. */
+  repostId?: string;
+  /** You reported this repost: its caption collapses for you (with "Show"). */
+  reportedByMe?: boolean;
 }
 
 export interface FieldRefDto {
@@ -377,6 +389,8 @@ export interface ArticleCardDto {
   myReaction: ReactionType | null;
   /** False for guests. */
   isSaved: boolean;
+  /** F22 (store): you reported it, so it collapses for you with "Show". False for guests; missing from an older API. */
+  reportedByMe?: boolean;
   /** Feed cards carry at most the first 10 PDF pages; article details carry all of them. */
   attachments: ArticleAttachmentsDto | null;
   /**
@@ -453,6 +467,8 @@ export interface ArticleDetailsDto extends ArticleCardDto {
   category?: WriterCategoryRefDto | null;
   /** F23: featured by an admin (the "⋯" offers Feature / Unfeature). Missing from an API older than F23. */
   isFeatured?: boolean;
+  /** F36: the users you are blocked with; their mentions in the article render as plain text. */
+  unlinkedMentionIds?: string[];
 }
 
 // ── Writer categories (F31) ─────────────────────────────────
@@ -667,6 +683,10 @@ export interface CommentDto {
    * on placeholders. Missing from an API older than the profile step.
    */
   isFollowingAuthor?: boolean;
+  /** F22 (store): you reported it, so it collapses for you with "Show". */
+  reportedByMe?: boolean;
+  /** F36: a blocked person's comment kept as a placeholder for others' replies (`body` and `author` null). */
+  isUnavailable?: boolean;
 }
 
 /** `GET /articles/{id}/comments`. `total` is the article's comment count (visible comments and replies). */
@@ -696,8 +716,9 @@ export interface MentionCandidateDto {
 export type ReportReason = 'spam' | 'misinformation' | 'harassment' | 'copyright' | 'other';
 export const REPORT_REASONS: readonly ReportReason[] = ['spam', 'misinformation', 'harassment', 'copyright', 'other'];
 
-export type ModerationTargetType = 'article' | 'comment' | 'user';
-export const MODERATION_TARGET_TYPES: readonly ModerationTargetType[] = ['article', 'comment', 'user'];
+export type ModerationTargetType = 'article' | 'comment' | 'user' | 'repost';
+/** F22 (store): reposts are a report target too (their caption is the reposter's text). */
+export const MODERATION_TARGET_TYPES: readonly ModerationTargetType[] = ['article', 'comment', 'user', 'repost'];
 
 export type ReportStatus = 'open' | 'resolved' | 'dismissed';
 export const REPORT_STATUSES: readonly ReportStatus[] = ['open', 'resolved', 'dismissed'];
@@ -712,6 +733,8 @@ export interface ReportRequest {
   reason: ReportReason;
   /** ≤ 500 characters. */
   details?: string | null;
+  /** F36: also block the target's author in the same step (default false; `400 block.limit` saves neither). */
+  alsoBlock?: boolean;
 }
 
 export type ModerationAction =
@@ -802,6 +825,10 @@ export interface ModerationQueueItemDto {
   /** Resolved and dismissed lists. */
   closedAt: string | null;
   target: ModerationTargetDto;
+  /** F22 (store): open cases: whole hours since the oldest open report; null otherwise. Missing from an older API. */
+  ageHours?: number | null;
+  /** Open and at least 12 hours old («عاجل» / "Urgent"). */
+  urgent?: boolean;
 }
 
 export interface ModerationReportDto {
@@ -814,6 +841,10 @@ export interface ModerationReportDto {
   createdAt: string;
   closedAt: string | null;
   closedBy: UserSummaryDto | null;
+  /** F37: filed by the content filter (`reporter` is null): «فلتر المحتوى» / "Content filter". */
+  isSystem?: boolean;
+  /** F37: the terms the filter matched (system reports only; staff see them). */
+  matchedTerms?: string[] | null;
 }
 
 /** A row of the moderation log (SPEC §16 `ModerationActions`). */
@@ -834,7 +865,9 @@ export type ModerationLogAction =
   | 'reports.dismiss'
   // F23: every article and comment of the user hidden with the account, and restored.
   | 'user.hide_content'
-  | 'user.unhide_content';
+  | 'user.unhide_content'
+  // F22 (store): a moderator deleted a reported repost.
+  | 'repost.delete';
 
 export interface ModerationActionDto {
   id: string;
@@ -1586,7 +1619,11 @@ export type NotificationType =
   /** F35: support replied to your ticket or closed it (`data.closed`); always comes. */
   | 'support_reply'
   /** F35: a new ticket or a member's reply, for holders of `support.manage` (actor = the member). */
-  | 'support_ticket';
+  | 'support_ticket'
+  /** F22 (store): a new report, for holders of `moderation.manage` (grouped per target; can be turned off). */
+  | 'report_new'
+  /** F22 (store): a moderator closed your report (in-app only, always comes; never says who or what). */
+  | 'report_resolved';
 
 /** What changed on the account (`security_alert`); the API's `SecurityChange`, camelCase. */
 export type SecurityChange =
@@ -1644,6 +1681,15 @@ export interface NotificationDto {
     subject?: string;
     /** F35 `support_reply`: support closed the ticket. */
     closed?: boolean;
+    /** F22 `report_new` / `report_resolved`: what was reported (`targetId` for report_new only). */
+    targetType?: ModerationTargetType;
+    targetId?: string;
+    targetLabel?: string | null;
+    /** `report_new`: the reports on it; `system`: filed by the content filter. */
+    reportCount?: number;
+    system?: boolean;
+    /** `report_resolved`: resolved (`actioned`) or dismissed (`no_violation`). */
+    outcome?: 'actioned' | 'no_violation';
   };
   /** `readin://…`, the same deep links as pushes. */
   link: string;
@@ -1753,6 +1799,14 @@ export interface ProblemDetails {
   errors?: Record<string, string[]>;
   /** `user.suspended` (F22): when the suspension ends (ISO, UTC), or null when it is permanent. */
   suspendedUntil?: string | null;
+  /** F37 `content.objectionable`: the request field it names (e.g. `displayName`, `body`, `title`), and for a publish its language and block. */
+  field?: string;
+  language?: ArticleLanguage;
+  blockId?: string;
+  /** `content.too_many` (`articles_per_day` | `comments_per_hour`), `support.limit` (`daily` | `open`). */
+  limit?: string;
+  /** F36 `block.blocked` (to the blocker only): who. */
+  blockedUser?: { id: string; username: string; displayName: string };
 }
 
 // ── Admin console (F23) ─────────────────────────────────────
@@ -1774,6 +1828,8 @@ export interface AdminSummaryDto {
   pendingVerifications: number | null;
   /** The badge: the sum of the three that aren't null. */
   total: number;
+  /** F22 (store): open cases past the 24-hour target; null without `moderation.manage`. */
+  openReportsOver24h?: number | null;
 }
 
 export type AdminPeriod = 'today' | 'yesterday' | '7d' | '30d';
@@ -1797,6 +1853,8 @@ export interface DashboardCardsDto {
   openTickets: number | null;
   pendingVerifications: number | null;
   suspendedNow: number;
+  /** F22 (store): open cases past the 24-hour target (target: 0); null without `moderation.manage`. */
+  openReportsOver24h?: number | null;
 }
 
 /** One day of the 30-day charts; `date` is "YYYY-MM-DD" in `Admin:TimeZone`. */
@@ -2290,4 +2348,70 @@ export interface AdminTicketDto extends AdminTicketRowDto {
   reportsFiled: { items: AdminUserReportDto[]; total: number } | null;
   reportsAgainst: number | null;
   moderation: ModerationActionDto[] | null;
+}
+
+// ── Block (F36) ─────────────────────────────────────────────
+
+/** `PUT` / `DELETE /users/{id}/block`. */
+export interface UserBlockStateDto {
+  userId: string;
+  isBlocked: boolean;
+  /** PUT: you followed them and that follow ended (Undo with `restoreFollow=true`). */
+  followRemoved: boolean;
+}
+
+/** `GET /me/blocked` → `{ items }`, newest block first. */
+export interface BlockedUserDto {
+  user: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean };
+  blockedAt: string;
+}
+
+// ── Legal & content filter (F37) ────────────────────────────
+
+/** `GET /legal` 🌐. */
+export interface LegalDto {
+  termsVersion: string;
+  effectiveAt: string | null;
+  /** What changed; null → a generic text. */
+  summary: { ar: string | null; en: string | null };
+  /** Paths on the web. */
+  pages: { terms: string; communityGuidelines: string; privacy: string };
+}
+
+export type ContentFilterLevel = 'block' | 'flag';
+export const CONTENT_FILTER_LEVELS: readonly ContentFilterLevel[] = ['block', 'flag'];
+
+export interface ContentFilterTermDto {
+  id: string;
+  /** As written in the list: render with `dir="auto"`. */
+  term: string;
+  language: 'ar' | 'en';
+  level: ContentFilterLevel;
+  source: 'file' | 'console';
+  /** False: a file term an admin removed (the seeder never brings it back). */
+  isEnabled: boolean;
+  updatedAt: string;
+}
+
+/** `GET /admin/content-filter`. */
+export interface ContentFilterDto {
+  terms: ContentFilterTermDto[];
+  counts: { block: number; flag: number };
+}
+
+export interface ContentFilterTermInput {
+  term: string;
+  language: 'ar' | 'en';
+  level: ContentFilterLevel;
+}
+
+/** `PUT /admin/content-filter`: the whole enabled list (≤ 5,000); terms left out are disabled. */
+export interface UpdateContentFilterRequest {
+  terms: ContentFilterTermInput[];
+}
+
+/** `POST /admin/content-filter/test`. */
+export interface ContentFilterTestDto {
+  level: 'none' | ContentFilterLevel;
+  matches: string[];
 }

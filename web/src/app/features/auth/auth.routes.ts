@@ -35,6 +35,13 @@ export default [
     loadComponent: () => import('./set-recovery-pin.page').then((m) => m.SetRecoveryPinPage),
     title: 'pageTitles.recoveryPin',
   },
+  // F37: a newer version of the terms waits (after the password and the PIN).
+  {
+    path: 'terms',
+    canActivate: [setupStepGuard('terms')],
+    loadComponent: () => import('./accept-terms.page').then((m) => m.AcceptTermsPage),
+    title: 'legal.accept.pageTitle',
+  },
   {
     path: 'complete-profile',
     canActivate: [setupStepGuard('profile')],

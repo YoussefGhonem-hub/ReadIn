@@ -283,13 +283,13 @@ describe('CommentsSection (F11)', () => {
     expect(t.$('[data-comment="m1"]')).toBeNull();
   });
 
-  it("Mute commenter sits right before Report, collapses their comments, and the toast's Undo brings them back", async () => {
+  it("Mute commenter, then Block commenter, before Report; muting collapses their comments, and the toast's Undo brings them back", async () => {
     const t = await render({ total: 2, items: [dto('c1'), dto('c2', { author: { id: 'u-c1', displayName: 'User c1', username: 'user_c1', avatarUrl: null, isVerified: false } })] });
     http = t.http;
     t.$('[data-comment="c1"] [data-comment-menu]')!.click();
     await t.stable();
     const actions = [...document.querySelectorAll('[data-comment-menu-panel] [data-menu-action]')].map((el) => el.getAttribute('data-menu-action'));
-    expect(actions).toEqual(['muteCommenter', 'report']);
+    expect(actions).toEqual(['muteCommenter', 'blockCommenter', 'report']);
     expect(document.querySelector('[data-menu-action="muteCommenter"]')!.textContent!.trim()).toBe('كتم صاحب التعليق');
     (document.querySelector('[data-menu-action="muteCommenter"]') as HTMLElement).click();
     await t.stable();

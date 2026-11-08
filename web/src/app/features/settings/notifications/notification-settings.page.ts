@@ -35,10 +35,12 @@ export const CONFIGURABLE_TYPES: readonly ConfigurableNotificationType[] = [
   'announcement',
   // F35: new tickets and members' replies, for holders of support.manage only (support_reply always comes).
   'support_ticket',
+  // F22 (store): new reports, for holders of moderation.manage only (report_resolved always comes, in-app).
+  'report_new',
 ];
 
 /** The types only some accounts get, with the permission that brings them. */
-export const TYPE_PERMISSIONS: Partial<Record<ConfigurableNotificationType, string>> = { support_ticket: 'support.manage' };
+export const TYPE_PERMISSIONS: Partial<Record<ConfigurableNotificationType, string>> = { support_ticket: 'support.manage', report_new: 'moderation.manage' };
 const MODES: readonly NotificationMode[] = ['all', 'inApp', 'off'];
 /** Every configurable type defaults to `all` (a type the API leaves out has its default). */
 const DEFAULT_MODE: NotificationMode = 'all';

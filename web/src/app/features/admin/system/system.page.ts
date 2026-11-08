@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { firstValueFrom } from 'rxjs';
@@ -25,7 +26,7 @@ export function formatDuration(ms: number | null): string {
  */
 @Component({
   selector: 'rd-admin-system-page',
-  imports: [TranslocoPipe, LucideDynamicIcon, LocalizedDatePipe, PluralPipe, RelativeTimePipe, ErrorState, AdminConfirm, AdminPageHeader],
+  imports: [RouterLink, TranslocoPipe, LucideDynamicIcon, LocalizedDatePipe, PluralPipe, RelativeTimePipe, ErrorState, AdminConfirm, AdminPageHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-2', 'data-admin-system': '' },
   styles: [
@@ -184,6 +185,15 @@ export function formatDuration(ms: number | null): string {
           </tbody>
         </table>
       </section>
+
+      <!-- F37: the content filter's lists -->
+      <a [class]="card + ' flex items-center gap-3 p-4 text-inherit no-underline hover:bg-surface-variant'" routerLink="/admin/system/content-filter" data-system-filter>
+        <span class="min-w-0 flex-1">
+          <span class="block text-base font-semibold">{{ 'admin.filter.title' | transloco }}</span>
+          <span class="block text-sm text-text-secondary">{{ 'admin.filter.rowHint' | transloco }}</span>
+        </span>
+        <svg lucideIcon="ChevronRight" [size]="18" class="rd-flip-rtl shrink-0 text-text-secondary" aria-hidden="true"></svg>
+      </a>
 
       <section [class]="card + ' flex flex-wrap items-center gap-3 p-4'" aria-labelledby="system-counters">
         <div class="min-w-0 flex-1">

@@ -4,7 +4,9 @@ import { Router } from '@angular/router';
 import { renderAdmin, testTicket } from '../../../testing/admin-testing';
 import { testMe } from '../../../testing/auth-testing';
 import { TEST_API, flushMicrotasks, problem, setupSocialTesting } from '../../../testing/social-testing';
+import { environment } from '../../../environments/environment';
 import { SupportConfigDto, SupportTicketSummaryDto } from '../../core/api/models';
+import { LanguageService } from '../../core/i18n/language.service';
 import { MyTicketsPage } from './my-tickets.page';
 import { NewTicketForm } from './new-ticket-form';
 import { SupportPage } from './support.page';
@@ -71,6 +73,40 @@ describe('Help & support (F35)', () => {
       expect(t.$('[data-support-email] a')!.getAttribute('href')).toBe('mailto:support@readin.online');
       expect(t.$('[data-support-sign-in]')!.getAttribute('href')).toBe('/auth/sign-in?returnUrl=%2Fsupport');
       expect(t.$('[data-new-ticket]')).toBeNull();
+    });
+
+    it('names both languages for crawlers: canonical ?lang= of the language shown, hreflang ar / en / x-default (F37)', async () => {
+      TestBed.resetTestingModule();
+      ({ http } = setupSocialTesting({ guest: true }));
+      const t = renderAdmin(SupportPage);
+      http.expectOne(`${TEST_API}/support/config`).flush(CONFIG);
+      await t.stable();
+      const links = () => [...document.head.querySelectorAll('[data-rd-lang-alternates]')].map((l) => [l.getAttribute('rel'), l.getAttribute('hreflang'), l.getAttribute('href')]);
+      const site = environment.siteUrl;
+      expect(links()).toEqual([
+        ['canonical', null, `${site}/support?lang=ar`],
+        ['alternate', 'ar', `${site}/support?lang=ar`],
+        ['alternate', 'en', `${site}/support?lang=en`],
+        ['alternate', 'x-default', `${site}/support`],
+      ]);
+      // The apps' ?lang=en (bound to the `lang` input): the page follows, unsaved; ?lang=fr is ignored.
+      t.fixture.componentRef.setInput('lang', 'en');
+      await t.stable();
+      expect(links()[0]).toEqual(['canonical', null, `${site}/support?lang=en`]);
+      expect(document.documentElement.getAttribute('lang')).toBe('en');
+      expect(document.cookie).not.toContain('lang=en');
+      t.fixture.componentRef.setInput('lang', 'fr');
+      await t.stable();
+      expect(TestBed.inject(LanguageService).lang()).toBe('ar');
+      t.fixture.componentRef.setInput('lang', 'en');
+      await t.stable();
+      // Closing the page: the links go and the saved language is back.
+      t.fixture.destroy();
+      await flushMicrotasks();
+      expect(links()).toEqual([]);
+      expect(TestBed.inject(LanguageService).lang()).toBe('ar');
+      document.documentElement.removeAttribute('lang');
+      document.documentElement.removeAttribute('dir');
     });
 
     it('members see the form and "My tickets"; no email when the API has none', async () => {

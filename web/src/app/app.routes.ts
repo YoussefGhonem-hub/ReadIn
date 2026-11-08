@@ -21,6 +21,9 @@ export function profileMatcher(segments: UrlSegment[]): UrlMatchResult | null {
   return null;
 }
 
+/** The Terms of Use and Community Guidelines (F37): one page, one chunk. */
+const legalPage = () => import('./features/legal/legal.page').then((m) => m.LegalPage);
+
 export const routes: Routes = [
   // Welcome, sign in/up, forgot password and the mandatory setup screens (SPEC §9.2); each route has its own guard.
   { path: 'auth', loadChildren: () => import('./features/auth/auth.routes') },
@@ -107,6 +110,9 @@ export const routes: Routes = [
         data: { hideFollowingDock: true },
         loadChildren: () => import('./features/admin/admin.routes'),
       },
+      // The Terms of Use and Community Guidelines (F37): public, server-rendered (`**`), indexable; their own chunk.
+      { path: 'terms', loadComponent: legalPage, data: { page: 'terms' } },
+      { path: 'community-guidelines', loadComponent: legalPage, data: { page: 'guidelines' } },
       // Help & support (F35): `/support` is public and server-rendered; My tickets and a ticket are signed in only.
       { path: 'support', loadChildren: () => import('./features/support/support.routes') },
       // My articles and the editor (F05).

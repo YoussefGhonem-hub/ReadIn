@@ -1,7 +1,7 @@
 import { PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRouteSnapshot, CanActivateChildFn, CanActivateFn, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { SETUP_ORDER, SETUP_PATHS, SetupStep, nextSetupStep, postAuthTarget, safeReturnUrl } from './account-setup';
+import { SETUP_ORDER, SETUP_PATHS, SetupStep, TERMS_STEP_OPEN_PATHS, nextSetupStep, postAuthTarget, safeReturnUrl } from './account-setup';
 import { AuthService } from './auth.service';
 import { SessionStore } from './session.store';
 
@@ -56,6 +56,8 @@ export const accountSetupGuard: CanActivateFn & CanActivateChildFn = async (
   await inject(AuthService).whenReady();
   const me = session.me();
   const step = session.isAuthenticated() && me ? nextSetupStep(me) : null;
+  // F37: the terms screen links to the texts and offers deleting the account instead.
+  if (step === 'terms' && TERMS_STEP_OPEN_PATHS.includes(state.url.split(/[?#]/)[0])) return true;
   return step ? stepTree(router, step, state.url) : true;
 };
 

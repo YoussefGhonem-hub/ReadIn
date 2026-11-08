@@ -12,7 +12,7 @@ import { ArticleMenu, MenuArticle } from './article-menu';
 
 const MODERATOR = ['articles.read', 'reports.create', 'moderation.manage', 'users.suspend'];
 // The reader's menu: Hide highlights (F30) right after Show less; Download PDF (F33, every member) right before Report.
-const OTHERS = ['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'downloadPdf', 'report'];
+const OTHERS = ['showLess', 'highlights', 'follow', 'muteAuthor', 'blockAuthor', 'muteTopics', 'downloadPdf', 'report'];
 const DOTNET: FieldRefDto = { id: 't1', slug: 'dotnet', name: '.NET', nameAr: 'دوت نت', nameEn: '.NET' };
 const FEED = { applies: true } as const;
 
@@ -65,12 +65,12 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     document.querySelectorAll('.cdk-overlay-container').forEach((el) => (el.innerHTML = ''));
   });
 
-  it("someone else's article: Show less, Follow, Mute author, Mute topics, Download PDF, then Report in the error color", async () => {
+  it("someone else's article: Show less, Follow, Mute author, Block author, Mute topics, Download PDF, then Report in the error color", async () => {
     const t = await render();
     http = t.http;
     expect(t.$('[data-article-menu]')!.getAttribute('aria-label')).toBe('خيارات المقال');
     expect(await t.openMenu()).toEqual(OTHERS);
-    expect(OTHERS.map(t.label)).toEqual(['عرض أقل من هذا النوع', 'إخفاء التمييزات', 'متابعة الكاتب', 'كتم الكاتب', 'كتم المواضيع', 'تنزيل PDF', 'الإبلاغ عن المقال']);
+    expect(OTHERS.map(t.label)).toEqual(['عرض أقل من هذا النوع', 'إخفاء التمييزات', 'متابعة الكاتب', 'كتم الكاتب', 'حظر الكاتب', 'كتم المواضيع', 'تنزيل PDF', 'الإبلاغ عن المقال']);
     const report = document.querySelector('[data-menu-action="report"]')!;
     expect(report.classList).toContain('text-error');
     expect(document.querySelector('[data-menu-action="showLess"]')!.classList).not.toContain('text-error');
@@ -408,7 +408,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     const t = await render(testCard(), { permissions: MODERATOR });
     http = t.http;
     // Report ends the reader's items; the moderator's item comes last, after a divider (as on mobile).
-    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'downloadPdf', 'report', 'hide']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'blockAuthor', 'muteTopics', 'downloadPdf', 'report', 'hide']);
     expect(document.querySelector('[data-menu-action="hide"]')!.textContent!.trim()).toBe('إخفاء المقال');
     const dividers = document.querySelectorAll('[data-article-menu-panel] [data-menu-divider]');
     expect(dividers).toHaveLength(1);
@@ -444,7 +444,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
   it('a hidden article offers Unhide, at once with a toast', async () => {
     const t = await render({ ...testCard(), moderation: { hiddenAt: '2026-11-03T09:00:00Z', note: null } }, { permissions: MODERATOR });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'report', 'unhide']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'blockAuthor', 'muteTopics', 'report', 'unhide']);
     await t.pick('unhide');
     const req = t.http.expectOne(`${TEST_API}/moderation/actions`);
     expect(req.request.body).toEqual({ action: 'unhide', targetType: 'article', targetId: 'a1' });
@@ -478,7 +478,7 @@ describe('Reader "⋯" menu (F22, F28)', () => {
     const ADMIN = [...MODERATOR, 'articles.feature', 'admin.access'];
     const t = await render({ ...testCard(), isFeatured: false }, { permissions: ADMIN });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'downloadPdf', 'report', 'hide', 'feature', 'openInConsole']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'blockAuthor', 'muteTopics', 'downloadPdf', 'report', 'hide', 'feature', 'openInConsole']);
     expect(t.label('feature')).toBe('تمييز');
     await t.pick('feature');
     t.$('[data-feature-confirm]')!.click();

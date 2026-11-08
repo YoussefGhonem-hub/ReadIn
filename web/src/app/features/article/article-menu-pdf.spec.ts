@@ -67,7 +67,7 @@ describe('Reader "⋯" → Download PDF for every member (F33)', () => {
     const t = await render(testCard({ language: 'en' }));
     http = t.http;
 
-    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'downloadPdf', 'report']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'blockAuthor', 'muteTopics', 'downloadPdf', 'report']);
     expect(t.item('downloadPdf')!.textContent!.trim()).toBe(TestBed.inject(TranslocoService).translate('pdf.download'));
     expect(t.item('downloadPdf')!.classList).not.toContain('text-error');
 
@@ -114,13 +114,13 @@ describe('Reader "⋯" → Download PDF for every member (F33)', () => {
   it('a moderator reading a visible article has Download PDF before Report, then Hide after the divider', async () => {
     const t = await render(testCard(), { permissions: MODERATOR });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'downloadPdf', 'report', 'hide']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'blockAuthor', 'muteTopics', 'downloadPdf', 'report', 'hide']);
   });
 
   it("someone else's hidden article (a moderator reads it): no Download PDF, since the API answers 404", async () => {
     const t = await render({ ...testCard(), moderation: HIDDEN }, { permissions: MODERATOR });
     http = t.http;
-    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'muteTopics', 'report', 'unhide']);
+    expect(await t.openMenu()).toEqual(['showLess', 'highlights', 'follow', 'muteAuthor', 'blockAuthor', 'muteTopics', 'report', 'unhide']);
   });
 
   it('your own hidden article keeps Download PDF: the server explains why it has no file (409)', async () => {
@@ -150,6 +150,6 @@ describe('Reader "⋯" → Download PDF for every member (F33)', () => {
     card.detectChanges();
     await card.whenStable();
     const actions = [...document.querySelectorAll('[data-article-menu-panel] [data-menu-action]')].map((el) => el.getAttribute('data-menu-action'));
-    expect(actions).toEqual(['showLess', 'follow', 'muteAuthor', 'muteTopics', 'report']);
+    expect(actions).toEqual(['showLess', 'follow', 'muteAuthor', 'blockAuthor', 'muteTopics', 'report']);
   });
 });

@@ -92,10 +92,17 @@ describe('Continue with Google / Apple (SPEC §9.2)', () => {
 
     it('"create a new account" resends the same token with createAccount, then goes to Complete profile', async () => {
       const { root, http, fixture, navigate } = await notLinkedSheet();
+      // F37: the terms checkbox comes first; until it's ticked, nothing is sent.
+      expect(root.querySelector<HTMLButtonElement>('[data-create]')!.disabled).toBe(true);
+      root.querySelector<HTMLButtonElement>('[data-create]')!.click();
+      await settle(10);
+      http.expectNone(`${TEST_API}/auth/external`);
+      root.querySelector<HTMLInputElement>('[data-accept-terms]')!.click();
+      fixture.detectChanges();
       root.querySelector<HTMLButtonElement>('[data-create]')!.click();
       await settle(10);
       const request = http.expectOne(`${TEST_API}/auth/external`);
-      expect(request.request.body).toMatchObject({ provider: 'google', idToken: 'google-token', createAccount: true });
+      expect(request.request.body).toMatchObject({ provider: 'google', idToken: 'google-token', createAccount: true, acceptTerms: true });
       expect(request.request.body.link).toBeUndefined();
       request.flush(testSession('t1', testMe({ isProfileComplete: false, onboardingCompleted: false, hasPassword: false, mustSetRecoveryPin: false })));
       await settle(10);

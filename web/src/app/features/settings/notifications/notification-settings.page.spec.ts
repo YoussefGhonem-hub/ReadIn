@@ -3,7 +3,9 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { TranslocoService } from '@jsverse/transloco';
 import { TEST_API, flushMicrotasks, problem, setupSocialTesting } from '../../../../testing/social-testing';
+import { testMe } from '../../../../testing/auth-testing';
 import { NotificationSettingsDto } from '../../../core/api/models';
+import { SessionStore } from '../../../core/auth/session.store';
 import { PushService } from '../../../core/push/push.service';
 import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { CONFIGURABLE_TYPES, NotificationSettingsPage } from './notification-settings.page';
@@ -50,9 +52,10 @@ describe('NotificationSettingsPage (F17)', () => {
 
   it('lists every configurable type with its mode (a type the API leaves out is "All")', async () => {
     const { root, typeRow } = await render(settings({ types: { mention: 'off', daily_article: 'inApp' } }));
-    // F35: support tickets only for holders of support.manage, so a member's list leaves them out.
+    // F35: support tickets only for holders of support.manage, and (F22, store) new reports only for holders of
+    // moderation.manage, so a member's list leaves both out.
     expect([...root.querySelectorAll('[data-notification-type]')].map((e) => e.getAttribute('data-notification-type'))).toEqual(
-      CONFIGURABLE_TYPES.filter((type) => type !== 'support_ticket'),
+      CONFIGURABLE_TYPES.filter((type) => type !== 'support_ticket' && type !== 'report_new'),
     );
     expect(typeRow('mention').getAttribute('data-mode')).toBe('off');
     expect(typeRow('daily_article').getAttribute('data-mode')).toBe('inApp');
@@ -61,9 +64,10 @@ describe('NotificationSettingsPage (F17)', () => {
     // Mentions cover comments and articles.
     expect(typeRow('mention').textContent).toContain('عندما يشير إليك أحد في تعليق أو مقال');
     expect(TestBed.inject(TranslocoService).translate('settings.notifications.types.mention.hint', {}, 'en')).toBe('When someone mentions you in a comment or an article');
-    // F29: reposts are the 9th configurable type; F23 and F35 add announcements and support tickets after it.
-    expect(CONFIGURABLE_TYPES).toHaveLength(11);
-    expect(CONFIGURABLE_TYPES.slice(-3)).toEqual(['article_reposted', 'announcement', 'support_ticket']);
+    // F29: reposts are the 9th configurable type; F23 and F35 add announcements and support tickets after it, and the
+    // F22 store additions new reports.
+    expect(CONFIGURABLE_TYPES).toHaveLength(12);
+    expect(CONFIGURABLE_TYPES.slice(-4)).toEqual(['article_reposted', 'announcement', 'support_ticket', 'report_new']);
     expect(typeRow('announcement').textContent).toContain('الإعلانات');
     expect(typeRow('article_reposted').getAttribute('data-mode')).toBe('all');
     expect(typeRow('article_reposted').textContent).toContain('إعادة النشر');
@@ -72,6 +76,23 @@ describe('NotificationSettingsPage (F17)', () => {
     expect(root.querySelector('[data-notification-types]')!.textContent).toContain('لا يمكن إيقاف تنبيهات الأمان وإشعارات فريق الإشراف');
     expect(root.querySelector<HTMLInputElement>('#quiet-start')!.value).toBe('23:00');
     expect(root.querySelector<HTMLInputElement>('#quiet-end')!.value).toBe('07:00');
+  });
+
+  it('moderators (moderation.manage) also get New reports, which they can turn off (F22, store)', async () => {
+    TestBed.inject(SessionStore).setMe(testMe({ permissions: ['moderation.manage'] }));
+    const { root, typeRow, choose, put, stable } = await render();
+    const shown = [...root.querySelectorAll('[data-notification-type]')].map((e) => e.getAttribute('data-notification-type'));
+    expect(shown).toContain('report_new');
+    expect(shown).not.toContain('support_ticket');
+    expect(typeRow('report_new').textContent).toContain('البلاغات الجديدة');
+    expect(typeRow('report_new').textContent).toContain('عندما يبلغ أحد عن محتوى أو حساب');
+    choose('report_new', 'off');
+    await stable();
+    const request = put();
+    expect(request.request.body.types).toEqual({ report_new: 'off' });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await stable();
+    expect(typeRow('report_new').getAttribute('data-mode')).toBe('off');
   });
 
   it('saves a changed mode at once, sending that type only; a refusal puts it back', async () => {
@@ -169,7 +190,7 @@ describe('NotificationSettingsPage (F17)', () => {
     http.expectOne(URL).flush(settings());
     await flushMicrotasks();
     fixture.detectChanges();
-    // A member doesn't get support tickets (F35: support.manage only).
-    expect(root.querySelectorAll('[data-notification-type]')).toHaveLength(CONFIGURABLE_TYPES.length - 1);
+    // A member doesn't get support tickets (F35: support.manage only) or new reports (F22: moderation.manage only).
+    expect(root.querySelectorAll('[data-notification-type]')).toHaveLength(CONFIGURABLE_TYPES.length - 2);
   });
 });

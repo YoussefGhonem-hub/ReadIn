@@ -13,6 +13,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { BlockDialog } from '../../shared/blocks/block-dialog';
 import { isPlatformBrowser } from '@angular/common';
 import { Dir } from '@angular/cdk/bidi';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -68,6 +69,7 @@ const NEAR_TOP_SLACK_PX = 160;
     CommentThreadView,
     ReportSheet,
     DeleteCommentSheet,
+    BlockDialog,
   ],
   providers: [CommentsStore, provideCommentIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -188,6 +190,7 @@ const NEAR_TOP_SLACK_PX = 160;
       </div>
 
       <rd-report-sheet [target]="reportTarget()" (closed)="store.closeDialog()" />
+      <rd-block-dialog [person]="store.blocking()" (closed)="store.closeBlock()" />
       <rd-delete-comment-sheet />
     </div>
   `,
@@ -230,7 +233,9 @@ export class CommentsSection {
   /** The comment being reported, in the shared report sheet (F22). */
   protected readonly reportTarget = computed<ReportTarget | null>(() => {
     const dialog = this.store.dialog();
-    return dialog?.kind === 'report' ? { type: 'comment', id: dialog.comment.id } : null;
+    if (dialog?.kind !== 'report') return null;
+    const author = dialog.comment.author;
+    return { type: 'comment', id: dialog.comment.id, author: author ? { id: author.id, displayName: author.displayName, username: author.username } : null };
   });
   protected readonly incomingLabel = computed(() =>
     translatePlural(this.transloco, 'comments.newComments', this.store.incomingCount(), this.language.lang()),

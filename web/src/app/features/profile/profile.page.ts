@@ -24,7 +24,9 @@ import { SessionStore } from '../../core/auth/session.store';
 import { HydrationWindow } from '../../core/http/hydration-window';
 import { LanguageService } from '../../core/i18n/language.service';
 import { FollowStore } from '../../core/social/follow.store';
+import { BlockStore, BlockedPersonRef } from '../../core/social/block.store';
 import { MuteStore, keepMutedContent } from '../../core/social/mute.store';
+import { BlockedState } from '../../shared/blocks/blocked-state';
 import { MutedBanner } from '../../shared/mutes/muted-banner';
 import { ScrollRow } from '../../shared/ui/scroll-row';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
@@ -67,8 +69,7 @@ export type ProfileTab = 'articles' | 'categories' | 'reposts' | 'saved' | 'path
     PublicStatsSwitch,
     ReadingStatsCard,
     ReadingHeatmap,
-    MutedBanner,
-  ],
+    MutedBanner, BlockedState],
   // The writer's own page keeps muted content: you opened it on purpose (F28).
   providers: [ProfileArticlesStore, keepMutedContent()],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,7 +77,12 @@ export type ProfileTab = 'articles' | 'categories' | 'reposts' | 'saved' | 'path
   template: `
     <!-- Cards on the page's canvas, 8px apart: the top card (banner, photo, who they are, actions, stats), the reading
          stats, the tabs, then the tab's content (post cards, or one card). -->
-    @if (profile(); as p) {
+    @if (blockedUser(); as blocked) {
+      <!-- F36: you blocked them: the account isn't available, with Unblock (they get a 404 for yours) -->
+      <div class="rd-card shadow-none max-sm:-mx-4 max-sm:rounded-none max-sm:border-x-0">
+        <rd-blocked-state kind="account" [user]="blocked" (unblocked)="resource.reload()" />
+      </div>
+    } @else if (profile(); as p) {
       <rd-profile-header [profile]="p" [isMe]="isMe()" />
 
       <!-- A writer you muted (F28): their page still opens, with the way to unmute -->
@@ -209,6 +215,18 @@ export class ProfilePage {
   protected readonly notFound = computed(() => {
     const error = this.resource.error();
     return isApiError(error) && error.status === 404;
+  });
+  private readonly blocks = inject(BlockStore);
+  /** F36: the person you blocked (`403 block.blocked` with `blockedUser`, or a block from the "⋯" menu now). */
+  protected readonly blockedUser = computed<BlockedPersonRef | null>(() => {
+    const error = this.resource.error();
+    if (isApiError(error) && error.code === 'block.blocked' && error.problem?.blockedUser) {
+      // Shown until the reload after Unblock replaces the error (the unblock itself is optimistic, so the state must not
+      // disappear before it can ask for the reload).
+      return error.problem.blockedUser;
+    }
+    const p = this.profile();
+    return p && !p.isMe && this.session.isAuthenticated() && this.blocks.isBlocked(p.id) ? { id: p.id, displayName: p.displayName, username: p.username } : null;
   });
 
   /** The server says so, or the session already knows it (SSR and the first client render are anonymous). */

@@ -54,6 +54,11 @@ import { isActorType, notificationDetail, notificationIcon, notificationText, ve
             <rd-bdi-text [text]="comment.excerpt" />
           </span>
         }
+        @if (n.type === 'report_new' && n.data.system) {
+          <span class="mt-0.5 block text-sm text-text-secondary" data-notification-system>{{ 'notifications.text.report_new.system' | transloco }}{{
+            n.data.targetLabel ? ' · ' : ''
+          }}<bdi dir="auto">{{ n.data.targetLabel ?? '' }}</bdi></span>
+        }
         @if (detail(); as line) {
           <!-- An announcement's text, or a ticket's "#12 · subject" (F23, F35): mixed text in its own direction. -->
           <span class="mt-0.5 line-clamp-2 block text-sm text-text-secondary" dir="auto" data-notification-detail>{{ line }}</span>
@@ -112,6 +117,7 @@ export class NotificationItem {
         return 'bg-accent-container text-text-primary';
       case 'security_alert':
       case 'moderation_notice':
+      case 'report_new':
         return 'bg-callout-danger text-error';
       case 'verification_result':
         return this.rejected() ? 'bg-callout-warning text-text-primary' : 'bg-primary-container text-on-primary-container';

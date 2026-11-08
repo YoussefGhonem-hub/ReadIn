@@ -50,9 +50,11 @@ export class ModerationApi {
    * `POST /reports` → 204 (permission `reports.create`). Reporting the same target again is a no-op that succeeds too.
    * `400 report.own_content`, `404 report.target_not_found`, validation `report.target_invalid` / `report.reason_invalid`.
    */
-  report(targetType: ModerationTargetType, targetId: string, reason: ReportReason, details?: string | null): Observable<void> {
+  report(targetType: ModerationTargetType, targetId: string, reason: ReportReason, details?: string | null, alsoBlock = false): Observable<void> {
     const body: ReportRequest = { targetType, targetId, reason };
     if (details?.trim()) body.details = details.trim();
+    // F36: block the author in the same step (`400 block.limit` saves neither).
+    if (alsoBlock) body.alsoBlock = true;
     return this.http.post<void>(`${this.base}/reports`, body, { context: this.silent() });
   }
 

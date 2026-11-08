@@ -44,7 +44,9 @@ export const QUEUE_PAGE_SIZE = 20;
           <button type="button" class="rd-chip" [attr.aria-pressed]="currentType() === type" [attr.data-type-chip]="type" (click)="setType(type)">
             {{ 'moderation.types.' + type | transloco }}
             @if (counts(); as c) {
-              <span class="opacity-80 tabular-nums" aria-hidden="true">{{ c[type] }}</span>
+              @if (countOf(c, type); as n) {
+                <span class="opacity-80 tabular-nums" aria-hidden="true">{{ n }}</span>
+              }
             }
           </button>
         }
@@ -72,6 +74,14 @@ export const QUEUE_PAGE_SIZE = 20;
                           <svg lucideIcon="Flag" [size]="14" aria-hidden="true"></svg>{{ reportCount(item) }}
                         </span>
                         ·
+                        @if (item.status === 'open' && item.ageHours !== null && item.ageHours !== undefined) {
+                          <!-- F22 (store): every report is handled within 24 hours; 12 hours makes a case urgent -->
+                          <span [class.font-semibold]="item.urgent" [class.text-error]="item.urgent" data-case-age>{{ ageLabel(item.ageHours) }}</span>
+                          @if (item.urgent) {
+                            <span class="rd-tag bg-callout-danger text-error" data-case-urgent>{{ 'moderation.urgent' | transloco }}</span>
+                          }
+                          ·
+                        }
                         @if (item.closedAt && item.status !== 'open') {
                           <span>{{ 'moderation.closedAt' | transloco: { time: (item.closedAt | rdRelativeTime: lang()) } }}</span>
                         } @else {
@@ -155,6 +165,16 @@ export class ModerationQueuePage {
 
   protected setType(type: ModerationTargetType | null): void {
     void this.router.navigate(['/admin/reports'], { queryParams: { status: this.currentStatus() === 'open' ? null : this.currentStatus(), type }, replaceUrl: true });
+  }
+
+  /** A type's open count from the summary (reposts have none there yet). */
+  protected countOf(counts: Record<string, number>, type: string): number | null {
+    return counts[type] ?? null;
+  }
+
+  /** "Open for 5 hours": whole hours since the oldest open report. */
+  protected ageLabel(hours: number): string {
+    return translatePlural(this.transloco, 'moderation.age', hours, this.lang());
   }
 
   protected reportCount(item: ModerationQueueItemDto): string {

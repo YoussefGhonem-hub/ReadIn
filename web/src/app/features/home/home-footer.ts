@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { environment } from '../../../environments/environment';
 
@@ -8,7 +9,7 @@ import { environment } from '../../../environments/environment';
  */
 @Component({
   selector: 'rd-home-footer',
-  imports: [TranslocoPipe],
+  imports: [RouterLink, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block px-2 py-3 text-center text-xs text-text-secondary' },
   template: `
@@ -16,7 +17,9 @@ import { environment } from '../../../environments/environment';
       <ul class="m-0 flex list-none flex-wrap justify-center gap-x-3 gap-y-1 p-0">
         <li><a [href]="site + '/'" target="_blank" rel="noopener" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.about' | transloco }}</a></li>
         <li><a [href]="site + '/privacy'" target="_blank" rel="noopener" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.privacy' | transloco }}</a></li>
-        <li><a [href]="site + '/terms'" target="_blank" rel="noopener" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.terms' | transloco }}</a></li>
+        <!-- F37: the terms and the guidelines are the app's own pages -->
+        <li><a routerLink="/terms" class="text-text-secondary no-underline hover:underline" data-footer-terms>{{ 'home.footer.terms' | transloco }}</a></li>
+        <li><a routerLink="/community-guidelines" class="text-text-secondary no-underline hover:underline" data-footer-guidelines>{{ 'legal.guidelines.title' | transloco }}</a></li>
         <li><a [href]="'mailto:' + email" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.help' | transloco }}</a></li>
       </ul>
     </nav>

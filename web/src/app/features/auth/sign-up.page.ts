@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
+import { TermsCheckbox } from '../../shared/legal/terms-checkbox';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, TouchedChangeEvent, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -40,8 +41,7 @@ type Step = 1 | 2;
     PhoneField,
     PasswordField,
     PinInput,
-    ConfirmPhoneDialog,
-  ],
+    ConfirmPhoneDialog, TermsCheckbox],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <rd-auth-card [title]="(step() === 1 ? 'auth.signUp.title' : 'auth.signUp.pinTitle') | transloco" [subtitle]="(step() === 1 ? 'auth.signUp.subtitle' : 'auth.signUp.pinSubtitle') | transloco">
@@ -140,9 +140,11 @@ type Step = 1 | 2;
               <p id="sign-up-pin-confirm-error" class="rd-field-error">{{ confirmPinError()! | transloco }}</p>
             }
           </div>
+          <!-- F37: required before the account is created; Continue stays off until it is ticked -->
+          <rd-terms-checkbox [(checked)]="acceptTerms" />
           <div class="flex gap-2">
             <button type="button" class="rd-btn rd-btn-ghost" (click)="back()">{{ 'common.back' | transloco }}</button>
-            <rd-submit-button class="flex-1">{{ 'common.continue' | transloco }}</rd-submit-button>
+            <rd-submit-button class="flex-1" [disabled]="!acceptTerms()">{{ 'common.continue' | transloco }}</rd-submit-button>
           </div>
         </form>
       }
@@ -186,6 +188,8 @@ export class SignUpPage {
   protected readonly recovery = this.fb.group({ pin: [''], confirmPin: [''] });
 
   protected readonly step = signal<Step>(1);
+  /** F37: the terms checkbox (SPEC §9.2). */
+  protected readonly acceptTerms = signal(false);
   protected readonly confirming = signal(false);
   protected readonly busy = signal(false);
   protected readonly dialogError = signal<string | null>(null);
@@ -279,6 +283,7 @@ export class SignUpPage {
 
   /** Step 2 → the "confirm your number" dialog (step 3). */
   protected review(): void {
+    if (!this.acceptTerms()) return;
     this.recoverySubmitted.set(true);
     if (this.pinError() || this.confirmPinError()) {
       this.pinInputs()?.focus();
@@ -302,7 +307,7 @@ export class SignUpPage {
     this.busy.set(true);
     this.dialogError.set(null);
     try {
-      const me = await this.auth.register({ phoneNumber: phone, password, recoveryPin: normalizePin(this.recovery.getRawValue().pin) });
+      const me = await this.auth.register({ phoneNumber: phone, password, recoveryPin: normalizePin(this.recovery.getRawValue().pin), acceptTerms: this.acceptTerms() });
       const country = this.phoneField()?.selectedCountry;
       if (country) rememberCountry(country);
       this.flow.phone.set(null);

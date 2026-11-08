@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Meta } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { filter, map, startWith } from 'rxjs';
 import { AdminSummaryStore } from '../../core/admin/admin-summary.store';
 import { SessionStore } from '../../core/auth/session.store';
-import { provideModerationIcons } from '../../shared/moderation/moderation-icons';
+import { LanguageService } from '../../core/i18n/language.service';
+import { translatePlural } from '../../shared/pipes/intl';
 import { provideAdminIcons } from './admin-icons';
 import { AdminSection, sectionOf, visibleSections } from './admin-nav';
 
@@ -20,7 +21,9 @@ import { AdminSection, sectionOf, visibleSections } from './admin-nav';
 @Component({
   selector: 'rd-admin-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoPipe, LucideDynamicIcon],
-  providers: [provideAdminIcons(), provideModerationIcons()],
+  // One registry for the tree: two LUCIDE_ICONS providers here would replace each other (the last wins). The admin set
+  // includes the moderation icons; the moderation pages register their own.
+  providers: [provideAdminIcons()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'admin-layout mx-auto block max-w-[1280px] px-4 pt-4 lg:px-6 lg:pt-6', 'data-admin-layout': '' },
   styles: `
@@ -69,6 +72,13 @@ import { AdminSection, sectionOf, visibleSections } from './admin-nav';
 
         <nav id="admin-nav" class="admin-nav rd-card mt-2 p-1.5 shadow-none lg:mt-0" [class.hidden]="!menuOpen()" [attr.aria-label]="'admin.title' | transloco" data-admin-nav>
           <p class="m-0 px-3 pb-1 pt-2 text-xs font-semibold uppercase text-text-secondary">{{ 'admin.title' | transloco }}</p>
+          @if (overdue(); as n) {
+            <!-- F22 (store): reports past the 24-hour target -->
+            <a routerLink="/admin/reports" class="mx-1 my-1 flex items-center gap-2 rounded-sm bg-callout-danger px-3 py-2 text-xs font-semibold text-error no-underline" data-admin-overdue>
+              <svg lucideIcon="TriangleAlert" [size]="14" class="shrink-0" aria-hidden="true"></svg>
+              {{ overdueLabel(n) }}
+            </a>
+          }
           <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
             @for (item of sections(); track item.id) {
               <li>
@@ -101,6 +111,8 @@ import { AdminSection, sectionOf, visibleSections } from './admin-nav';
 export class AdminLayout {
   private readonly session = inject(SessionStore);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
+  private readonly lang = inject(LanguageService).lang;
   protected readonly summary = inject(AdminSummaryStore);
 
   protected readonly menuOpen = signal(false);
@@ -127,6 +139,13 @@ export class AdminLayout {
       )
       .subscribe(() => this.menuOpen.set(false));
     void this.summary.refresh();
+  }
+
+  /** F22 (store): open cases past the 24-hour target, or 0. */
+  protected readonly overdue = computed(() => this.summary.summary()?.openReportsOver24h ?? 0);
+
+  protected overdueLabel(count: number): string {
+    return translatePlural(this.transloco, 'admin.overdueReports', count, this.lang());
   }
 
   /** The section's queue count, or 0 (no badge). */
