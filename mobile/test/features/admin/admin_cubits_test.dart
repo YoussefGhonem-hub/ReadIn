@@ -141,45 +141,95 @@ void main() {
   });
 
   group('AdminUsersCubit (an offset-paged console list)', () {
-    PagedList<AdminUserRow> page(int number, List<String> ids, {int totalPages = 2}) => PagedList(
+    PagedList<AdminUserRow> page(int number, List<String> ids, {int totalCount = 120, int totalPages = 3}) => PagedList(
           items: [for (final id in ids) userRow(id: id)],
           page: number,
-          totalCount: 3,
+          totalCount: totalCount,
           totalPages: totalPages,
         );
 
-    test('the first page, then the next one as the list scrolls; a row seen twice is kept once', () async {
+    test('one page at a time: next shows page 2 alone, previous page 1 again; nothing past the edges', () async {
       when(() => repository.users(any(), page: 1, pageSize: 50)).thenAnswer((_) async => Ok(page(1, ['a', 'b'])));
-      when(() => repository.users(any(), page: 2, pageSize: 50)).thenAnswer((_) async => Ok(page(2, ['b', 'c'])));
+      when(() => repository.users(any(), page: 2, pageSize: 50)).thenAnswer((_) async => Ok(page(2, ['c', 'd'])));
+      when(() => repository.users(any(), page: 3, pageSize: 50)).thenAnswer((_) async => Ok(page(3, ['e'])));
       final cubit = AdminUsersCubit(GetAdminUsers(repository));
 
       await cubit.load();
-      expect(cubit.state.hasMore, isTrue);
-      await cubit.loadMore();
+      expect(cubit.state.page, 1);
+      expect(cubit.state.hasPrevious, isFalse);
+      expect(cubit.state.hasNext, isTrue);
+      expect((cubit.state.firstRow, cubit.state.lastRow, cubit.state.totalCount), (1, 2, 120));
+      expect(await cubit.previousPage(), isNull);
+      verifyNever(() => repository.users(any(), page: 0, pageSize: any(named: 'pageSize')));
 
-      expect([for (final u in cubit.state.items) u.id], ['a', 'b', 'c']);
-      expect(cubit.state.hasMore, isFalse);
-      await cubit.loadMore();
-      verify(() => repository.users(any(), page: 2, pageSize: 50)).called(1);
+      await cubit.nextPage();
+      expect(cubit.state.page, 2);
+      expect([for (final u in cubit.state.items) u.id], ['c', 'd'], reason: 'the rows of page 2 only');
+      expect((cubit.state.firstRow, cubit.state.lastRow), (51, 52));
+
+      await cubit.goToPage(3);
+      expect(cubit.state.hasNext, isFalse);
+      expect((cubit.state.firstRow, cubit.state.lastRow), (101, 101));
+      expect(await cubit.nextPage(), isNull);
+      verifyNever(() => repository.users(any(), page: 4, pageSize: any(named: 'pageSize')));
+
+      await cubit.previousPage();
+      expect(cubit.state.page, 2);
+      await cubit.previousPage();
+      expect([for (final u in cubit.state.items) u.id], ['a', 'b']);
       await cubit.close();
     });
 
-    test('a new query starts again from page 1; a failed later page offers to try again', () async {
+    test('a page that fails keeps the rows shown and is returned; while it loads the rows stay', () async {
       when(() => repository.users(any(), page: 1, pageSize: 50)).thenAnswer((_) async => Ok(page(1, ['a'])));
       when(() => repository.users(any(), page: 2, pageSize: 50)).thenAnswer((_) async => const Err(offline));
       final cubit = AdminUsersCubit(GetAdminUsers(repository));
-
       await cubit.load();
-      await cubit.loadMore();
-      expect(cubit.state.moreFailure, offline);
+
+      final changing = cubit.nextPage();
+      expect(cubit.state.changingPage, isTrue);
       expect(cubit.state.items, hasLength(1));
+      expect(await changing, offline);
+
+      expect(cubit.state.page, 1);
+      expect(cubit.state.changingPage, isFalse);
+      expect(cubit.state.status, AdminListStatus.ready);
+      expect(cubit.state.items, hasLength(1));
+      await cubit.close();
+    });
+
+    test('a new query (search, filter or sort) starts again from page 1', () async {
+      when(() => repository.users(any(), page: 1, pageSize: 50)).thenAnswer((_) async => Ok(page(1, ['a'])));
+      when(() => repository.users(any(), page: 2, pageSize: 50)).thenAnswer((_) async => Ok(page(2, ['b'])));
+      final cubit = AdminUsersCubit(GetAdminUsers(repository));
+      await cubit.load();
+      await cubit.nextPage();
+      expect(cubit.state.page, 2);
 
       const query = AdminUserQuery(q: 'crypto', hasReports: true);
       await cubit.setQuery(query);
 
       verify(() => repository.users(query, page: 1, pageSize: 50)).called(1);
       expect(cubit.state.query, query);
+      expect(cubit.state.page, 1);
       expect(cubit.state.status, AdminListStatus.ready);
+      await cubit.close();
+    });
+
+    test('a page emptied since it was counted (rows went away) shows the last page there is', () async {
+      when(() => repository.users(any(), page: 1, pageSize: 50)).thenAnswer((_) async => Ok(page(1, ['a'], totalPages: 2)));
+      final cubit = AdminUsersCubit(GetAdminUsers(repository));
+      await cubit.load();
+      when(() => repository.users(any(), page: 2, pageSize: 50))
+          .thenAnswer((_) async => Ok(page(2, [], totalCount: 40, totalPages: 1)));
+      when(() => repository.users(any(), page: 1, pageSize: 50))
+          .thenAnswer((_) async => Ok(page(1, ['a'], totalCount: 40, totalPages: 1)));
+
+      await cubit.nextPage();
+
+      expect(cubit.state.page, 1);
+      expect(cubit.state.totalPages, 1);
+      expect(cubit.state.items, hasLength(1));
       await cubit.close();
     });
 

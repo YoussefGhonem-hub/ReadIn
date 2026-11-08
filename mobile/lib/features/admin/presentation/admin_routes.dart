@@ -1,3 +1,4 @@
+import '../../auth/domain/entities/permissions.dart';
 import '../../moderation/presentation/moderation_routes.dart';
 
 /// Where the admin console lives in the app (F23): Settings / the More sheet → «لوحة التحكم» (`/admin`), with
@@ -36,4 +37,22 @@ abstract final class AdminRoutes {
   /// Whether [path] is a ticket of the console (`/admin/tickets/{id}`): without `support.manage` a push opens the
   /// notification center instead (F35).
   static bool isTicket(String path) => path.startsWith('$tickets/');
+
+  /// The admin's bottom bar (holders of `admin.access`): its tabs are branches of the main shell, under `/console`.
+  /// The app opens on [consoleDashboard] for them; Home (`/home`) is the app as a reader sees it.
+  static const console = '/console';
+  static const consoleDashboard = '$console/dashboard';
+  static const consoleTickets = '$console/tickets';
+  static const consoleUsers = '$console/users';
+  static const consoleNotifications = '$console/notifications';
+
+  /// Whether [path] is one of the admin bar's tabs.
+  static bool isConsoleTab(String path) => path == console || path.startsWith('$console/');
+
+  /// The permission a console tab needs besides `admin.access` (null for the dashboard and the notifications).
+  static String? consoleTabPermission(String path) => switch (path) {
+        consoleTickets => Permissions.supportManage,
+        consoleUsers => Permissions.usersRead,
+        _ => null,
+      };
 }

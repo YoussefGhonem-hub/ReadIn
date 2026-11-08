@@ -6561,4 +6561,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminNeverPublished => 'Never published';
+
+  @override
+  String get adminNavDashboard => 'Dashboard';
+
+  @override
+  String adminNavTicketsOpen(String count) {
+    return 'Tickets, $count open';
+  }
+
+  @override
+  String get adminViewAsReader => 'View the app as a reader';
+
+  @override
+  String get adminPagePrevious => 'Previous page';
+
+  @override
+  String get adminPageNext => 'Next page';
+
+  @override
+  String adminPageRows(String from, String to, String total) {
+    return '$from–$to of $total';
+  }
+
+  @override
+  String adminPageOf(String page, String pages) {
+    return 'Page $page of $pages';
+  }
 }

@@ -7,66 +7,65 @@ import '../../domain/entities/paged_list.dart';
 
 enum AdminListStatus { loading, ready, failure }
 
-/// An admin table as a compact list (F23): offset pages (`?page=`) loaded one after another as the list scrolls,
-/// filtered by [query].
+/// An admin table as a compact list (F23), one offset page at a time (`?page=&pageSize=`, SPEC §17.1): the page
+/// controls go to the previous or next page; a new [query] starts again from page 1.
 class AdminListState<T, Q> extends Equatable {
   const AdminListState({
     required this.query,
     this.status = AdminListStatus.loading,
     this.items = const [],
     this.page = 0,
+    this.pageSize = 0,
     this.totalCount = 0,
     this.totalPages = 0,
-    this.loadingMore = false,
+    this.changingPage = false,
     this.failure,
-    this.moreFailure,
   });
 
   final AdminListStatus status;
   final Q query;
+
+  /// The rows of [page] only.
   final List<T> items;
 
-  /// The last page loaded (1-based; 0 before the first).
+  /// The page shown (1-based; 0 before the first).
   final int page;
+  final int pageSize;
   final int totalCount;
   final int totalPages;
-  final bool loadingMore;
+
+  /// Another page is loading; the rows shown stay until it arrives.
+  final bool changingPage;
 
   /// The first page failed.
   final Failure? failure;
 
-  /// A later page failed; the list stays and offers to try again.
-  final Failure? moreFailure;
+  bool get hasPrevious => page > 1;
+  bool get hasNext => page < totalPages;
 
-  bool get hasMore => page < totalPages;
+  /// The 1-based position of the first row shown, 0 when there is none ("1–50 of 1,234").
+  int get firstRow => items.isEmpty ? 0 : (page - 1) * pageSize + 1;
 
-  AdminListState<T, Q> copyWith({
-    AdminListStatus? status,
-    List<T>? items,
-    int? page,
-    int? totalCount,
-    int? totalPages,
-    bool? loadingMore,
-    Failure? Function()? moreFailure,
-  }) =>
-      AdminListState<T, Q>(
+  /// The position of the last row shown.
+  int get lastRow => items.isEmpty ? 0 : firstRow + items.length - 1;
+
+  AdminListState<T, Q> copyWith({List<T>? items, int? totalCount, bool? changingPage}) => AdminListState<T, Q>(
         query: query,
-        status: status ?? this.status,
+        status: status,
         items: items ?? this.items,
-        page: page ?? this.page,
+        page: page,
+        pageSize: pageSize,
         totalCount: totalCount ?? this.totalCount,
-        totalPages: totalPages ?? this.totalPages,
-        loadingMore: loadingMore ?? this.loadingMore,
+        totalPages: totalPages,
+        changingPage: changingPage ?? this.changingPage,
         failure: failure,
-        moreFailure: moreFailure != null ? moreFailure() : this.moreFailure,
       );
 
   @override
-  List<Object?> get props => [status, query, items, page, totalCount, totalPages, loadingMore, failure, moreFailure];
+  List<Object?> get props => [status, query, items, page, pageSize, totalCount, totalPages, changingPage, failure];
 }
 
-/// Loads an [AdminListState] page by page and reloads from the first page when the query changes. An older answer
-/// never replaces a newer query's.
+/// Loads an [AdminListState] page by page. An older answer never replaces a newer query's or page's.
 abstract class AdminListCubit<T, Q> extends Cubit<AdminListState<T, Q>> {
   AdminListCubit(Q query) : super(AdminListState<T, Q>(query: query));
 
@@ -76,63 +75,62 @@ abstract class AdminListCubit<T, Q> extends Cubit<AdminListState<T, Q>> {
 
   Object idOf(T item);
 
-  /// The first page. A reload ([refresh]) keeps the shown items when it fails, and returns why.
-  Future<Failure?> load() async {
-    final generation = ++_generation;
-    final query = state.query;
-    final result = await fetch(query, 1);
-    if (isClosed || generation != _generation) return null;
-    switch (result) {
-      case Ok(value: final page):
-        emit(AdminListState<T, Q>(
-          query: query,
-          status: AdminListStatus.ready,
-          items: page.items,
-          page: page.page < 1 ? 1 : page.page,
-          totalCount: page.totalCount,
-          totalPages: page.totalPages,
-        ));
-        return null;
-      case Err(:final failure):
-        if (state.items.isEmpty) {
-          emit(AdminListState<T, Q>(query: query, status: AdminListStatus.failure, failure: failure));
-        }
-        return failure;
-    }
-  }
+  /// The first page.
+  Future<Failure?> load() => _show(1);
 
-  /// Pull to refresh, or back from a detail page; null when it worked.
-  Future<Failure?> refresh() => load();
+  /// Pull to refresh, or back from a detail page: the page shown, read again. A failure keeps the rows on screen and
+  /// is returned; null when it worked.
+  Future<Failure?> refresh() => _show(state.page < 1 ? 1 : state.page);
 
-  /// Shows [query] from its first page.
+  /// Shows [query] from page 1 (a search, a filter or a sort).
   Future<void> setQuery(Q query) async {
     if (query == state.query && state.status != AdminListStatus.failure) return;
     emit(AdminListState<T, Q>(query: query));
     await load();
   }
 
-  /// The next page, when the list is scrolled near its end.
-  Future<void> loadMore() async {
-    if (state.status != AdminListStatus.ready || !state.hasMore || state.loadingMore) return;
-    final generation = _generation;
-    emit(state.copyWith(loadingMore: true, moreFailure: () => null));
-    final result = await fetch(state.query, state.page + 1);
-    if (isClosed || generation != _generation) return;
-    emit(result.fold(
-      (failure) => state.copyWith(loadingMore: false, moreFailure: () => failure),
-      (page) => state.copyWith(
-        loadingMore: false,
-        // Rows can move between pages while the list changes: keep the first copy.
-        items: [
-          ...state.items,
-          for (final item in page.items)
-            if (!state.items.any((shown) => idOf(shown) == idOf(item))) item,
-        ],
-        page: page.page,
-        totalCount: page.totalCount,
-        totalPages: page.totalPages,
-      ),
-    ));
+  /// Another page: within 1..totalPages; the rows shown stay until it arrives. Null when it worked (or there was
+  /// nothing to do).
+  Future<Failure?> goToPage(int page) async {
+    if (state.status != AdminListStatus.ready || page < 1 || page > state.totalPages || page == state.page) return null;
+    emit(state.copyWith(changingPage: true));
+    return _show(page);
+  }
+
+  Future<Failure?> nextPage() => goToPage(state.page + 1);
+
+  Future<Failure?> previousPage() => goToPage(state.page - 1);
+
+  Future<Failure?> _show(int page) async {
+    final generation = ++_generation;
+    final query = state.query;
+    var result = await fetch(query, page);
+    if (isClosed || generation != _generation) return null;
+    // Rows went away since (a page past the end has no items and the real total): show the last page instead.
+    if (result case Ok(value: final empty) when empty.items.isEmpty && page > 1 && empty.totalPages >= 1 && page > empty.totalPages) {
+      result = await fetch(query, empty.totalPages);
+      if (isClosed || generation != _generation) return null;
+    }
+    switch (result) {
+      case Ok(value: final list):
+        emit(AdminListState<T, Q>(
+          query: query,
+          status: AdminListStatus.ready,
+          items: list.items,
+          page: list.page < 1 ? 1 : list.page,
+          pageSize: list.pageSize,
+          totalCount: list.totalCount,
+          totalPages: list.totalPages,
+        ));
+        return null;
+      case Err(:final failure):
+        if (state.status == AdminListStatus.ready) {
+          emit(state.copyWith(changingPage: false));
+        } else {
+          emit(AdminListState<T, Q>(query: query, status: AdminListStatus.failure, failure: failure));
+        }
+        return failure;
+    }
   }
 
   /// A row changed in place (hidden, featured, …).

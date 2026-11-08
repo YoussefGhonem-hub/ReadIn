@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -26,7 +24,8 @@ class AdminConsoleEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final summary = cubit ?? adminSummaryCubit();
-    final tile = _EntryTile(onTap: () => unawaited(context.push<void>(AdminRoutes.home)));
+    // To the admin's bar (F23): from the app as a reader, the way back to the console.
+    final tile = _EntryTile(onTap: () => context.go(AdminRoutes.consoleDashboard));
     if (summary == null) return tile;
     return BlocProvider.value(value: summary, child: AdminSummaryWatcher(cubit: summary, child: tile));
   }
@@ -61,12 +60,15 @@ class _EntryTile extends StatelessWidget {
 }
 
 /// The console badge on an icon (the More sheet's tile, the Me sheet's row): [child] with the count, kept fresh while
-/// shown. Just [child] without DI.
+/// shown; one queue's number with [count] (the admin's More sheet). Just [child] without DI.
 class AdminSummaryBadge extends StatelessWidget {
-  const AdminSummaryBadge({super.key, required this.child, this.cubit});
+  const AdminSummaryBadge({super.key, required this.child, this.cubit, this.count});
 
   final Widget child;
   final AdminSummaryCubit? cubit;
+
+  /// The number shown; the total by default.
+  final int? Function(AdminSummary summary)? count;
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +79,7 @@ class AdminSummaryBadge extends StatelessWidget {
       child: BlocBuilder<AdminSummaryCubit, AdminSummary?>(
         bloc: summary,
         builder: (context, state) {
-          final total = state?.total ?? 0;
+          final total = (state == null ? null : (count == null ? state.total : count!(state))) ?? 0;
           if (total <= 0) return child;
           return Badge(
             label: Text(total > 9 ? '9+' : '$total'),

@@ -108,6 +108,130 @@ class MainNavBar extends StatelessWidget {
   }
 }
 
+/// The admin's bottom bar (holders of `admin.access`, F23), in the members' bar's style: Tickets · Users · (the ReadIn
+/// mark, the Dashboard) · Notifications · More. Nothing to write here: the admin writes from the app as a reader sees
+/// it. A tab whose permission is missing isn't shown ([tickets], [users]) and the mark stays in the middle. Tickets
+/// carries the open tickets and Notifications the unread count, as red badges (screen readers hear the count in the
+/// name); More opens the console's More sheet.
+class AdminNavBar extends StatelessWidget {
+  const AdminNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onSelect,
+    required this.onMore,
+    this.tickets = true,
+    this.users = true,
+    this.openTickets = 0,
+    this.unread = 0,
+  });
+
+  /// The branch that is open: 5 Dashboard, 6 Tickets, 7 Users, 8 Notifications.
+  final int currentIndex;
+
+  /// The mark or a tab was pressed, with its branch.
+  final ValueChanged<int> onSelect;
+
+  /// More was pressed.
+  final VoidCallback onMore;
+
+  /// Show Tickets (`support.manage`).
+  final bool tickets;
+
+  /// Show Users (`users.read`).
+  final bool users;
+
+  /// The badge on Tickets.
+  final int openTickets;
+
+  /// The badge on Notifications.
+  final int unread;
+
+  static const int dashboardBranch = 5;
+  static const int ticketsBranch = 6;
+  static const int usersBranch = 7;
+  static const int notificationsBranch = 8;
+
+  /// Whether [branch] is one of this bar's (the main shell shows this bar on them).
+  static bool isConsoleBranch(int branch) => branch >= dashboardBranch;
+
+  static String? _count(int value) => value <= 0 ? null : (value > 9 ? '9+' : '$value');
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final inset = MediaQuery.paddingOf(context).bottom;
+    Widget tab(int? index, IconData icon, IconData selectedIcon, String label, {String? badge, VoidCallback? onTap}) =>
+        Expanded(
+          child: _Tab(
+            icon: icon,
+            selectedIcon: selectedIcon,
+            label: label,
+            selected: index != null && currentIndex == index,
+            onTap: onTap ?? () => onSelect(index!),
+            badge: badge,
+          ),
+        );
+    // Each side takes half of the room beside the notch, so a hidden tab never moves the mark.
+    Widget side(List<Widget> tabs) => Expanded(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: tabs));
+    return _Rise(
+      rise: MainNavBar.rise,
+      child: SizedBox(
+        height: MainNavBar.rise + MainNavBar.barHeight + inset,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const Positioned.fill(child: _BarBackground(top: MainNavBar.rise)),
+            Positioned(
+              top: MainNavBar.rise,
+              left: 0,
+              right: 0,
+              height: MainNavBar.barHeight,
+              child: Material(
+                type: MaterialType.transparency,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    side([
+                      if (tickets)
+                        tab(
+                          ticketsBranch,
+                          Icons.support_agent_outlined,
+                          Icons.support_agent,
+                          openTickets > 0 ? l10n.adminNavTicketsOpen('$openTickets') : l10n.adminSectionTickets,
+                          badge: _count(openTickets),
+                        ),
+                      if (users) tab(usersBranch, Icons.people_alt_outlined, Icons.people_alt, l10n.adminSectionUsers),
+                    ]),
+                    const SizedBox(width: _BarShape.notchWidth),
+                    side([
+                      tab(
+                        notificationsBranch,
+                        Icons.notifications_none_rounded,
+                        Icons.notifications_rounded,
+                        unread > 0 ? l10n.notificationsUnread(unread) : l10n.notifications,
+                        badge: _count(unread),
+                      ),
+                      tab(null, Icons.grid_view_outlined, Icons.grid_view_rounded, l10n.navMore, onTap: onMore),
+                    ]),
+                  ],
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: _HomeMark(
+                label: l10n.adminNavDashboard,
+                selected: currentIndex == dashboardBranch,
+                onTap: () => onSelect(dashboardBranch),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// The geometry of the bar's top edge: flat, with a round notch around the mark whose shoulders curve smoothly into it.
 abstract final class _BarShape {
   /// The notch's radius: the mark's, plus a gap.
@@ -212,6 +336,7 @@ class _Tab extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.badge,
   });
 
   final IconData icon;
@@ -219,6 +344,9 @@ class _Tab extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+
+  /// A count on the icon ("9+" past 9); none when null.
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -271,6 +399,18 @@ class _Tab extends StatelessWidget {
                   ),
                 ),
               ),
+              // A count (the admin's bar): the app's red badge at the icon's top end; its number is in [label].
+              if (badge case final text?)
+                Center(
+                  child: IgnorePointer(
+                    child: Badge(
+                      label: ExcludeSemantics(child: Text(text)),
+                      backgroundColor: colors.error,
+                      textColor: colors.onError,
+                      child: const SizedBox.square(dimension: 26),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

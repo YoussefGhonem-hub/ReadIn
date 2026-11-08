@@ -1876,5 +1876,12 @@
   "adminTheirArticles": "مقالاته",
   "adminRemoveFilter": "إزالة عامل التصفية",
   "adminSuspendedProfileHint": "لا يفتح هذا الملف الشخصي إلا المسؤولون ما دام الحساب موقوفًا.",
-  "adminNeverPublished": "لم يُنشر قط"
+  "adminNeverPublished": "لم يُنشر قط",
+  "adminNavDashboard": "لوحة التحكم",
+  "adminNavTicketsOpen": "التذاكر، {count} مفتوحة",
+  "adminViewAsReader": "عرض التطبيق كقارئ",
+  "adminPagePrevious": "الصفحة السابقة",
+  "adminPageNext": "الصفحة التالية",
+  "adminPageRows": "{from}–{to} من {total}",
+  "adminPageOf": "الصفحة {page} من {pages}"
 }

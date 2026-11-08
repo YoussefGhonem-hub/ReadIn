@@ -10,6 +10,7 @@ import '../features/admin/presentation/pages/admin_article_page.dart';
 import '../features/admin/presentation/pages/admin_console_page.dart';
 import '../features/admin/presentation/pages/admin_content_page.dart';
 import '../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../features/admin/presentation/pages/admin_notifications_tab.dart';
 import '../features/admin/presentation/pages/admin_user_page.dart';
 import '../features/admin/presentation/pages/admin_users_page.dart';
 import '../features/admin/presentation/pages/admin_verification_page.dart';
@@ -173,6 +174,7 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
       targetPath == AppRoutes.readingStats ||
       targetPath == AppRoutes.verification ||
       // The admin console (F23) and Help & support (F35); the pages check the permissions.
+      AdminRoutes.isConsoleTab(targetPath) ||
       AdminRoutes.isConsole(targetPath) ||
       SupportRoutes.isSupport(targetPath);
   // Shared links (articles, profiles, tag pages, field pages) open for first-time guests too, without Welcome first.
@@ -186,6 +188,23 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
     if (session.gate case final gate?) {
       final gateRoute = AppRoutes.forGate(gate);
       return targetPath == gateRoute ? stay() : gateRoute;
+    }
+    // The admin's bar (F23): holders of admin.access start on the console's dashboard, when the app opens and after
+    // signing in; the console's tabs are theirs only, each behind its permission (Home is the app as a reader sees it).
+    final isAdmin = session.me?.isAdmin ?? false;
+    final landing = isAuthRoute ||
+        targetPath == AppRoutes.setRecoveryPin ||
+        targetPath == AppRoutes.completeProfile ||
+        (atSplash && targetPath == AppRoutes.home);
+    if (isAdmin && landing) return AdminRoutes.consoleDashboard;
+    // The console's old home (`/admin`) is the dashboard tab now; its pages (`/admin/...`) still open as before.
+    if (targetPath == AdminRoutes.home) return isAdmin ? AdminRoutes.consoleDashboard : AppRoutes.home;
+    if (AdminRoutes.isConsoleTab(targetPath)) {
+      if (!isAdmin) return AppRoutes.home;
+      final needs = AdminRoutes.consoleTabPermission(targetPath);
+      if (targetPath == AdminRoutes.console || (needs != null && !(session.me?.can(needs) ?? false))) {
+        return AdminRoutes.consoleDashboard;
+      }
     }
     // Mandatory screens that no longer apply, and the sign-in screens, lead home.
     if (isAuthRoute || targetPath == AppRoutes.setRecoveryPin || targetPath == AppRoutes.completeProfile) {
@@ -343,6 +362,14 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
           StatefulShellBranch(routes: [GoRoute(path: AppRoutes.write, builder: (_, _) => const MyArticlesPage())]),
           StatefulShellBranch(routes: [GoRoute(path: AppRoutes.saved, builder: (_, _) => const SavedPage())]),
           StatefulShellBranch(routes: [GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfilePage())]),
+          // The admin's bar (F23, holders of admin.access; the redirect keeps everyone else out): Dashboard, Tickets,
+          // Users and Notifications; More opens a sheet with the rest of the console.
+          StatefulShellBranch(routes: [GoRoute(path: AdminRoutes.consoleDashboard, builder: (_, _) => const AdminDashboardPage())]),
+          StatefulShellBranch(routes: [GoRoute(path: AdminRoutes.consoleTickets, builder: (_, _) => const AdminTicketsPage())]),
+          StatefulShellBranch(routes: [GoRoute(path: AdminRoutes.consoleUsers, builder: (_, _) => const AdminUsersPage())]),
+          StatefulShellBranch(
+            routes: [GoRoute(path: AdminRoutes.consoleNotifications, builder: (_, _) => const AdminNotificationsTab())],
+          ),
         ],
       ),
     ],

@@ -11041,6 +11041,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Never published'**
   String get adminNeverPublished;
+
+  /// No description provided for @adminNavDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get adminNavDashboard;
+
+  /// No description provided for @adminNavTicketsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Tickets, {count} open'**
+  String adminNavTicketsOpen(String count);
+
+  /// No description provided for @adminViewAsReader.
+  ///
+  /// In en, this message translates to:
+  /// **'View the app as a reader'**
+  String get adminViewAsReader;
+
+  /// No description provided for @adminPagePrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get adminPagePrevious;
+
+  /// No description provided for @adminPageNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get adminPageNext;
+
+  /// No description provided for @adminPageRows.
+  ///
+  /// In en, this message translates to:
+  /// **'{from}–{to} of {total}'**
+  String adminPageRows(String from, String to, String total);
+
+  /// No description provided for @adminPageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {pages}'**
+  String adminPageOf(String page, String pages);
 }
 
 class _AppLocalizationsDelegate

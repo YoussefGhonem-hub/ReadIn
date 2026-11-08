@@ -88,7 +88,8 @@ class MeSheet extends StatelessWidget {
         _Item(
           icon: Icons.admin_panel_settings_outlined,
           label: l10n.adminConsoleTitle,
-          onTap: () => _go(context, AdminRoutes.home),
+          // The admin's bar (F23): switch to it rather than stack the console.
+          onTap: () => _go(context, AdminRoutes.consoleDashboard, tab: true),
         ),
       if (me.isModerator && !me.isAdmin)
         _Item(icon: Icons.shield_outlined, label: l10n.moderationTitle, onTap: () => _go(context, ModerationRoutes.home)),

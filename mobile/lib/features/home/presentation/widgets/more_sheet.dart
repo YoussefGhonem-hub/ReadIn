@@ -12,6 +12,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/action_feedback.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../admin/domain/entities/admin_dashboard.dart';
 import '../../../admin/presentation/admin_routes.dart';
 import '../../../admin/presentation/widgets/admin_entry.dart';
 import '../../../auth/domain/entities/me.dart';
@@ -21,6 +22,7 @@ import '../../../moderation/presentation/moderation_routes.dart';
 import '../../../mutes/presentation/pages/muted_page.dart';
 import '../../../notifications/presentation/cubit/unread_badge_cubit.dart';
 import '../../../paths/presentation/path_routes.dart';
+import '../../../profile/presentation/profile_routes.dart';
 import '../../../reading/presentation/pages/reading_stats_page.dart';
 import '../../../settings/domain/entities/app_settings.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
@@ -64,7 +66,14 @@ class MoreSheet extends StatelessWidget {
       if (me != null) ...[
         // The admin console first, for holders of admin.access (F23); it replaces Moderation for them.
         if (me.isAdmin)
-          _Shortcut('admin', Icons.admin_panel_settings_outlined, l10n.adminConsoleTitle, _Tint.rose, AdminRoutes.home),
+          _Shortcut(
+            'admin',
+            Icons.admin_panel_settings_outlined,
+            l10n.adminConsoleTitle,
+            _Tint.rose,
+            AdminRoutes.consoleDashboard,
+            tab: true,
+          ),
         _Shortcut('profile', Icons.person_outline_rounded, l10n.navProfile, _Tint.primary, '/profile', tab: true),
         _Shortcut('notifications', Icons.notifications_none_rounded, l10n.notifications, _Tint.amber, '/notifications'),
         _Shortcut('paths', Icons.route_outlined, l10n.pathsTabMine, _Tint.blue, PathRoutes.mine),
@@ -135,12 +144,102 @@ class MoreSheet extends StatelessWidget {
   }
 }
 
+/// Opens the admin bar's More sheet ([ConsoleMoreSheet], F23), on the root navigator like [showMoreSheet].
+Future<void> showConsoleMoreSheet(BuildContext context) {
+  final session = context.read<SessionCubit>();
+  final settings = context.read<SettingsCubit>();
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (_) => MultiBlocProvider(
+      providers: [BlocProvider.value(value: session), BlocProvider.value(value: settings)],
+      child: const ConsoleMoreSheet(),
+    ),
+  );
+}
+
+/// The admin bar's "More" (F23): the admin (a tap opens their profile), the language and dark mode, then the rest of
+/// the console: Content and Reports (`moderation.manage`), Verification (`verification.manage`), with the queues'
+/// counts; their Profile, Settings, and "View the app as a reader", which opens Home with the members' bar (the More
+/// sheet's «لوحة التحكم» leads back). Sign out last.
+class ConsoleMoreSheet extends StatelessWidget {
+  const ConsoleMoreSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final me = context.select((SessionCubit c) => c.state.isAuthenticated ? c.state.me : null);
+    if (me == null) return const SizedBox.shrink();
+    final profile = ProfileRoutes.of(me.username);
+    final tiles = <_Shortcut>[
+      if (me.isModerator) ...[
+        _Shortcut('console-content', Icons.article_outlined, l10n.adminSectionContent, _Tint.blue, AdminRoutes.content),
+        _Shortcut(
+          'console-reports',
+          Icons.flag_outlined,
+          l10n.adminSectionReports,
+          _Tint.rose,
+          AdminRoutes.reports,
+          summaryCount: (summary) => summary.openReports,
+        ),
+      ],
+      if (me.can(Permissions.verificationManage))
+        _Shortcut(
+          'console-verification',
+          Icons.verified_outlined,
+          l10n.adminSectionVerification,
+          _Tint.green,
+          AdminRoutes.verification,
+          summaryCount: (summary) => summary.pendingVerifications,
+        ),
+      _Shortcut('console-profile', Icons.person_outline_rounded, l10n.navProfile, _Tint.primary, profile),
+      _Shortcut('console-settings', Icons.settings_outlined, l10n.settings, _Tint.neutral, '/settings'),
+      _Shortcut('console-reader', Icons.auto_stories_outlined, l10n.adminViewAsReader, _Tint.amber, '/home', tab: true),
+    ];
+    return SingleChildScrollView(
+      key: const ValueKey('console-more-sheet'),
+      padding: const EdgeInsets.only(bottom: ReadInSpace.s5),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(padding: MoreSheet._padding, child: _MeCard(me: me, location: profile, tab: false)),
+          const SizedBox(height: ReadInSpace.s4),
+          const Padding(padding: MoreSheet._padding, child: _QuickSettings()),
+          const SizedBox(height: ReadInSpace.s4),
+          Padding(padding: MoreSheet._padding, child: _ShortcutGrid(tiles: tiles)),
+          const SizedBox(height: ReadInSpace.s3),
+          Padding(
+            padding: MoreSheet._padding,
+            child: TextButton.icon(
+              key: const ValueKey('console-sign-out'),
+              style: TextButton.styleFrom(foregroundColor: context.colors.error, minimumSize: const Size.fromHeight(48)),
+              onPressed: () {
+                final session = context.read<SessionCubit>();
+                Navigator.of(context).pop();
+                unawaited(session.signOut());
+              },
+              icon: const Icon(Icons.logout_rounded),
+              label: Text(l10n.signOut),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// The signed-in user on a soft green card: avatar, name (with the Verified badge) and @username; a tap opens their
 /// profile.
 class _MeCard extends StatelessWidget {
-  const _MeCard({required this.me});
+  const _MeCard({required this.me, this.location = '/profile', this.tab = true});
 
   final Me me;
+
+  /// Where a tap leads: the Profile tab, or (the admin's bar) their profile page over the console.
+  final String location;
+  final bool tab;
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +259,7 @@ class _MeCard extends StatelessWidget {
         child: InkWell(
           key: const ValueKey('more-profile-card'),
           borderRadius: radius,
-          onTap: () => MoreSheet.go(context, '/profile', tab: true),
+          onTap: () => MoreSheet.go(context, location, tab: tab),
           child: Padding(
             padding: const EdgeInsets.all(ReadInSpace.s4),
             child: Row(
@@ -388,7 +487,7 @@ class _LanguageToggle extends StatelessWidget {
 
 /// One of the grid's screens.
 class _Shortcut {
-  const _Shortcut(this.id, this.icon, this.label, this.tint, this.location, {this.tab = false});
+  const _Shortcut(this.id, this.icon, this.label, this.tint, this.location, {this.tab = false, this.summaryCount});
 
   final String id;
   final IconData icon;
@@ -398,6 +497,9 @@ class _Shortcut {
 
   /// A tab of the bottom bar's shell (switched to) rather than a screen opened over it.
   final bool tab;
+
+  /// A console queue's count on the icon (the admin's More sheet, F23).
+  final int? Function(AdminSummary summary)? summaryCount;
 }
 
 /// The screens three to a row; the tiles of a row share its height (the tallest name sets it).
@@ -450,6 +552,7 @@ class _ShortcutTile extends StatelessWidget {
     }
     // The console's badge: open reports + open tickets + pending verification (F23).
     if (tile.id == 'admin') icon = AdminSummaryBadge(child: icon);
+    if (tile.summaryCount case final count?) icon = AdminSummaryBadge(count: count, child: icon);
     return Material(
       color: colors.surface,
       shape: RoundedRectangleBorder(

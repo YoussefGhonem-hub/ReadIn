@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:readin/app/router.dart';
 import 'package:readin/core/errors/failure.dart';
+import 'package:readin/features/admin/presentation/admin_routes.dart';
 import 'package:readin/features/auth/domain/entities/me.dart';
+import 'package:readin/features/auth/domain/entities/permissions.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
 import 'package:readin/features/settings/domain/entities/app_settings.dart';
 
@@ -207,6 +209,81 @@ void main() {
       expect(offline.gate, isNull);
       expect(redirect('/home', offline), isNull);
       expect(redirect('/auth/sign-in', offline), AppRoutes.home);
+    });
+  });
+
+  group("the admin's bar (F23)", () {
+    Me admin({Set<String> without = const {}}) => Me(
+          id: 'u-super',
+          displayName: 'Super Admin',
+          username: 'superadmin',
+          onboardingCompleted: true,
+          permissions: [
+            for (final p in [Permissions.adminAccess, Permissions.supportManage, Permissions.usersRead])
+              if (!without.contains(p)) p,
+          ],
+        );
+
+    test('holders of admin.access start on the dashboard; a link they opened still opens', () {
+      expect(redirect('/splash', signedIn(admin())), AdminRoutes.consoleDashboard);
+      expect(redirect('/splash?from=%2Fhome', signedIn(admin())), AdminRoutes.consoleDashboard);
+      expect(redirect('/splash?from=%2Fa%2Fdi-in-dotnet', signedIn(admin())), '/a/di-in-dotnet');
+      expect(redirect('/splash?from=%2Fadmin%2Ftickets%2Ft-1', signedIn(admin())), '/admin/tickets/t-1');
+      // Everyone else, as before.
+      expect(redirect('/splash', onboarded), AppRoutes.home);
+    });
+
+    test('and after signing in, or a mandatory screen that no longer applies', () {
+      for (final path in ['/auth/sign-in', '/auth/sign-up', '/welcome', AppRoutes.setRecoveryPin, AppRoutes.completeProfile]) {
+        expect(redirect(path, signedIn(admin())), AdminRoutes.consoleDashboard, reason: path);
+        expect(redirect(path, onboarded), AppRoutes.home, reason: path);
+      }
+    });
+
+    test('the account guards still come first', () {
+      const gated = Me(
+        id: 'u-super',
+        displayName: 'Super Admin',
+        username: 'superadmin',
+        mustChangePassword: true,
+        permissions: [Permissions.adminAccess],
+      );
+      expect(redirect('/splash', signedIn(gated)), AppRoutes.changePassword);
+    });
+
+    test('Home stays Home for the admin: the app as a reader sees it', () {
+      expect(redirect('/home', signedIn(admin())), isNull);
+      expect(redirect('/explore', signedIn(admin())), isNull);
+    });
+
+    test('the console tabs are for admin.access only, each behind its permission', () {
+      for (final tab in [
+        AdminRoutes.consoleDashboard,
+        AdminRoutes.consoleTickets,
+        AdminRoutes.consoleUsers,
+        AdminRoutes.consoleNotifications,
+      ]) {
+        expect(redirect(tab, signedIn(admin())), isNull, reason: tab);
+        expect(redirect(tab, onboarded), AppRoutes.home, reason: 'a member: $tab');
+        expect(redirect(tab, guest), AppRoutes.home, reason: 'a guest: $tab');
+      }
+      expect(redirect(AdminRoutes.console, signedIn(admin())), AdminRoutes.consoleDashboard);
+      expect(redirect(AdminRoutes.consoleTickets, signedIn(admin(without: {Permissions.supportManage}))), AdminRoutes.consoleDashboard);
+      expect(redirect(AdminRoutes.consoleUsers, signedIn(admin(without: {Permissions.usersRead}))), AdminRoutes.consoleDashboard);
+      expect(redirect(AdminRoutes.consoleUsers, signedIn(admin(without: {Permissions.supportManage}))), isNull);
+    });
+
+    test("the console's old home /admin opens the dashboard tab; its pages still open; members and guests go home", () {
+      expect(redirect(AdminRoutes.home, signedIn(admin())), AdminRoutes.consoleDashboard);
+      expect(redirect('/splash?from=%2Fadmin', signedIn(admin())), AdminRoutes.consoleDashboard);
+      for (final path in ['/admin/tickets/t-1', '/admin/users/w-9', '/admin/content', '/admin/verification', '/admin/dashboard']) {
+        expect(redirect(path, signedIn(admin())), isNull, reason: path);
+      }
+      expect(redirect(AdminRoutes.home, onboarded), AppRoutes.home);
+      expect(redirect(AdminRoutes.home, guest), AppRoutes.home);
+      expect(redirect(AdminRoutes.home, guest, fresh), AppRoutes.welcome);
+      // A ticket push for a member still opens the notification center.
+      expect(redirect('/admin/tickets/t-1', onboarded), AppRoutes.notifications);
     });
   });
 }

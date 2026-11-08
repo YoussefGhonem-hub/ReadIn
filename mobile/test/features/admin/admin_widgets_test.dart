@@ -42,6 +42,9 @@ import 'package:readin/features/settings/domain/entities/app_settings.dart';
 import 'package:readin/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:readin/features/settings/presentation/pages/settings_page.dart';
 import 'package:readin/features/support/domain/entities/support.dart';
+import 'package:readin/features/support/domain/usecases/support_usecases.dart';
+import 'package:readin/features/support/presentation/cubit/support_cubits.dart';
+import 'package:readin/features/support/presentation/pages/admin_tickets_page.dart';
 import 'package:readin/features/taxonomy/domain/entities/field.dart';
 import 'package:readin/features/taxonomy/domain/repositories/taxonomy_repository.dart';
 import 'package:readin/features/taxonomy/domain/usecases/taxonomy_usecases.dart';
@@ -661,6 +664,191 @@ void main() {
 
       expect(find.textContaining('Never published'), findsWidgets);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('pages (the offset-paged console lists)', () {
+    List<AdminUserRow> users(int first, int count) => [for (var i = 0; i < count; i++) userRow(id: 'u-${first + i}')];
+    PagedList<AdminUserRow> usersPage(int page, int count, {int total = 120, int pages = 3}) =>
+        PagedList(items: users((page - 1) * 50 + 1, count), page: page, totalCount: total, totalPages: pages);
+    String text(WidgetTester tester, String key) => tester.widget<Text>(find.byKey(ValueKey(key))).data!;
+    VoidCallback? button(WidgetTester tester, String key) => tester.widget<IconButton>(find.byKey(ValueKey(key))).onPressed;
+
+    testWidgets('Users: previous and next at the bottom, "1–50 of 120" and "Page 1 of 3"; disabled at the edges', (tester) async {
+      when(() => repository.users(any(), page: 1, pageSize: 50)).thenAnswer((_) async => Ok(usersPage(1, 50)));
+      when(() => repository.users(any(), page: 2, pageSize: 50)).thenAnswer((_) async => Ok(usersPage(2, 50)));
+      when(() => repository.users(any(), page: 3, pageSize: 50)).thenAnswer((_) async => Ok(usersPage(3, 20)));
+      final cubit = AdminUsersCubit(GetAdminUsers(repository));
+      await pump(tester, BlocProvider.value(value: cubit, child: const AdminUsersView()));
+      await cubit.load();
+      await tester.pumpAndSettle();
+
+      expect(text(tester, 'admin-page-rows'), '1–50 of 120');
+      expect(text(tester, 'admin-page-of'), 'Page 1 of 3');
+      expect(button(tester, 'admin-page-previous'), isNull, reason: 'the first page');
+      expect(button(tester, 'admin-page-next'), isNotNull);
+      final pager = tester.getRect(find.byKey(const ValueKey('admin-pager')));
+      expect(pager.bottom, 844, reason: 'at the bottom, under the rows');
+      expect(pager.top, greaterThanOrEqualTo(tester.getRect(find.byKey(const PageStorageKey('admin-page-1'))).bottom));
+
+      await tester.tap(find.byTooltip('Next page'));
+      await tester.pumpAndSettle();
+      expect(text(tester, 'admin-page-rows'), '51–100 of 120');
+      expect(text(tester, 'admin-page-of'), 'Page 2 of 3');
+      expect(tester.widget<AdminUserTile>(find.byType(AdminUserTile).first).user.id, 'u-51', reason: 'the rows of page 2 only');
+      expect(cubit.state.items, hasLength(50));
+
+      await tester.tap(find.byKey(const ValueKey('admin-page-next')));
+      await tester.pumpAndSettle();
+      expect(text(tester, 'admin-page-rows'), '101–120 of 120');
+      expect(text(tester, 'admin-page-of'), 'Page 3 of 3');
+      expect(button(tester, 'admin-page-next'), isNull, reason: 'the last page');
+      expect(button(tester, 'admin-page-previous'), isNotNull);
+
+      // No more rows load as the list scrolls: only the buttons change the page.
+      await tester.drag(find.byKey(const PageStorageKey('admin-page-3')), const Offset(0, -4000));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Previous page'));
+      await tester.pumpAndSettle();
+      expect(text(tester, 'admin-page-of'), 'Page 2 of 3');
+      verify(() => repository.users(any(), page: 1, pageSize: 50)).called(1);
+      verify(() => repository.users(any(), page: 2, pageSize: 50)).called(2);
+      verify(() => repository.users(any(), page: 3, pageSize: 50)).called(1);
+      await cubit.close();
+    });
+
+    testWidgets('a filter, a search or a sort starts again from page 1', (tester) async {
+      when(() => repository.users(any(), page: 1, pageSize: 50)).thenAnswer((_) async => Ok(usersPage(1, 50)));
+      when(() => repository.users(any(), page: 2, pageSize: 50)).thenAnswer((_) async => Ok(usersPage(2, 50)));
+      final cubit = AdminUsersCubit(GetAdminUsers(repository));
+      await pump(tester, BlocProvider.value(value: cubit, child: const AdminUsersView()));
+      await cubit.load();
+      await tester.pumpAndSettle();
+      Future<void> toPage2() async {
+        await tester.tap(find.byKey(const ValueKey('admin-page-next')));
+        await tester.pumpAndSettle();
+        expect(text(tester, 'admin-page-of'), 'Page 2 of 3');
+      }
+
+      await toPage2();
+      await tester.ensureVisible(find.text('Has reports'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Has reports'));
+      await tester.pumpAndSettle();
+      expect(cubit.state.query.hasReports, isTrue);
+      expect(text(tester, 'admin-page-of'), 'Page 1 of 3');
+      expect(text(tester, 'admin-page-rows'), '1–50 of 120');
+
+      await toPage2();
+      await tester.enterText(find.byType(TextField), 'crypto');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+      expect(cubit.state.query.q, 'crypto');
+      expect(text(tester, 'admin-page-of'), 'Page 1 of 3');
+
+      await toPage2();
+      await tester.tap(find.byKey(const ValueKey('admin-users-sort')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CheckedPopupMenuItem<AdminUserSort>).last);
+      await tester.pumpAndSettle();
+      expect(cubit.state.query.sort, AdminUserSort.values.last);
+      expect(text(tester, 'admin-page-of'), 'Page 1 of 3');
+      verify(() => repository.users(cubit.state.query, page: 1, pageSize: 50)).called(1);
+      await cubit.close();
+    });
+
+    testWidgets('big numbers are grouped, in Arabic too: "1–50 من 1,234", "الصفحة 1 من 25"', (tester) async {
+      when(() => repository.users(any(), page: 1, pageSize: 50))
+          .thenAnswer((_) async => Ok(usersPage(1, 50, total: 1234, pages: 25)));
+      final cubit = AdminUsersCubit(GetAdminUsers(repository));
+      await pump(tester, BlocProvider.value(value: cubit, child: const AdminUsersView()));
+      await cubit.load();
+      await tester.pumpAndSettle();
+      expect(text(tester, 'admin-page-rows'), '1–50 of 1,234');
+      expect(text(tester, 'admin-page-of'), 'Page 1 of 25');
+
+      await pump(tester, BlocProvider.value(value: cubit, child: const AdminUsersView()), variant: const Variant(AppLocales.ar, Brightness.light));
+      await tester.pumpAndSettle();
+      expect(text(tester, 'admin-page-rows'), '1–50 من 1,234');
+      expect(text(tester, 'admin-page-of'), 'الصفحة 1 من 25');
+      expect(find.byTooltip('الصفحة التالية'), findsOneWidget);
+      await cubit.close();
+    });
+
+    testWidgets('no pager for an empty list; a single page has both buttons off', (tester) async {
+      when(() => repository.users(any(), page: 1, pageSize: 50)).thenAnswer((_) async => const Ok(PagedList(items: <AdminUserRow>[])));
+      final cubit = AdminUsersCubit(GetAdminUsers(repository));
+      await pump(tester, BlocProvider.value(value: cubit, child: const AdminUsersView()));
+      await cubit.load();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('admin-pager')), findsNothing);
+
+      when(() => repository.users(any(), page: 1, pageSize: 50)).thenAnswer((_) async => Ok(usersPage(1, 7, total: 7, pages: 1)));
+      await cubit.refresh();
+      await tester.pumpAndSettle();
+      expect(text(tester, 'admin-page-rows'), '1–7 of 7');
+      expect(button(tester, 'admin-page-previous'), isNull);
+      expect(button(tester, 'admin-page-next'), isNull);
+      await cubit.close();
+    });
+
+    testWidgets('Content (articles and the latest comments) and the ticket queue page the same way', (tester) async {
+      when(() => repository.articles(any(), page: any(named: 'page'), pageSize: 50)).thenAnswer((invocation) async {
+        final page = invocation.namedArguments[#page] as int;
+        return Ok(PagedList(items: [adminArticle()], page: page, totalCount: 51, totalPages: 2));
+      });
+      when(() => repository.comments(any(), page: 1, pageSize: 50)).thenAnswer(
+        (_) async => Ok(PagedList(
+          items: [
+            AdminCommentRow(id: 'c-1', body: 'Spam', article: const AdminCommentArticle(id: 'a', slug: 'a', title: 'A'), createdAt: adminNow),
+          ],
+          totalCount: 60,
+          totalPages: 2,
+        )),
+      );
+      await pump(
+        tester,
+        AdminContentPage(
+          articlesCubit: AdminArticlesCubit(GetAdminArticles(repository), null),
+          commentsCubit: AdminCommentsCubit(GetAdminComments(repository)),
+          actions: MockModerationActionCubit()..hold(null),
+          taxonomy: taxonomyChoices(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Page 1 of 2').hitTestable(), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('admin-page-next')).hitTestable());
+      await tester.pumpAndSettle();
+      expect(find.text('51–51 of 51').hitTestable(), findsOneWidget);
+      verify(() => repository.articles(any(), page: 2, pageSize: 50)).called(1);
+
+      await tester.tap(find.text('Latest comments'));
+      await tester.pumpAndSettle();
+      expect(find.text('1–1 of 60').hitTestable(), findsOneWidget);
+
+      registerFallbackValue(const AdminTicketQuery());
+      final support = MockSupportRepository();
+      when(() => support.adminTickets(any(), page: any(named: 'page'), pageSize: 50)).thenAnswer((invocation) async {
+        final page = invocation.namedArguments[#page] as int;
+        return Ok(PagedList(items: [adminTicketRow(id: 't-$page')], page: page, pageSize: 1, totalCount: 2, totalPages: 2));
+      });
+      final tickets = AdminTicketsCubit(GetAdminTickets(support), null);
+      await pump(tester, BlocProvider.value(value: tickets, child: const AdminTicketsView()));
+      await tickets.load();
+      await tester.pumpAndSettle();
+      expect(text(tester, 'admin-page-rows'), '1–1 of 2');
+      await tester.tap(find.byKey(const ValueKey('admin-page-next')));
+      await tester.pumpAndSettle();
+      expect(text(tester, 'admin-page-rows'), '2–2 of 2');
+      expect(text(tester, 'admin-page-of'), 'Page 2 of 2');
+
+      // A status tab is a new query: page 1 again.
+      await tester.tap(find.text('Closed'));
+      await tester.pumpAndSettle();
+      expect(text(tester, 'admin-page-of'), 'Page 1 of 2');
+      verify(() => support.adminTickets(const AdminTicketQuery(status: SupportStatus.closed), page: 1, pageSize: 50)).called(1);
+      await tickets.close();
     });
   });
 

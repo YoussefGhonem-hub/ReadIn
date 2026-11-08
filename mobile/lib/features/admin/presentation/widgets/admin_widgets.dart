@@ -180,7 +180,7 @@ class _AdminSearchFieldState extends State<AdminSearchField> {
 }
 
 /// A paged console list once its [AdminListCubit] is provided: [header] (search, filters) on top, then skeleton, error
-/// with retry, empty, pull to refresh, and the next page as the list nears its end (a retry row when it fails).
+/// with retry, empty, pull to refresh, the rows of one page, and the page controls at the bottom ([AdminPager]).
 class AdminPagedList<C extends AdminListCubit<T, Q>, T, Q> extends StatelessWidget {
   const AdminPagedList({
     super.key,
@@ -201,8 +201,6 @@ class AdminPagedList<C extends AdminListCubit<T, Q>, T, Q> extends StatelessWidg
   /// "1,204 users": the total under the header.
   final String Function(int total)? countLabel;
 
-  static const _loadMoreWithin = 400.0;
-
   Future<void> _refresh(BuildContext context) async {
     final failure = await context.read<C>().refresh();
     if (context.mounted) showActionFailure(context, failure);
@@ -212,6 +210,11 @@ class AdminPagedList<C extends AdminListCubit<T, Q>, T, Q> extends StatelessWidg
   Widget build(BuildContext context) {
     final cubit = context.read<C>();
     final colors = context.colors;
+    Future<void> turn(Future<Failure?> Function() to) async {
+      final failure = await to();
+      if (context.mounted) showActionFailure(context, failure);
+    }
+
     return BlocBuilder<C, AdminListState<T, Q>>(
       builder: (context, state) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -226,6 +229,7 @@ class AdminPagedList<C extends AdminListCubit<T, Q>, T, Q> extends StatelessWidg
               padding: const EdgeInsets.fromLTRB(ReadInSpace.s4, ReadInSpace.s2, ReadInSpace.s4, 0),
               child: Text(countLabel!(state.totalCount), style: context.textTheme.labelMedium?.copyWith(color: colors.textSecondary)),
             ),
+          if (state.changingPage) const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: switch (state.status) {
               AdminListStatus.loading => const AdminListSkeleton(),
@@ -239,26 +243,114 @@ class AdminPagedList<C extends AdminListCubit<T, Q>, T, Q> extends StatelessWidg
                     ),
                   ),
                 ),
-              AdminListStatus.ready => NotificationListener<ScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.metrics.extentAfter < _loadMoreWithin) unawaited(cubit.loadMore());
-                    return false;
-                  },
-                  child: RefreshIndicator(
-                    onRefresh: () => _refresh(context),
-                    child: ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.only(top: PageBlock.gap, bottom: ReadInSpace.s6),
-                      itemCount: state.items.length + (state.hasMore || state.moreFailure != null ? 1 : 0),
-                      itemBuilder: (context, index) => index < state.items.length
-                          ? itemBuilder(context, state.items[index])
-                          : AdminLoadMoreRow(failure: state.moreFailure, onRetry: () => unawaited(cubit.loadMore())),
-                    ),
+              AdminListStatus.ready => RefreshIndicator(
+                  onRefresh: () => _refresh(context),
+                  child: ListView.builder(
+                    // A new page starts at its top.
+                    key: PageStorageKey('admin-page-${state.page}'),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(top: PageBlock.gap, bottom: ReadInSpace.s4),
+                    itemCount: state.items.length,
+                    itemBuilder: (context, index) => itemBuilder(context, state.items[index]),
                   ),
                 ),
             },
           ),
+          if (state.status == AdminListStatus.ready && state.totalCount > 0)
+            AdminPager(
+              firstRow: state.firstRow,
+              lastRow: state.lastRow,
+              totalCount: state.totalCount,
+              page: state.page,
+              totalPages: state.totalPages,
+              busy: state.changingPage,
+              onPrevious: state.hasPrevious ? () => unawaited(turn(cubit.previousPage)) : null,
+              onNext: state.hasNext ? () => unawaited(turn(cubit.nextPage)) : null,
+            ),
         ],
+      ),
+    );
+  }
+}
+
+/// The page controls under a console list: previous · "1–50 of 1,234" and "Page 1 of 25" · next. A button at an
+/// edge (the first or the last page) is disabled.
+class AdminPager extends StatelessWidget {
+  const AdminPager({
+    super.key,
+    required this.firstRow,
+    required this.lastRow,
+    required this.totalCount,
+    required this.page,
+    required this.totalPages,
+    this.onPrevious,
+    this.onNext,
+    this.busy = false,
+  });
+
+  final int firstRow;
+  final int lastRow;
+  final int totalCount;
+  final int page;
+  final int totalPages;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  /// A page is loading: both buttons wait.
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    return Material(
+      key: const ValueKey('admin-pager'),
+      color: colors.surface,
+      child: Container(
+        decoration: BoxDecoration(border: Border(top: BorderSide(color: colors.border))),
+        padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2, vertical: ReadInSpace.s1),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              IconButton(
+                key: const ValueKey('admin-page-previous'),
+                tooltip: l10n.adminPagePrevious,
+                // Mirrors in Arabic: "previous" points to the start side.
+                icon: const Icon(Icons.chevron_left_rounded),
+                onPressed: busy ? null : onPrevious,
+              ),
+              Expanded(
+                child: Semantics(
+                  liveRegion: true,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.adminPageRows(adminNumber(firstRow), adminNumber(lastRow), adminNumber(totalCount)),
+                        key: const ValueKey('admin-page-rows'),
+                        textAlign: TextAlign.center,
+                        style: context.textTheme.labelLarge,
+                      ),
+                      Text(
+                        l10n.adminPageOf(adminNumber(page), adminNumber(totalPages)),
+                        key: const ValueKey('admin-page-of'),
+                        textAlign: TextAlign.center,
+                        style: context.textTheme.labelSmall?.copyWith(color: colors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              IconButton(
+                key: const ValueKey('admin-page-next'),
+                tooltip: l10n.adminPageNext,
+                icon: const Icon(Icons.chevron_right_rounded),
+                onPressed: busy ? null : onNext,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -2076,5 +2076,15 @@
   "adminTheirArticles": "Their articles",
   "adminRemoveFilter": "Remove filter",
   "adminSuspendedProfileHint": "Only admins can open this profile while the account is suspended.",
-  "adminNeverPublished": "Never published"
+  "adminNeverPublished": "Never published",
+  "adminNavDashboard": "Dashboard",
+  "adminNavTicketsOpen": "Tickets, {count} open",
+  "@adminNavTicketsOpen": { "placeholders": { "count": { "type": "String" } } },
+  "adminViewAsReader": "View the app as a reader",
+  "adminPagePrevious": "Previous page",
+  "adminPageNext": "Next page",
+  "adminPageRows": "{from}–{to} of {total}",
+  "@adminPageRows": { "placeholders": { "from": { "type": "String" }, "to": { "type": "String" }, "total": { "type": "String" } } },
+  "adminPageOf": "Page {page} of {pages}",
+  "@adminPageOf": { "placeholders": { "page": { "type": "String" }, "pages": { "type": "String" } } }
 }

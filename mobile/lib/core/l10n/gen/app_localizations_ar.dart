@@ -6679,4 +6679,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminNeverPublished => 'لم يُنشر قط';
+
+  @override
+  String get adminNavDashboard => 'لوحة التحكم';
+
+  @override
+  String adminNavTicketsOpen(String count) {
+    return 'التذاكر، $count مفتوحة';
+  }
+
+  @override
+  String get adminViewAsReader => 'عرض التطبيق كقارئ';
+
+  @override
+  String get adminPagePrevious => 'الصفحة السابقة';
+
+  @override
+  String get adminPageNext => 'الصفحة التالية';
+
+  @override
+  String adminPageRows(String from, String to, String total) {
+    return '$from–$to من $total';
+  }
+
+  @override
+  String adminPageOf(String page, String pages) {
+    return 'الصفحة $page من $pages';
+  }
 }
