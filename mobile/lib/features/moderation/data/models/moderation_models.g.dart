@@ -12,6 +12,7 @@ _ReportRequest _$ReportRequestFromJson(Map<String, dynamic> json) =>
       targetId: json['targetId'] as String,
       reason: json['reason'] as String,
       details: json['details'] as String?,
+      alsoBlock: json['alsoBlock'] as bool?,
     );
 
 Map<String, dynamic> _$ReportRequestToJson(_ReportRequest instance) =>
@@ -20,6 +21,7 @@ Map<String, dynamic> _$ReportRequestToJson(_ReportRequest instance) =>
       'targetId': instance.targetId,
       'reason': instance.reason,
       'details': ?instance.details,
+      'alsoBlock': ?instance.alsoBlock,
     };
 
 _ModerationTargetRefModel _$ModerationTargetRefModelFromJson(
@@ -158,6 +160,8 @@ _ModerationQueueItemModel _$ModerationQueueItemModelFromJson(
   target: ModerationTargetModel.fromJson(
     json['target'] as Map<String, dynamic>,
   ),
+  ageHours: (json['ageHours'] as num?)?.toInt(),
+  urgent: json['urgent'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ModerationQueueItemModelToJson(
@@ -172,6 +176,8 @@ Map<String, dynamic> _$ModerationQueueItemModelToJson(
   'lastReportedAt': instance.lastReportedAt.toIso8601String(),
   'closedAt': ?instance.closedAt?.toIso8601String(),
   'target': instance.target.toJson(),
+  'ageHours': ?instance.ageHours,
+  'urgent': instance.urgent,
 };
 
 _ModerationQueuePageModel _$ModerationQueuePageModelFromJson(
@@ -211,6 +217,10 @@ _ModerationReportModel _$ModerationReportModelFromJson(
   closedBy: json['closedBy'] == null
       ? null
       : UserSummaryModel.fromJson(json['closedBy'] as Map<String, dynamic>),
+  isSystem: json['isSystem'] as bool? ?? false,
+  matchedTerms: (json['matchedTerms'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
 );
 
 Map<String, dynamic> _$ModerationReportModelToJson(
@@ -224,6 +234,8 @@ Map<String, dynamic> _$ModerationReportModelToJson(
   'createdAt': instance.createdAt.toIso8601String(),
   'closedAt': ?instance.closedAt?.toIso8601String(),
   'closedBy': ?instance.closedBy?.toJson(),
+  'isSystem': instance.isSystem,
+  'matchedTerms': ?instance.matchedTerms,
 };
 
 _ModerationActionModel _$ModerationActionModelFromJson(

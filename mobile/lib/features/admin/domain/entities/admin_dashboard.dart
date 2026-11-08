@@ -5,15 +5,24 @@ import '../../../article/domain/entities/article.dart';
 /// `GET /admin/summary` (F23): the badge on the console entry, open reports + open tickets + pending verification
 /// requests. A part is null when the caller lacks its permission; [total] adds the others.
 class AdminSummary extends Equatable {
-  const AdminSummary({this.openReports, this.openTickets, this.pendingVerifications, this.total = 0});
+  const AdminSummary({
+    this.openReports,
+    this.openTickets,
+    this.pendingVerifications,
+    this.total = 0,
+    this.openReportsOver24h,
+  });
 
   final int? openReports;
   final int? openTickets;
   final int? pendingVerifications;
   final int total;
 
+  /// Open reports past the 24-hour target (F22 store additions; null without `moderation.manage`). The target is 0.
+  final int? openReportsOver24h;
+
   @override
-  List<Object?> get props => [openReports, openTickets, pendingVerifications, total];
+  List<Object?> get props => [openReports, openTickets, pendingVerifications, total, openReportsOver24h];
 }
 
 /// The dashboard's period: today (the default), yesterday, the last 7 or 30 days, in `Admin:TimeZone` days.
@@ -70,6 +79,7 @@ class DashboardCards extends Equatable {
     this.openTickets,
     this.pendingVerifications,
     this.suspendedNow = 0,
+    this.openReportsOver24h,
   });
 
   final DashboardValue articlesPublished;
@@ -84,8 +94,12 @@ class DashboardCards extends Equatable {
   final int? pendingVerifications;
   final int suspendedNow;
 
+  /// Open targets whose oldest open report is older than 24 hours (target: 0); null without `moderation.manage`.
+  final int? openReportsOver24h;
+
   @override
   List<Object?> get props => [
+        openReportsOver24h,
         articlesPublished,
         newUsers,
         activeReaders,

@@ -59,6 +59,24 @@ abstract final class ModerationFlows {
     return _run(context, ModerationCommand(ModerationActionType.delete, ModerationTargetRef.comment(commentId)), l10n.commentsDeleted);
   }
 
+  /// A reported repost (F22 store additions): removed as if its owner had undone it; its reports are resolved.
+  static Future<bool> deleteRepost(BuildContext context, String repostId) async {
+    final l10n = context.l10n;
+    final confirmed = await confirmModeration(
+      context,
+      title: l10n.moderationDeleteRepostTitle,
+      body: l10n.moderationDeleteRepostBody,
+      confirmLabel: l10n.moderationDeleteRepost,
+      destructive: true,
+    );
+    if (!confirmed || !context.mounted) return false;
+    return _run(
+      context,
+      ModerationCommand(ModerationActionType.delete, ModerationTargetRef.repost(repostId)),
+      l10n.moderationRepostDeleted,
+    );
+  }
+
   /// Warn [userId] with a note they have to acknowledge. [resolveReportsOf]: also close the reports of the content the
   /// warning is about.
   static Future<bool> warn(BuildContext context, {required String userId, required String name, ModerationTargetRef? resolveReportsOf}) async {

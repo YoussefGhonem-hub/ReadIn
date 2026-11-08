@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../core/theme/tokens.g.dart';
@@ -18,6 +19,7 @@ class RDocScope extends InheritedWidget {
     this.onLinkTap,
     this.onTermTap,
     this.onMentionTap,
+    this.unlinkedMentionIds = const {},
   });
 
   /// Fallback direction for `dir: auto` blocks without strong characters:
@@ -27,6 +29,10 @@ class RDocScope extends InheritedWidget {
   final RDocLinkHandler? onLinkTap;
   final RDocTermHandler? onTermTap;
   final RDocMentionHandler? onMentionTap;
+
+  /// People the reader is blocked with (F36, `ArticleDetailsDto.unlinkedMentionIds`): their mentions read as plain
+  /// text, with no link.
+  final Set<String> unlinkedMentionIds;
 
   static TextDirection directionForLanguage(String language) =>
       language.startsWith('ar') ? TextDirection.rtl : TextDirection.ltr;
@@ -46,5 +52,6 @@ class RDocScope extends InheritedWidget {
       old.bodyFontSize != bodyFontSize ||
       old.onLinkTap != onLinkTap ||
       old.onTermTap != onTermTap ||
-      old.onMentionTap != onMentionTap;
+      old.onMentionTap != onMentionTap ||
+      !setEquals(old.unlinkedMentionIds, unlinkedMentionIds);
 }

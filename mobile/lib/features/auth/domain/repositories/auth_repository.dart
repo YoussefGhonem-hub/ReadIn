@@ -69,6 +69,9 @@ abstract interface class AccountRepository {
   /// The mandatory first PIN (`mustSetRecoveryPin`).
   Future<Result<Me>> setRecoveryPin(String pin);
 
+  /// `POST /me/terms/accept` (F37): the blocking terms screen's "I agree".
+  Future<Result<Me>> acceptTerms();
+
   Future<Result<void>> changeRecoveryPin({required String currentPassword, required String newPin});
 
   /// Other sessions end; this one gets fresh tokens.

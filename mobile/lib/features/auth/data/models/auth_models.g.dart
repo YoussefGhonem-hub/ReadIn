@@ -50,6 +50,8 @@ _MeModel _$MeModelFromJson(Map<String, dynamic> json) => _MeModel(
   privacy: json['privacy'] == null
       ? const PrivacyModel()
       : PrivacyModel.fromJson(json['privacy'] as Map<String, dynamic>),
+  termsVersion: json['termsVersion'] as String?,
+  mustAcceptTerms: json['mustAcceptTerms'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$MeModelToJson(_MeModel instance) => <String, dynamic>{
@@ -80,6 +82,8 @@ Map<String, dynamic> _$MeModelToJson(_MeModel instance) => <String, dynamic>{
   'permissions': instance.permissions,
   'interests': instance.interests.toJson(),
   'privacy': instance.privacy.toJson(),
+  'termsVersion': ?instance.termsVersion,
+  'mustAcceptTerms': instance.mustAcceptTerms,
 };
 
 _ExternalLoginModel _$ExternalLoginModelFromJson(Map<String, dynamic> json) =>

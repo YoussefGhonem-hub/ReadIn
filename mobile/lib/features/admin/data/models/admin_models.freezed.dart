@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AdminSummaryModel {
 
- int? get openReports; int? get openTickets; int? get pendingVerifications; int get total;
+ int? get openReports; int? get openTickets; int? get pendingVerifications; int get total; int? get openReportsOver24h;
 /// Create a copy of AdminSummaryModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AdminSummaryModelCopyWith<AdminSummaryModel> get copyWith => _$AdminSummaryMode
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AdminSummaryModel&&(identical(other.openReports, openReports) || other.openReports == openReports)&&(identical(other.openTickets, openTickets) || other.openTickets == openTickets)&&(identical(other.pendingVerifications, pendingVerifications) || other.pendingVerifications == pendingVerifications)&&(identical(other.total, total) || other.total == total));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AdminSummaryModel&&(identical(other.openReports, openReports) || other.openReports == openReports)&&(identical(other.openTickets, openTickets) || other.openTickets == openTickets)&&(identical(other.pendingVerifications, pendingVerifications) || other.pendingVerifications == pendingVerifications)&&(identical(other.total, total) || other.total == total)&&(identical(other.openReportsOver24h, openReportsOver24h) || other.openReportsOver24h == openReportsOver24h));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,openReports,openTickets,pendingVerifications,total);
+int get hashCode => Object.hash(runtimeType,openReports,openTickets,pendingVerifications,total,openReportsOver24h);
 
 @override
 String toString() {
-  return 'AdminSummaryModel(openReports: $openReports, openTickets: $openTickets, pendingVerifications: $pendingVerifications, total: $total)';
+  return 'AdminSummaryModel(openReports: $openReports, openTickets: $openTickets, pendingVerifications: $pendingVerifications, total: $total, openReportsOver24h: $openReportsOver24h)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AdminSummaryModelCopyWith<$Res>  {
   factory $AdminSummaryModelCopyWith(AdminSummaryModel value, $Res Function(AdminSummaryModel) _then) = _$AdminSummaryModelCopyWithImpl;
 @useResult
 $Res call({
- int? openReports, int? openTickets, int? pendingVerifications, int total
+ int? openReports, int? openTickets, int? pendingVerifications, int total, int? openReportsOver24h
 });
 
 
@@ -65,13 +65,14 @@ class _$AdminSummaryModelCopyWithImpl<$Res>
 
 /// Create a copy of AdminSummaryModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? openReports = freezed,Object? openTickets = freezed,Object? pendingVerifications = freezed,Object? total = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? openReports = freezed,Object? openTickets = freezed,Object? pendingVerifications = freezed,Object? total = null,Object? openReportsOver24h = freezed,}) {
   return _then(_self.copyWith(
 openReports: freezed == openReports ? _self.openReports : openReports // ignore: cast_nullable_to_non_nullable
 as int?,openTickets: freezed == openTickets ? _self.openTickets : openTickets // ignore: cast_nullable_to_non_nullable
 as int?,pendingVerifications: freezed == pendingVerifications ? _self.pendingVerifications : pendingVerifications // ignore: cast_nullable_to_non_nullable
 as int?,total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
-as int,
+as int,openReportsOver24h: freezed == openReportsOver24h ? _self.openReportsOver24h : openReportsOver24h // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -156,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? openReports,  int? openTickets,  int? pendingVerifications,  int total)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? openReports,  int? openTickets,  int? pendingVerifications,  int total,  int? openReportsOver24h)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AdminSummaryModel() when $default != null:
-return $default(_that.openReports,_that.openTickets,_that.pendingVerifications,_that.total);case _:
+return $default(_that.openReports,_that.openTickets,_that.pendingVerifications,_that.total,_that.openReportsOver24h);case _:
   return orElse();
 
 }
@@ -177,10 +178,10 @@ return $default(_that.openReports,_that.openTickets,_that.pendingVerifications,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? openReports,  int? openTickets,  int? pendingVerifications,  int total)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? openReports,  int? openTickets,  int? pendingVerifications,  int total,  int? openReportsOver24h)  $default,) {final _that = this;
 switch (_that) {
 case _AdminSummaryModel():
-return $default(_that.openReports,_that.openTickets,_that.pendingVerifications,_that.total);case _:
+return $default(_that.openReports,_that.openTickets,_that.pendingVerifications,_that.total,_that.openReportsOver24h);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +198,10 @@ return $default(_that.openReports,_that.openTickets,_that.pendingVerifications,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? openReports,  int? openTickets,  int? pendingVerifications,  int total)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? openReports,  int? openTickets,  int? pendingVerifications,  int total,  int? openReportsOver24h)?  $default,) {final _that = this;
 switch (_that) {
 case _AdminSummaryModel() when $default != null:
-return $default(_that.openReports,_that.openTickets,_that.pendingVerifications,_that.total);case _:
+return $default(_that.openReports,_that.openTickets,_that.pendingVerifications,_that.total,_that.openReportsOver24h);case _:
   return null;
 
 }
@@ -212,13 +213,14 @@ return $default(_that.openReports,_that.openTickets,_that.pendingVerifications,_
 @JsonSerializable()
 
 class _AdminSummaryModel extends AdminSummaryModel {
-  const _AdminSummaryModel({this.openReports, this.openTickets, this.pendingVerifications, this.total = 0}): super._();
+  const _AdminSummaryModel({this.openReports, this.openTickets, this.pendingVerifications, this.total = 0, this.openReportsOver24h}): super._();
   factory _AdminSummaryModel.fromJson(Map<String, dynamic> json) => _$AdminSummaryModelFromJson(json);
 
 @override final  int? openReports;
 @override final  int? openTickets;
 @override final  int? pendingVerifications;
 @override@JsonKey() final  int total;
+@override final  int? openReportsOver24h;
 
 /// Create a copy of AdminSummaryModel
 /// with the given fields replaced by the non-null parameter values.
@@ -233,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AdminSummaryModel&&(identical(other.openReports, openReports) || other.openReports == openReports)&&(identical(other.openTickets, openTickets) || other.openTickets == openTickets)&&(identical(other.pendingVerifications, pendingVerifications) || other.pendingVerifications == pendingVerifications)&&(identical(other.total, total) || other.total == total));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AdminSummaryModel&&(identical(other.openReports, openReports) || other.openReports == openReports)&&(identical(other.openTickets, openTickets) || other.openTickets == openTickets)&&(identical(other.pendingVerifications, pendingVerifications) || other.pendingVerifications == pendingVerifications)&&(identical(other.total, total) || other.total == total)&&(identical(other.openReportsOver24h, openReportsOver24h) || other.openReportsOver24h == openReportsOver24h));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,openReports,openTickets,pendingVerifications,total);
+int get hashCode => Object.hash(runtimeType,openReports,openTickets,pendingVerifications,total,openReportsOver24h);
 
 @override
 String toString() {
-  return 'AdminSummaryModel(openReports: $openReports, openTickets: $openTickets, pendingVerifications: $pendingVerifications, total: $total)';
+  return 'AdminSummaryModel(openReports: $openReports, openTickets: $openTickets, pendingVerifications: $pendingVerifications, total: $total, openReportsOver24h: $openReportsOver24h)';
 }
 
 
@@ -253,7 +255,7 @@ abstract mixin class _$AdminSummaryModelCopyWith<$Res> implements $AdminSummaryM
   factory _$AdminSummaryModelCopyWith(_AdminSummaryModel value, $Res Function(_AdminSummaryModel) _then) = __$AdminSummaryModelCopyWithImpl;
 @override @useResult
 $Res call({
- int? openReports, int? openTickets, int? pendingVerifications, int total
+ int? openReports, int? openTickets, int? pendingVerifications, int total, int? openReportsOver24h
 });
 
 
@@ -270,13 +272,14 @@ class __$AdminSummaryModelCopyWithImpl<$Res>
 
 /// Create a copy of AdminSummaryModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? openReports = freezed,Object? openTickets = freezed,Object? pendingVerifications = freezed,Object? total = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? openReports = freezed,Object? openTickets = freezed,Object? pendingVerifications = freezed,Object? total = null,Object? openReportsOver24h = freezed,}) {
   return _then(_AdminSummaryModel(
 openReports: freezed == openReports ? _self.openReports : openReports // ignore: cast_nullable_to_non_nullable
 as int?,openTickets: freezed == openTickets ? _self.openTickets : openTickets // ignore: cast_nullable_to_non_nullable
 as int?,pendingVerifications: freezed == pendingVerifications ? _self.pendingVerifications : pendingVerifications // ignore: cast_nullable_to_non_nullable
 as int?,total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
-as int,
+as int,openReportsOver24h: freezed == openReportsOver24h ? _self.openReportsOver24h : openReportsOver24h // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -562,7 +565,7 @@ as int,
 /// @nodoc
 mixin _$DashboardCardsModel {
 
- DashboardValueModel get articlesPublished; DashboardValueModel get newUsers; DashboardValueModel get activeReaders; DashboardValueModel get reads; DashboardValueModel get comments; DashboardValueModel get reactions; DashboardValueModel get reposts; int? get openReports; int? get openTickets; int? get pendingVerifications; int get suspendedNow;
+ DashboardValueModel get articlesPublished; DashboardValueModel get newUsers; DashboardValueModel get activeReaders; DashboardValueModel get reads; DashboardValueModel get comments; DashboardValueModel get reactions; DashboardValueModel get reposts; int? get openReports; int? get openTickets; int? get pendingVerifications; int get suspendedNow; int? get openReportsOver24h;
 /// Create a copy of DashboardCardsModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -575,16 +578,16 @@ $DashboardCardsModelCopyWith<DashboardCardsModel> get copyWith => _$DashboardCar
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardCardsModel&&(identical(other.articlesPublished, articlesPublished) || other.articlesPublished == articlesPublished)&&(identical(other.newUsers, newUsers) || other.newUsers == newUsers)&&(identical(other.activeReaders, activeReaders) || other.activeReaders == activeReaders)&&(identical(other.reads, reads) || other.reads == reads)&&(identical(other.comments, comments) || other.comments == comments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.reposts, reposts) || other.reposts == reposts)&&(identical(other.openReports, openReports) || other.openReports == openReports)&&(identical(other.openTickets, openTickets) || other.openTickets == openTickets)&&(identical(other.pendingVerifications, pendingVerifications) || other.pendingVerifications == pendingVerifications)&&(identical(other.suspendedNow, suspendedNow) || other.suspendedNow == suspendedNow));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardCardsModel&&(identical(other.articlesPublished, articlesPublished) || other.articlesPublished == articlesPublished)&&(identical(other.newUsers, newUsers) || other.newUsers == newUsers)&&(identical(other.activeReaders, activeReaders) || other.activeReaders == activeReaders)&&(identical(other.reads, reads) || other.reads == reads)&&(identical(other.comments, comments) || other.comments == comments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.reposts, reposts) || other.reposts == reposts)&&(identical(other.openReports, openReports) || other.openReports == openReports)&&(identical(other.openTickets, openTickets) || other.openTickets == openTickets)&&(identical(other.pendingVerifications, pendingVerifications) || other.pendingVerifications == pendingVerifications)&&(identical(other.suspendedNow, suspendedNow) || other.suspendedNow == suspendedNow)&&(identical(other.openReportsOver24h, openReportsOver24h) || other.openReportsOver24h == openReportsOver24h));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,articlesPublished,newUsers,activeReaders,reads,comments,reactions,reposts,openReports,openTickets,pendingVerifications,suspendedNow);
+int get hashCode => Object.hash(runtimeType,articlesPublished,newUsers,activeReaders,reads,comments,reactions,reposts,openReports,openTickets,pendingVerifications,suspendedNow,openReportsOver24h);
 
 @override
 String toString() {
-  return 'DashboardCardsModel(articlesPublished: $articlesPublished, newUsers: $newUsers, activeReaders: $activeReaders, reads: $reads, comments: $comments, reactions: $reactions, reposts: $reposts, openReports: $openReports, openTickets: $openTickets, pendingVerifications: $pendingVerifications, suspendedNow: $suspendedNow)';
+  return 'DashboardCardsModel(articlesPublished: $articlesPublished, newUsers: $newUsers, activeReaders: $activeReaders, reads: $reads, comments: $comments, reactions: $reactions, reposts: $reposts, openReports: $openReports, openTickets: $openTickets, pendingVerifications: $pendingVerifications, suspendedNow: $suspendedNow, openReportsOver24h: $openReportsOver24h)';
 }
 
 
@@ -595,7 +598,7 @@ abstract mixin class $DashboardCardsModelCopyWith<$Res>  {
   factory $DashboardCardsModelCopyWith(DashboardCardsModel value, $Res Function(DashboardCardsModel) _then) = _$DashboardCardsModelCopyWithImpl;
 @useResult
 $Res call({
- DashboardValueModel articlesPublished, DashboardValueModel newUsers, DashboardValueModel activeReaders, DashboardValueModel reads, DashboardValueModel comments, DashboardValueModel reactions, DashboardValueModel reposts, int? openReports, int? openTickets, int? pendingVerifications, int suspendedNow
+ DashboardValueModel articlesPublished, DashboardValueModel newUsers, DashboardValueModel activeReaders, DashboardValueModel reads, DashboardValueModel comments, DashboardValueModel reactions, DashboardValueModel reposts, int? openReports, int? openTickets, int? pendingVerifications, int suspendedNow, int? openReportsOver24h
 });
 
 
@@ -612,7 +615,7 @@ class _$DashboardCardsModelCopyWithImpl<$Res>
 
 /// Create a copy of DashboardCardsModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? articlesPublished = null,Object? newUsers = null,Object? activeReaders = null,Object? reads = null,Object? comments = null,Object? reactions = null,Object? reposts = null,Object? openReports = freezed,Object? openTickets = freezed,Object? pendingVerifications = freezed,Object? suspendedNow = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? articlesPublished = null,Object? newUsers = null,Object? activeReaders = null,Object? reads = null,Object? comments = null,Object? reactions = null,Object? reposts = null,Object? openReports = freezed,Object? openTickets = freezed,Object? pendingVerifications = freezed,Object? suspendedNow = null,Object? openReportsOver24h = freezed,}) {
   return _then(_self.copyWith(
 articlesPublished: null == articlesPublished ? _self.articlesPublished : articlesPublished // ignore: cast_nullable_to_non_nullable
 as DashboardValueModel,newUsers: null == newUsers ? _self.newUsers : newUsers // ignore: cast_nullable_to_non_nullable
@@ -625,7 +628,8 @@ as DashboardValueModel,openReports: freezed == openReports ? _self.openReports :
 as int?,openTickets: freezed == openTickets ? _self.openTickets : openTickets // ignore: cast_nullable_to_non_nullable
 as int?,pendingVerifications: freezed == pendingVerifications ? _self.pendingVerifications : pendingVerifications // ignore: cast_nullable_to_non_nullable
 as int?,suspendedNow: null == suspendedNow ? _self.suspendedNow : suspendedNow // ignore: cast_nullable_to_non_nullable
-as int,
+as int,openReportsOver24h: freezed == openReportsOver24h ? _self.openReportsOver24h : openReportsOver24h // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 /// Create a copy of DashboardCardsModel
@@ -773,10 +777,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DashboardValueModel articlesPublished,  DashboardValueModel newUsers,  DashboardValueModel activeReaders,  DashboardValueModel reads,  DashboardValueModel comments,  DashboardValueModel reactions,  DashboardValueModel reposts,  int? openReports,  int? openTickets,  int? pendingVerifications,  int suspendedNow)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DashboardValueModel articlesPublished,  DashboardValueModel newUsers,  DashboardValueModel activeReaders,  DashboardValueModel reads,  DashboardValueModel comments,  DashboardValueModel reactions,  DashboardValueModel reposts,  int? openReports,  int? openTickets,  int? pendingVerifications,  int suspendedNow,  int? openReportsOver24h)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DashboardCardsModel() when $default != null:
-return $default(_that.articlesPublished,_that.newUsers,_that.activeReaders,_that.reads,_that.comments,_that.reactions,_that.reposts,_that.openReports,_that.openTickets,_that.pendingVerifications,_that.suspendedNow);case _:
+return $default(_that.articlesPublished,_that.newUsers,_that.activeReaders,_that.reads,_that.comments,_that.reactions,_that.reposts,_that.openReports,_that.openTickets,_that.pendingVerifications,_that.suspendedNow,_that.openReportsOver24h);case _:
   return orElse();
 
 }
@@ -794,10 +798,10 @@ return $default(_that.articlesPublished,_that.newUsers,_that.activeReaders,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DashboardValueModel articlesPublished,  DashboardValueModel newUsers,  DashboardValueModel activeReaders,  DashboardValueModel reads,  DashboardValueModel comments,  DashboardValueModel reactions,  DashboardValueModel reposts,  int? openReports,  int? openTickets,  int? pendingVerifications,  int suspendedNow)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DashboardValueModel articlesPublished,  DashboardValueModel newUsers,  DashboardValueModel activeReaders,  DashboardValueModel reads,  DashboardValueModel comments,  DashboardValueModel reactions,  DashboardValueModel reposts,  int? openReports,  int? openTickets,  int? pendingVerifications,  int suspendedNow,  int? openReportsOver24h)  $default,) {final _that = this;
 switch (_that) {
 case _DashboardCardsModel():
-return $default(_that.articlesPublished,_that.newUsers,_that.activeReaders,_that.reads,_that.comments,_that.reactions,_that.reposts,_that.openReports,_that.openTickets,_that.pendingVerifications,_that.suspendedNow);case _:
+return $default(_that.articlesPublished,_that.newUsers,_that.activeReaders,_that.reads,_that.comments,_that.reactions,_that.reposts,_that.openReports,_that.openTickets,_that.pendingVerifications,_that.suspendedNow,_that.openReportsOver24h);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -814,10 +818,10 @@ return $default(_that.articlesPublished,_that.newUsers,_that.activeReaders,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DashboardValueModel articlesPublished,  DashboardValueModel newUsers,  DashboardValueModel activeReaders,  DashboardValueModel reads,  DashboardValueModel comments,  DashboardValueModel reactions,  DashboardValueModel reposts,  int? openReports,  int? openTickets,  int? pendingVerifications,  int suspendedNow)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DashboardValueModel articlesPublished,  DashboardValueModel newUsers,  DashboardValueModel activeReaders,  DashboardValueModel reads,  DashboardValueModel comments,  DashboardValueModel reactions,  DashboardValueModel reposts,  int? openReports,  int? openTickets,  int? pendingVerifications,  int suspendedNow,  int? openReportsOver24h)?  $default,) {final _that = this;
 switch (_that) {
 case _DashboardCardsModel() when $default != null:
-return $default(_that.articlesPublished,_that.newUsers,_that.activeReaders,_that.reads,_that.comments,_that.reactions,_that.reposts,_that.openReports,_that.openTickets,_that.pendingVerifications,_that.suspendedNow);case _:
+return $default(_that.articlesPublished,_that.newUsers,_that.activeReaders,_that.reads,_that.comments,_that.reactions,_that.reposts,_that.openReports,_that.openTickets,_that.pendingVerifications,_that.suspendedNow,_that.openReportsOver24h);case _:
   return null;
 
 }
@@ -829,7 +833,7 @@ return $default(_that.articlesPublished,_that.newUsers,_that.activeReaders,_that
 @JsonSerializable()
 
 class _DashboardCardsModel extends DashboardCardsModel {
-  const _DashboardCardsModel({this.articlesPublished = const DashboardValueModel(), this.newUsers = const DashboardValueModel(), this.activeReaders = const DashboardValueModel(), this.reads = const DashboardValueModel(), this.comments = const DashboardValueModel(), this.reactions = const DashboardValueModel(), this.reposts = const DashboardValueModel(), this.openReports, this.openTickets, this.pendingVerifications, this.suspendedNow = 0}): super._();
+  const _DashboardCardsModel({this.articlesPublished = const DashboardValueModel(), this.newUsers = const DashboardValueModel(), this.activeReaders = const DashboardValueModel(), this.reads = const DashboardValueModel(), this.comments = const DashboardValueModel(), this.reactions = const DashboardValueModel(), this.reposts = const DashboardValueModel(), this.openReports, this.openTickets, this.pendingVerifications, this.suspendedNow = 0, this.openReportsOver24h}): super._();
   factory _DashboardCardsModel.fromJson(Map<String, dynamic> json) => _$DashboardCardsModelFromJson(json);
 
 @override@JsonKey() final  DashboardValueModel articlesPublished;
@@ -843,6 +847,7 @@ class _DashboardCardsModel extends DashboardCardsModel {
 @override final  int? openTickets;
 @override final  int? pendingVerifications;
 @override@JsonKey() final  int suspendedNow;
+@override final  int? openReportsOver24h;
 
 /// Create a copy of DashboardCardsModel
 /// with the given fields replaced by the non-null parameter values.
@@ -857,16 +862,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardCardsModel&&(identical(other.articlesPublished, articlesPublished) || other.articlesPublished == articlesPublished)&&(identical(other.newUsers, newUsers) || other.newUsers == newUsers)&&(identical(other.activeReaders, activeReaders) || other.activeReaders == activeReaders)&&(identical(other.reads, reads) || other.reads == reads)&&(identical(other.comments, comments) || other.comments == comments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.reposts, reposts) || other.reposts == reposts)&&(identical(other.openReports, openReports) || other.openReports == openReports)&&(identical(other.openTickets, openTickets) || other.openTickets == openTickets)&&(identical(other.pendingVerifications, pendingVerifications) || other.pendingVerifications == pendingVerifications)&&(identical(other.suspendedNow, suspendedNow) || other.suspendedNow == suspendedNow));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardCardsModel&&(identical(other.articlesPublished, articlesPublished) || other.articlesPublished == articlesPublished)&&(identical(other.newUsers, newUsers) || other.newUsers == newUsers)&&(identical(other.activeReaders, activeReaders) || other.activeReaders == activeReaders)&&(identical(other.reads, reads) || other.reads == reads)&&(identical(other.comments, comments) || other.comments == comments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.reposts, reposts) || other.reposts == reposts)&&(identical(other.openReports, openReports) || other.openReports == openReports)&&(identical(other.openTickets, openTickets) || other.openTickets == openTickets)&&(identical(other.pendingVerifications, pendingVerifications) || other.pendingVerifications == pendingVerifications)&&(identical(other.suspendedNow, suspendedNow) || other.suspendedNow == suspendedNow)&&(identical(other.openReportsOver24h, openReportsOver24h) || other.openReportsOver24h == openReportsOver24h));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,articlesPublished,newUsers,activeReaders,reads,comments,reactions,reposts,openReports,openTickets,pendingVerifications,suspendedNow);
+int get hashCode => Object.hash(runtimeType,articlesPublished,newUsers,activeReaders,reads,comments,reactions,reposts,openReports,openTickets,pendingVerifications,suspendedNow,openReportsOver24h);
 
 @override
 String toString() {
-  return 'DashboardCardsModel(articlesPublished: $articlesPublished, newUsers: $newUsers, activeReaders: $activeReaders, reads: $reads, comments: $comments, reactions: $reactions, reposts: $reposts, openReports: $openReports, openTickets: $openTickets, pendingVerifications: $pendingVerifications, suspendedNow: $suspendedNow)';
+  return 'DashboardCardsModel(articlesPublished: $articlesPublished, newUsers: $newUsers, activeReaders: $activeReaders, reads: $reads, comments: $comments, reactions: $reactions, reposts: $reposts, openReports: $openReports, openTickets: $openTickets, pendingVerifications: $pendingVerifications, suspendedNow: $suspendedNow, openReportsOver24h: $openReportsOver24h)';
 }
 
 
@@ -877,7 +882,7 @@ abstract mixin class _$DashboardCardsModelCopyWith<$Res> implements $DashboardCa
   factory _$DashboardCardsModelCopyWith(_DashboardCardsModel value, $Res Function(_DashboardCardsModel) _then) = __$DashboardCardsModelCopyWithImpl;
 @override @useResult
 $Res call({
- DashboardValueModel articlesPublished, DashboardValueModel newUsers, DashboardValueModel activeReaders, DashboardValueModel reads, DashboardValueModel comments, DashboardValueModel reactions, DashboardValueModel reposts, int? openReports, int? openTickets, int? pendingVerifications, int suspendedNow
+ DashboardValueModel articlesPublished, DashboardValueModel newUsers, DashboardValueModel activeReaders, DashboardValueModel reads, DashboardValueModel comments, DashboardValueModel reactions, DashboardValueModel reposts, int? openReports, int? openTickets, int? pendingVerifications, int suspendedNow, int? openReportsOver24h
 });
 
 
@@ -894,7 +899,7 @@ class __$DashboardCardsModelCopyWithImpl<$Res>
 
 /// Create a copy of DashboardCardsModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? articlesPublished = null,Object? newUsers = null,Object? activeReaders = null,Object? reads = null,Object? comments = null,Object? reactions = null,Object? reposts = null,Object? openReports = freezed,Object? openTickets = freezed,Object? pendingVerifications = freezed,Object? suspendedNow = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? articlesPublished = null,Object? newUsers = null,Object? activeReaders = null,Object? reads = null,Object? comments = null,Object? reactions = null,Object? reposts = null,Object? openReports = freezed,Object? openTickets = freezed,Object? pendingVerifications = freezed,Object? suspendedNow = null,Object? openReportsOver24h = freezed,}) {
   return _then(_DashboardCardsModel(
 articlesPublished: null == articlesPublished ? _self.articlesPublished : articlesPublished // ignore: cast_nullable_to_non_nullable
 as DashboardValueModel,newUsers: null == newUsers ? _self.newUsers : newUsers // ignore: cast_nullable_to_non_nullable
@@ -907,7 +912,8 @@ as DashboardValueModel,openReports: freezed == openReports ? _self.openReports :
 as int?,openTickets: freezed == openTickets ? _self.openTickets : openTickets // ignore: cast_nullable_to_non_nullable
 as int?,pendingVerifications: freezed == pendingVerifications ? _self.pendingVerifications : pendingVerifications // ignore: cast_nullable_to_non_nullable
 as int?,suspendedNow: null == suspendedNow ? _self.suspendedNow : suspendedNow // ignore: cast_nullable_to_non_nullable
-as int,
+as int,openReportsOver24h: freezed == openReportsOver24h ? _self.openReportsOver24h : openReportsOver24h // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

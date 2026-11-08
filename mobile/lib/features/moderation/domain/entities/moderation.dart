@@ -9,7 +9,8 @@ import '../../../profile/domain/entities/profile_link.dart';
 enum ReportReason { spam, misinformation, harassment, copyright, other }
 
 /// What can be reported and moderated. The wire name is [name].
-enum ModerationTargetType { article, comment, user }
+/// `repost` (F22 store additions): a repost card's "⋯" reports the repost itself (its caption is the reposter's text).
+enum ModerationTargetType { article, comment, user, repost }
 
 /// A report's state; the queue is filtered on it. The wire name is [name].
 enum ReportStatus { open, resolved, dismissed }
@@ -73,6 +74,9 @@ enum ModerationLogAction {
   /// All of a user's content hidden at once, and brought back (F23).
   userHideContent('user.hide_content'),
   userUnhideContent('user.unhide_content'),
+
+  /// A repost removed by a moderator (F22 store additions).
+  repostDelete('repost.delete'),
   reportsDismiss('reports.dismiss'),
 
   /// An action this app version doesn't know yet.
@@ -109,6 +113,9 @@ class ModerationTargetRef extends Equatable {
   const ModerationTargetRef.comment(this.id) : type = ModerationTargetType.comment;
   const ModerationTargetRef.user(this.id) : type = ModerationTargetType.user;
 
+  /// A repost, by `RepostLabelDto.repostId`.
+  const ModerationTargetRef.repost(this.id) : type = ModerationTargetType.repost;
+
   final ModerationTargetType type;
   final String id;
 
@@ -130,7 +137,8 @@ class ModerationSummary extends Equatable {
 }
 
 /// `ModerationTargetDto`: what the moderator looks at. [author] is the content's author, or the user itself for a user
-/// target; null for a deleted account.
+/// target; null for a deleted account. A repost: [author] is the reposter, [body] the caption and `article*` the
+/// reposted article; its state is `visible` or `deleted`.
 class ModerationTarget extends Equatable {
   const ModerationTarget({
     required this.state,
@@ -191,7 +199,12 @@ class ModerationQueueItem extends Equatable {
     required this.target,
     this.reasons = const {},
     this.closedAt,
+    this.ageHours,
+    this.urgent = false,
   });
+
+  /// Cases older than this many hours are urgent («عاجل», SPEC F22: every report is handled within 24 hours).
+  static const urgentAfterHours = 12;
 
   final ModerationTargetType targetType;
   final String targetId;
@@ -207,14 +220,21 @@ class ModerationQueueItem extends Equatable {
   final DateTime? closedAt;
   final ModerationTarget target;
 
+  /// Open cases: whole hours since the oldest open report; null for resolved and dismissed ones.
+  final int? ageHours;
+
+  /// Open for 12 hours or more: marked «عاجل» / "Urgent".
+  final bool urgent;
+
   ModerationTargetRef get ref => ModerationTargetRef(targetType, targetId);
 
   @override
   List<Object?> get props =>
-      [targetType, targetId, status, reportCount, reasons, firstReportedAt, lastReportedAt, closedAt, target];
+      [targetType, targetId, status, reportCount, reasons, firstReportedAt, lastReportedAt, closedAt, target, ageHours, urgent];
 }
 
-/// `ModerationReportDto`. [reporter] and [closedBy] are null for deleted accounts.
+/// `ModerationReportDto`. [reporter] and [closedBy] are null for deleted accounts; [reporter] is null too for a report
+/// of the content filter ([isSystem], F37), which shows «فلتر المحتوى» and the [matchedTerms].
 class ModerationReport extends Equatable {
   const ModerationReport({
     required this.id,
@@ -225,10 +245,18 @@ class ModerationReport extends Equatable {
     this.details,
     this.closedAt,
     this.closedBy,
+    this.isSystem = false,
+    this.matchedTerms,
   });
 
   final String id;
   final UserSummary? reporter;
+
+  /// Filed by the content filter (F37).
+  final bool isSystem;
+
+  /// The words the filter matched (staff only); null for people's reports.
+  final List<String>? matchedTerms;
   final ReportReason reason;
   final String? details;
   final ReportStatus status;
@@ -237,7 +265,7 @@ class ModerationReport extends Equatable {
   final UserSummary? closedBy;
 
   @override
-  List<Object?> get props => [id, reporter, reason, details, status, createdAt, closedAt, closedBy];
+  List<Object?> get props => [id, reporter, reason, details, status, createdAt, closedAt, closedBy, isSystem, matchedTerms];
 }
 
 /// `ModerationActionDto`: a row of the moderation log.

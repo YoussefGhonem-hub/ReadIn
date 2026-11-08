@@ -5,6 +5,7 @@ import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/google_logo.dart';
+import '../../../legal/presentation/widgets/legal_links.dart';
 import '../../domain/entities/external_credential.dart';
 import '../cubit/external_sign_in_cubit.dart';
 import '../pages/link_external_account_page.dart';
@@ -210,8 +211,17 @@ Future<NotLinkedChoice?> showExternalNotLinkedSheet(BuildContext context) => sho
       builder: (_) => const ExternalNotLinkedSheet(),
     );
 
-class ExternalNotLinkedSheet extends StatelessWidget {
+/// F37: "Create a new account" needs the Terms checkbox ticked (the API refuses it otherwise, `auth.terms_required`);
+/// linking an existing account doesn't.
+class ExternalNotLinkedSheet extends StatefulWidget {
   const ExternalNotLinkedSheet({super.key});
+
+  @override
+  State<ExternalNotLinkedSheet> createState() => _ExternalNotLinkedSheetState();
+}
+
+class _ExternalNotLinkedSheetState extends State<ExternalNotLinkedSheet> {
+  bool _agreed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -225,9 +235,12 @@ class ExternalNotLinkedSheet extends StatelessWidget {
           Semantics(header: true, child: Text(l10n.externalNotLinkedTitle, style: context.textTheme.titleLarge)),
           const SizedBox(height: ReadInSpace.s3),
           Text(l10n.externalNotLinkedBody, style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary)),
-          const SizedBox(height: ReadInSpace.s5),
+          const SizedBox(height: ReadInSpace.s4),
+          TermsAgreement(value: _agreed, onChanged: (on) => setState(() => _agreed = on)),
+          const SizedBox(height: ReadInSpace.s3),
           FilledButton(
-            onPressed: () => Navigator.of(context).pop(NotLinkedChoice.createAccount),
+            key: const ValueKey('external-create-account'),
+            onPressed: _agreed ? () => Navigator.of(context).pop(NotLinkedChoice.createAccount) : null,
             child: Text(l10n.externalCreateAccount),
           ),
           const SizedBox(height: ReadInSpace.s3),

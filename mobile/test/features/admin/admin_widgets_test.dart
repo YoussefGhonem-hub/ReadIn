@@ -228,15 +228,21 @@ void main() {
 
   group('admin actions in the normal menus', () {
     test("a profile's ⋯: no Warn or Suspend for staff; Unsuspend while suspended; Remove badge and Open in console", () {
-      expect(profileMenuItems(moderator: true, canSuspend: true, staff: true), [ProfileMenuItem.mute, ProfileMenuItem.report]);
+      // Changed on purpose (F36): Block under Mute, on staff too.
+      expect(
+        profileMenuItems(moderator: true, canSuspend: true, staff: true),
+        [ProfileMenuItem.mute, ProfileMenuItem.block, ProfileMenuItem.report],
+      );
       expect(profileMenuItems(moderator: true, canSuspend: true, suspended: true), [
         ProfileMenuItem.mute,
+        ProfileMenuItem.block,
         ProfileMenuItem.report,
         ProfileMenuItem.warn,
         ProfileMenuItem.unsuspend,
       ]);
       expect(profileMenuItems(moderator: false, canSuspend: false, canRemoveBadge: true, console: true), [
         ProfileMenuItem.mute,
+        ProfileMenuItem.block,
         ProfileMenuItem.report,
         ProfileMenuItem.removeBadge,
         ProfileMenuItem.openInConsole,

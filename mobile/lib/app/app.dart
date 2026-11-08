@@ -14,8 +14,10 @@ import '../features/article/presentation/cubit/engagement_cubit.dart';
 import '../features/auth/presentation/pages/sign_in_page.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
 import '../features/auth/presentation/session/suspended_session_listener.dart';
+import '../features/blocks/presentation/cubit/blocks_cubit.dart';
 import '../features/follow/presentation/cubit/follows_cubit.dart';
 import '../features/moderation/presentation/cubit/moderation_notices_cubit.dart';
+import '../features/moderation/presentation/cubit/reported_content_cubit.dart';
 import '../features/moderation/presentation/widgets/moderation_notices_host.dart';
 import '../features/mutes/presentation/cubit/mutes_cubit.dart';
 import '../features/reading/presentation/cubit/streak_cubit.dart';
@@ -88,6 +90,8 @@ class _ReadInAppState extends State<ReadInApp> {
         BlocProvider.value(value: widget.social.collections),
         BlocProvider.value(value: getIt<ModerationNoticesCubit>()), // follows the session itself (F22)
         BlocProvider.value(value: getIt<MutesCubit>()), // follows the session itself (F28)
+        BlocProvider.value(value: getIt<BlocksCubit>()), // follows the session itself (F36)
+        BlocProvider.value(value: getIt<ReportedContentCubit>()), // follows the session itself (F22 store additions)
       ],
       child: BlocListener<SessionCubit, SessionState>(
         listenWhen: (a, b) => a.me != b.me,

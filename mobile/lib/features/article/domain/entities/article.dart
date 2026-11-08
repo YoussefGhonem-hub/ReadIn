@@ -36,7 +36,14 @@ class Author extends Equatable {
 
 /// `RepostLabelDto` (F29): why a repost placed this card, for the label "أعاد نشره {name}" / "{name} و N غيره".
 class RepostLabel extends Equatable {
-  const RepostLabel({required this.user, this.othersCount = 0, required this.repostedAt, this.caption});
+  const RepostLabel({
+    required this.user,
+    this.othersCount = 0,
+    required this.repostedAt,
+    this.caption,
+    this.repostId,
+    this.reportedByMe = false,
+  });
 
   /// The newest reposter the viewer follows (or the profile's owner on its Reposts tab).
   final Author user;
@@ -48,8 +55,14 @@ class RepostLabel extends Equatable {
   /// [user]'s thoughts on it (plain text, ≤ 500 characters, line breaks kept), shown under the label; null when none.
   final String? caption;
 
+  /// The repost itself, which the card's "⋯" reports (F22 store additions); null from an older API.
+  final String? repostId;
+
+  /// The viewer reported this repost: the card is collapsed for them, with «عرض» / "Show".
+  final bool reportedByMe;
+
   @override
-  List<Object?> get props => [user, othersCount, repostedAt, caption];
+  List<Object?> get props => [user, othersCount, repostedAt, caption, repostId, reportedByMe];
 }
 
 class FieldRef extends Equatable {
@@ -103,6 +116,7 @@ class ArticleCard extends Equatable {
     this.repostCount = 0,
     this.isReposted = false,
     this.repostedBy,
+    this.reportedByMe = false,
   });
 
   /// The post card shows this many tags, then "+N" (F34).
@@ -184,6 +198,10 @@ class ArticleCard extends Equatable {
   /// elsewhere.
   final RepostLabel? repostedBy;
 
+  /// The viewer reported this article (F22 store additions; false for guests): it stays in the lists, collapsed for
+  /// them with «عرض» / "Show".
+  final bool reportedByMe;
+
   /// "Read more" applies however short the excerpt is: the article goes on after it, or it has no excerpt yet.
   bool get continuesAfterExcerpt => excerpt == null || hasMore;
 
@@ -230,10 +248,12 @@ class ArticleCard extends Equatable {
         repostCount: repostCount ?? this.repostCount,
         isReposted: isReposted ?? this.isReposted,
         repostedBy: repostedBy,
+        reportedByMe: reportedByMe,
       );
 
   @override
   List<Object?> get props => [
+        reportedByMe,
         id,
         slug,
         language,
@@ -363,6 +383,7 @@ class ArticleDetails extends Equatable {
     this.moderation,
     this.category,
     this.isFeatured = false,
+    this.unlinkedMentionIds = const [],
   });
 
   final ArticleCard card;
@@ -400,6 +421,9 @@ class ArticleDetails extends Equatable {
   /// Featured on Explore (F23): the "⋯" of holders of `articles.feature` offers Unfeature.
   final bool isFeatured;
 
+  /// People the viewer is blocked with (F36): their mentions in the text read as plain text, without a link.
+  final List<String> unlinkedMentionIds;
+
   /// `saveCount` moved up to the card in wave 1 (still on `ArticleDetailsDto` through inheritance).
   int get saveCount => card.saveCount;
 
@@ -427,6 +451,7 @@ class ArticleDetails extends Equatable {
         moderation: moderation,
         category: category,
         isFeatured: isFeatured,
+        unlinkedMentionIds: unlinkedMentionIds,
       );
 
   /// The same article, featured on Explore or not any more (F23).
@@ -446,10 +471,12 @@ class ArticleDetails extends Equatable {
         moderation: moderation,
         category: category,
         isFeatured: featured,
+        unlinkedMentionIds: unlinkedMentionIds,
       );
 
   @override
   List<Object?> get props => [
+        unlinkedMentionIds,
         card,
         availableLanguages,
         summary,

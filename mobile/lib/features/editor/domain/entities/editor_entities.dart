@@ -198,7 +198,7 @@ abstract final class DraftProblemCodes {
 
 /// Why the article can't be published yet (`DraftProblemDto`).
 class DraftProblem extends Equatable {
-  const DraftProblem(this.code, {this.language, this.blockId, this.mediaAssetId, this.tag});
+  const DraftProblem(this.code, {this.language, this.blockId, this.mediaAssetId, this.tag, this.field});
 
   final String code;
 
@@ -214,8 +214,11 @@ class DraftProblem extends Equatable {
   /// Tag problems (F32): the name as in the document's tags.
   final String? tag;
 
+  /// `content.objectionable` (F37): the field the content filter refused (`title`, `subtitle`, `content`).
+  final String? field;
+
   @override
-  List<Object?> get props => [code, language, blockId, mediaAssetId, tag];
+  List<Object?> get props => [code, language, blockId, mediaAssetId, tag, field];
 }
 
 /// Reading time of one translation (SPEC §13.5).

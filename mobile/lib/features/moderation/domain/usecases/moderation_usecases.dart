@@ -10,7 +10,8 @@ String? _trimmed(String? text) {
   return value == null || value.isEmpty ? null : value;
 }
 
-/// Reports an article, a comment or a user (F22) with a reason and optional details.
+/// Reports an article, a comment, a user or a repost (F22) with a reason and optional details; [alsoBlock] blocks the
+/// target's author in the same step (F36).
 @injectable
 class SubmitReport {
   const SubmitReport(this._repository);
@@ -19,8 +20,8 @@ class SubmitReport {
 
   static const maxDetailsLength = 500;
 
-  Future<Result<void>> call(ModerationTargetRef target, ReportReason reason, {String? details}) =>
-      _repository.report(target, reason, details: _trimmed(details));
+  Future<Result<void>> call(ModerationTargetRef target, ReportReason reason, {String? details, bool alsoBlock = false}) =>
+      _repository.report(target, reason, details: _trimmed(details), alsoBlock: alsoBlock);
 }
 
 @injectable

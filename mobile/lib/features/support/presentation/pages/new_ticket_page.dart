@@ -139,7 +139,13 @@ class _NewTicketViewState extends State<NewTicketView> {
                       onChanged: cubit.setSubject,
                       decoration: InputDecoration(
                         labelText: l10n.supportSubject,
-                        errorText: errors && !state.subjectValid ? l10n.supportSubjectError : null,
+                        // F37: the content filter refused the subject.
+                        errorText: errors && !state.subjectValid
+                            ? l10n.supportSubjectError
+                            : switch (state.failure) {
+                                ObjectionableContentFailure(field: 'subject') => l10n.errContentObjectionable,
+                                _ => null,
+                              },
                       ),
                     ),
                     const SizedBox(height: ReadInSpace.s3),

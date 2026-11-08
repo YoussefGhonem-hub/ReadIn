@@ -24,8 +24,13 @@ part 'admin_models.g.dart';
 abstract class AdminSummaryModel with _$AdminSummaryModel {
   const AdminSummaryModel._();
 
-  const factory AdminSummaryModel({int? openReports, int? openTickets, int? pendingVerifications, @Default(0) int total}) =
-      _AdminSummaryModel;
+  const factory AdminSummaryModel({
+    int? openReports,
+    int? openTickets,
+    int? pendingVerifications,
+    @Default(0) int total,
+    int? openReportsOver24h,
+  }) = _AdminSummaryModel;
 
   factory AdminSummaryModel.fromJson(Map<String, dynamic> json) => _$AdminSummaryModelFromJson(json);
 
@@ -34,6 +39,7 @@ abstract class AdminSummaryModel with _$AdminSummaryModel {
         openTickets: openTickets,
         pendingVerifications: pendingVerifications,
         total: total,
+        openReportsOver24h: openReportsOver24h,
       );
 }
 
@@ -74,6 +80,7 @@ abstract class DashboardCardsModel with _$DashboardCardsModel {
     int? openTickets,
     int? pendingVerifications,
     @Default(0) int suspendedNow,
+    int? openReportsOver24h,
   }) = _DashboardCardsModel;
 
   factory DashboardCardsModel.fromJson(Map<String, dynamic> json) => _$DashboardCardsModelFromJson(json);
@@ -90,6 +97,7 @@ abstract class DashboardCardsModel with _$DashboardCardsModel {
         openTickets: openTickets,
         pendingVerifications: pendingVerifications,
         suspendedNow: suspendedNow,
+        openReportsOver24h: openReportsOver24h,
       );
 }
 

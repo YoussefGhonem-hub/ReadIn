@@ -179,6 +179,14 @@ class _DashboardBody extends StatelessWidget {
     final now = <Widget>[
       if (cards.openReports case final count?)
         _StateCard(label: l10n.adminCardOpenReports, value: count, onTap: () => open(AdminRoutes.reports)),
+      // The 24-hour target (F22 store additions): 0 is the goal.
+      if (cards.openReportsOver24h case final count?)
+        _StateCard(
+          key: const ValueKey('card-reports-over-24h'),
+          label: l10n.adminCardReportsOver24h,
+          value: count,
+          onTap: () => open(AdminRoutes.reports),
+        ),
       if (cards.openTickets case final count?)
         _StateCard(label: l10n.adminCardOpenTickets, value: count, onTap: () => open(AdminRoutes.tickets)),
       if (cards.pendingVerifications case final count?)
@@ -411,7 +419,7 @@ class AdminChange extends StatelessWidget {
 
 /// A number right now (no previous value), linking to its queue.
 class _StateCard extends StatelessWidget {
-  const _StateCard({required this.label, required this.value, this.onTap});
+  const _StateCard({super.key, required this.label, required this.value, this.onTap});
 
   final String label;
   final int value;

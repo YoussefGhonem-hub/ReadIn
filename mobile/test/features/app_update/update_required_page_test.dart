@@ -18,8 +18,10 @@ import 'package:readin/features/app_update/presentation/widgets/app_update_gate.
 import 'package:readin/features/app_update/presentation/widgets/update_motion.dart';
 import 'package:readin/features/article/presentation/cubit/engagement_cubit.dart';
 import 'package:readin/features/auth/presentation/session/session_cubit.dart';
+import 'package:readin/features/blocks/presentation/cubit/blocks_cubit.dart';
 import 'package:readin/features/follow/presentation/cubit/follows_cubit.dart';
 import 'package:readin/features/moderation/presentation/cubit/moderation_notices_cubit.dart';
+import 'package:readin/features/moderation/presentation/cubit/reported_content_cubit.dart';
 import 'package:readin/features/mutes/presentation/cubit/mutes_cubit.dart';
 import 'package:readin/features/reading/domain/entities/reading.dart';
 import 'package:readin/features/reading/presentation/cubit/streak_cubit.dart';
@@ -39,6 +41,10 @@ class MockSettingsCubit extends MockCubit<AppSettings> implements SettingsCubit 
 class MockStreakCubit extends MockCubit<Streak?> implements StreakCubit {}
 
 class MockMutesCubit extends MockCubit<MutesState> implements MutesCubit {}
+
+class MockBlocksCubit extends MockCubit<BlocksState> implements BlocksCubit {}
+
+class MockReportedContentCubit extends MockCubit<Set<String>> implements ReportedContentCubit {}
 
 /// A cubit whose answers the test sends.
 MockAppUpdateCubit updateCubit(StreamController<AppUpdateState> answers, AppUpdateState initial) {
@@ -213,13 +219,18 @@ void main() {
         getIt
           ..registerSingleton<StreakCubit>(MockStreakCubit()..hold(null))
           ..registerSingleton<ModerationNoticesCubit>(MockModerationNoticesCubit()..hold(const []))
-          ..registerSingleton<MutesCubit>(MockMutesCubit()..hold(const MutesState()));
+          ..registerSingleton<MutesCubit>(MockMutesCubit()..hold(const MutesState()))
+          // F36, F22 store additions: the app provides them like the mutes.
+          ..registerSingleton<BlocksCubit>(MockBlocksCubit()..hold(const BlocksState()))
+          ..registerSingleton<ReportedContentCubit>(MockReportedContentCubit()..hold(const <String>{}));
       });
 
       tearDown(() async {
         await getIt.unregister<StreakCubit>();
         await getIt.unregister<ModerationNoticesCubit>();
         await getIt.unregister<MutesCubit>();
+        await getIt.unregister<BlocksCubit>();
+        await getIt.unregister<ReportedContentCubit>();
       });
 
       for (final variant in Variant.all) {

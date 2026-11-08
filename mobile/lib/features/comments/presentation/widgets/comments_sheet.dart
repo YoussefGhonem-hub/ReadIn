@@ -15,6 +15,7 @@ import '../../../article/domain/entities/article.dart';
 import '../../../article/presentation/cubit/engagement_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
+import '../../../blocks/presentation/widgets/block_actions.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../moderation/domain/entities/moderation.dart';
 import '../../../moderation/presentation/cubit/report_cubit.dart';
@@ -149,7 +150,18 @@ mixin CommentActions<T extends StatefulWidget> on State<T> {
         await MuteActions.toggleUser(context, userId: author.id, name: author.displayName, fallback: comment.isAuthorMuted);
       case CommentMenuAction.report:
         // The shared report sheet (F22): the sign-in prompt for guests, then "thanks" once sent.
-        await showReportSheet(context, target: ModerationTargetRef.comment(comment.id), cubit: reportCubit);
+        final author = comment.author;
+        await showReportSheet(
+          context,
+          target: ModerationTargetRef.comment(comment.id),
+          cubit: reportCubit,
+          author: author == null ? null : ReportAuthor(author.id, author.username),
+        );
+      case CommentMenuAction.block:
+        // Block the commenter (F36): their comments leave this list at once (placeholders keep their threads).
+        final author = comment.author;
+        if (author == null) return;
+        await BlockActions.block(context, userId: author.id, username: author.username);
       case CommentMenuAction.hide:
       case CommentMenuAction.unhide:
         final hide = action == CommentMenuAction.hide;

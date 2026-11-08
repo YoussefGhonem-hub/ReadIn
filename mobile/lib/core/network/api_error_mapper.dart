@@ -36,6 +36,7 @@ abstract final class ApiErrorMapper {
           if (value is List) errors['$key'] = value.map((v) => '$v').toList();
         });
       }
+      if (_withExtensions(code, body) case final extended?) return extended;
       return Failure(
         code,
         statusCode: status,
@@ -54,6 +55,33 @@ abstract final class ApiErrorMapper {
     } on FormatException {
       return null;
     }
+  }
+
+  /// The problems whose extensions the screens use (F36, F37): who was blocked, which field broke the guidelines,
+  /// which spam limit was reached. Null for every other code.
+  static Failure? _withExtensions(String code, Map<dynamic, dynamic> body) {
+    final title = body['title'] as String?;
+    switch (code) {
+      case FailureCodes.blockBlocked:
+        final person = body['blockedUser'];
+        if (person is! Map || person['id'] is! String) return null;
+        return BlockedFailure(
+          blockedUserId: person['id'] as String,
+          blockedUsername: person['username'] as String? ?? '',
+          blockedDisplayName: person['displayName'] as String? ?? '',
+          message: title,
+        );
+      case FailureCodes.contentObjectionable:
+        return ObjectionableContentFailure(
+          field: body['field'] as String? ?? '',
+          language: body['language'] as String?,
+          blockId: body['blockId'] as String?,
+          message: title,
+        );
+      case FailureCodes.contentTooMany:
+        return ContentLimitFailure(limit: ContentLimitKind.fromWire(body['limit']), message: title);
+    }
+    return null;
   }
 
   /// The `suspendedUntil` extension of `user.suspended` (F22): ISO 8601 UTC, or null for a permanent suspension.

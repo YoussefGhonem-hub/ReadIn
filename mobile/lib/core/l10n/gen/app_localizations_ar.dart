@@ -6706,4 +6706,263 @@ class AppLocalizationsAr extends AppLocalizations {
   String adminPageOf(String page, String pages) {
     return 'الصفحة $page من $pages';
   }
+
+  @override
+  String get reportTitleRepost => 'الإبلاغ عن إعادة النشر';
+
+  @override
+  String get moderationTypeRepost => 'إعادة نشر';
+
+  @override
+  String get moderationFilterReposts => 'إعادات النشر';
+
+  @override
+  String get moderationCaseRepost => 'إعادة نشر مُبلَّغ عنها';
+
+  @override
+  String get moderationLogRepostDelete => 'حذف إعادة نشر';
+
+  @override
+  String moderationRepostOf(String title) {
+    return 'إعادة نشر لمقال «$title»';
+  }
+
+  @override
+  String get moderationDeleteRepost => 'حذف إعادة النشر';
+
+  @override
+  String get moderationDeleteRepostTitle => 'هل تريد حذف إعادة النشر هذه؟';
+
+  @override
+  String get moderationDeleteRepostBody =>
+      'تُحذف كأن صاحبها ألغاها، وتُسجَّل في سجل الإشراف.';
+
+  @override
+  String get moderationRepostDeleted => 'تم حذف إعادة النشر';
+
+  @override
+  String get moderationUrgent => 'عاجل';
+
+  @override
+  String moderationCaseAge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'بانتظار المراجعة منذ $count ساعة',
+      many: 'بانتظار المراجعة منذ $count ساعة',
+      few: 'بانتظار المراجعة منذ $count ساعات',
+      two: 'بانتظار المراجعة منذ ساعتين',
+      one: 'بانتظار المراجعة منذ ساعة واحدة',
+      zero: 'بانتظار المراجعة منذ أقل من ساعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moderationContentFilter => 'فلتر المحتوى';
+
+  @override
+  String moderationMatchedTerms(String terms) {
+    return 'الكلمات المطابقة: $terms';
+  }
+
+  @override
+  String get adminCardReportsOver24h => 'بلاغات مفتوحة منذ أكثر من 24 ساعة';
+
+  @override
+  String adminReportsOver24h(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count بلاغ ينتظر منذ أكثر من 24 ساعة',
+      many: '$count بلاغًا ينتظر منذ أكثر من 24 ساعة',
+      few: '$count بلاغات تنتظر منذ أكثر من 24 ساعة',
+      two: 'بلاغان ينتظران منذ أكثر من 24 ساعة',
+      one: 'بلاغ واحد ينتظر منذ أكثر من 24 ساعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get errBlockSelf => 'لا يمكنك حظر نفسك.';
+
+  @override
+  String get errBlockLimit =>
+      'وصلت إلى الحد الأقصى للحسابات المحظورة (1000 حساب).';
+
+  @override
+  String get errBlockBlocked => 'هذا الحساب محظور لديك. ألغِ الحظر أولًا.';
+
+  @override
+  String get errRepostNotFound => 'إعادة النشر هذه غير موجودة.';
+
+  @override
+  String get errTermsRequired =>
+      'يجب الموافقة على شروط الاستخدام وقواعد المجتمع لإنشاء حساب.';
+
+  @override
+  String get errContentObjectionable =>
+      'هذا النص يخالف قواعد المجتمع. عدّله وحاول مرة أخرى.';
+
+  @override
+  String get errContentTooMany =>
+      'وصلت إلى الحد المسموح به: 5 مقالات في اليوم و60 تعليقًا في الساعة.';
+
+  @override
+  String get blockAction => 'حظر';
+
+  @override
+  String blockMenuUser(String username) {
+    return 'حظر $username';
+  }
+
+  @override
+  String blockMenuUnblockUser(String username) {
+    return 'إلغاء حظر $username';
+  }
+
+  @override
+  String blockConfirmTitle(String username) {
+    return 'هل تريد حظر $username؟';
+  }
+
+  @override
+  String get blockConfirmBody =>
+      'لن يرى أيٌّ منكما مقالات الآخر أو تعليقاته، ولن يتمكن أيٌّ منكما من متابعة الآخر أو الإشارة إليه أو التعليق على محتواه. ولن يُرسَل إليه إشعار.';
+
+  @override
+  String blockDone(String username) {
+    return 'تم حظر $username';
+  }
+
+  @override
+  String blockUnblocked(String username) {
+    return 'تم إلغاء حظر $username';
+  }
+
+  @override
+  String get blockUnblock => 'إلغاء الحظر';
+
+  @override
+  String get blockAccountUnavailable => 'هذا الحساب غير متاح';
+
+  @override
+  String get blockContentUnavailable => 'هذا المحتوى غير متاح';
+
+  @override
+  String blockYouBlocked(String username) {
+    return 'لقد حظرت $username.';
+  }
+
+  @override
+  String get blockCommentUnavailable => 'هذا التعليق غير متاح';
+
+  @override
+  String get blockedTitle => 'الحسابات المحظورة';
+
+  @override
+  String get blockedSettingsHint => 'الأشخاص الذين حظرتهم، مع إلغاء الحظر';
+
+  @override
+  String get blockedEmptyTitle => 'لم تحظر أحدًا';
+
+  @override
+  String get blockedEmptyBody =>
+      'يمكنك حظر أي شخص من ملفه الشخصي أو من قائمة «⋯» في مقاله أو تعليقه.';
+
+  @override
+  String blockedSince(String date) {
+    return 'محظور منذ $date';
+  }
+
+  @override
+  String get blockedFollowsNote => 'إلغاء الحظر لا يعيد المتابعة.';
+
+  @override
+  String get reportedHidden => 'أبلغت عن هذا المحتوى، ولن يظهر لك بعد الآن';
+
+  @override
+  String reportAlsoBlock(String username) {
+    return 'حظر $username أيضًا';
+  }
+
+  @override
+  String get reportAlsoBlockHint =>
+      'لن يرى أيٌّ منكما محتوى الآخر، ولن يُرسَل إليه إشعار.';
+
+  @override
+  String reportThanksBlocked(String username) {
+    return 'شكرًا، سنراجع البلاغ. تم حظر $username.';
+  }
+
+  @override
+  String notifReportNew(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'article': 'بلاغ جديد عن مقال',
+      'comment': 'بلاغ جديد عن تعليق',
+      'user': 'بلاغ جديد عن حساب',
+      'repost': 'بلاغ جديد عن إعادة نشر',
+      'other': 'بلاغ جديد',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get notifReportSystem => 'رصده فلتر المحتوى';
+
+  @override
+  String get notifReportResolvedRemoved => 'راجعنا بلاغك وأزلنا المحتوى';
+
+  @override
+  String get notifReportResolvedUser => 'راجعنا بلاغك واتخذنا الإجراء المناسب';
+
+  @override
+  String get notifReportResolvedNoViolation =>
+      'راجعنا بلاغك، والمحتوى لا يخالف قواعد المجتمع';
+
+  @override
+  String get notifReportResolved => 'راجعنا بلاغك';
+
+  @override
+  String get notifTypeReportNew => 'البلاغات الجديدة';
+
+  @override
+  String get notifTypeReportNewHint => 'عند الإبلاغ عن محتوى (للمشرفين فقط)';
+
+  @override
+  String get legalTitle => 'الشؤون القانونية';
+
+  @override
+  String get legalTerms => 'شروط الاستخدام';
+
+  @override
+  String get legalGuidelines => 'قواعد المجتمع';
+
+  @override
+  String get legalPrivacy => 'سياسة الخصوصية';
+
+  @override
+  String get termsAgreeLead => 'أوافق على ';
+
+  @override
+  String get termsAgreeAnd => ' و';
+
+  @override
+  String get termsGateTitleFirst => 'شروط الاستخدام وقواعد المجتمع';
+
+  @override
+  String get termsGateTitleUpdated => 'حدّثنا شروط الاستخدام';
+
+  @override
+  String get termsGateBody =>
+      'لمتابعة استخدام ReadIn، اقرأ شروط الاستخدام وقواعد المجتمع ووافق عليها. لا تسامح مع المحتوى المسيء أو المستخدمين المسيئين.';
+
+  @override
+  String get termsGateChanges => 'ما الذي تغيّر';
+
+  @override
+  String get termsGateAgree => 'موافق';
+
+  @override
+  String get termsGateDeleteAccount => 'حذف حسابي';
 }

@@ -546,7 +546,9 @@ mixin _$CommentModel {
 
  String get id; String get articleId; String? get parentId; String? get body; AuthorModel? get author; bool get isArticleAuthor; List<CommentMentionModel> get mentions; int get likeCount; bool get likedByMe; int get replyCount; bool get isPinned; DateTime get createdAt; DateTime? get editedAt; bool get isDeleted; bool get isHidden; bool get canEdit; bool get canDelete; bool get canPin; bool get canReport; bool get canModerate; List<CommentModel>? get replies;// F28: the viewer muted the author (collapsed to "تعليق من شخص كتمته").
  bool get isAuthorMuted;// F11: the viewer follows the author (the row's "متابعة"; seeds the follow store).
- bool get isFollowingAuthor;
+ bool get isFollowingAuthor;// F22 store additions: the viewer reported it (collapsed for them, with "Show").
+ bool get reportedByMe;// F36: someone the viewer is blocked with, kept as a placeholder for others' replies (body and author null).
+ bool get isUnavailable;
 /// Create a copy of CommentModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -559,16 +561,16 @@ $CommentModelCopyWith<CommentModel> get copyWith => _$CommentModelCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CommentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.articleId, articleId) || other.articleId == articleId)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.body, body) || other.body == body)&&(identical(other.author, author) || other.author == author)&&(identical(other.isArticleAuthor, isArticleAuthor) || other.isArticleAuthor == isArticleAuthor)&&const DeepCollectionEquality().equals(other.mentions, mentions)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.likedByMe, likedByMe) || other.likedByMe == likedByMe)&&(identical(other.replyCount, replyCount) || other.replyCount == replyCount)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.editedAt, editedAt) || other.editedAt == editedAt)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden)&&(identical(other.canEdit, canEdit) || other.canEdit == canEdit)&&(identical(other.canDelete, canDelete) || other.canDelete == canDelete)&&(identical(other.canPin, canPin) || other.canPin == canPin)&&(identical(other.canReport, canReport) || other.canReport == canReport)&&(identical(other.canModerate, canModerate) || other.canModerate == canModerate)&&const DeepCollectionEquality().equals(other.replies, replies)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CommentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.articleId, articleId) || other.articleId == articleId)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.body, body) || other.body == body)&&(identical(other.author, author) || other.author == author)&&(identical(other.isArticleAuthor, isArticleAuthor) || other.isArticleAuthor == isArticleAuthor)&&const DeepCollectionEquality().equals(other.mentions, mentions)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.likedByMe, likedByMe) || other.likedByMe == likedByMe)&&(identical(other.replyCount, replyCount) || other.replyCount == replyCount)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.editedAt, editedAt) || other.editedAt == editedAt)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden)&&(identical(other.canEdit, canEdit) || other.canEdit == canEdit)&&(identical(other.canDelete, canDelete) || other.canDelete == canDelete)&&(identical(other.canPin, canPin) || other.canPin == canPin)&&(identical(other.canReport, canReport) || other.canReport == canReport)&&(identical(other.canModerate, canModerate) || other.canModerate == canModerate)&&const DeepCollectionEquality().equals(other.replies, replies)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&(identical(other.reportedByMe, reportedByMe) || other.reportedByMe == reportedByMe)&&(identical(other.isUnavailable, isUnavailable) || other.isUnavailable == isUnavailable));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,articleId,parentId,body,author,isArticleAuthor,const DeepCollectionEquality().hash(mentions),likeCount,likedByMe,replyCount,isPinned,createdAt,editedAt,isDeleted,isHidden,canEdit,canDelete,canPin,canReport,canModerate,const DeepCollectionEquality().hash(replies),isAuthorMuted,isFollowingAuthor]);
+int get hashCode => Object.hashAll([runtimeType,id,articleId,parentId,body,author,isArticleAuthor,const DeepCollectionEquality().hash(mentions),likeCount,likedByMe,replyCount,isPinned,createdAt,editedAt,isDeleted,isHidden,canEdit,canDelete,canPin,canReport,canModerate,const DeepCollectionEquality().hash(replies),isAuthorMuted,isFollowingAuthor,reportedByMe,isUnavailable]);
 
 @override
 String toString() {
-  return 'CommentModel(id: $id, articleId: $articleId, parentId: $parentId, body: $body, author: $author, isArticleAuthor: $isArticleAuthor, mentions: $mentions, likeCount: $likeCount, likedByMe: $likedByMe, replyCount: $replyCount, isPinned: $isPinned, createdAt: $createdAt, editedAt: $editedAt, isDeleted: $isDeleted, isHidden: $isHidden, canEdit: $canEdit, canDelete: $canDelete, canPin: $canPin, canReport: $canReport, canModerate: $canModerate, replies: $replies, isAuthorMuted: $isAuthorMuted, isFollowingAuthor: $isFollowingAuthor)';
+  return 'CommentModel(id: $id, articleId: $articleId, parentId: $parentId, body: $body, author: $author, isArticleAuthor: $isArticleAuthor, mentions: $mentions, likeCount: $likeCount, likedByMe: $likedByMe, replyCount: $replyCount, isPinned: $isPinned, createdAt: $createdAt, editedAt: $editedAt, isDeleted: $isDeleted, isHidden: $isHidden, canEdit: $canEdit, canDelete: $canDelete, canPin: $canPin, canReport: $canReport, canModerate: $canModerate, replies: $replies, isAuthorMuted: $isAuthorMuted, isFollowingAuthor: $isFollowingAuthor, reportedByMe: $reportedByMe, isUnavailable: $isUnavailable)';
 }
 
 
@@ -579,7 +581,7 @@ abstract mixin class $CommentModelCopyWith<$Res>  {
   factory $CommentModelCopyWith(CommentModel value, $Res Function(CommentModel) _then) = _$CommentModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String articleId, String? parentId, String? body, AuthorModel? author, bool isArticleAuthor, List<CommentMentionModel> mentions, int likeCount, bool likedByMe, int replyCount, bool isPinned, DateTime createdAt, DateTime? editedAt, bool isDeleted, bool isHidden, bool canEdit, bool canDelete, bool canPin, bool canReport, bool canModerate, List<CommentModel>? replies, bool isAuthorMuted, bool isFollowingAuthor
+ String id, String articleId, String? parentId, String? body, AuthorModel? author, bool isArticleAuthor, List<CommentMentionModel> mentions, int likeCount, bool likedByMe, int replyCount, bool isPinned, DateTime createdAt, DateTime? editedAt, bool isDeleted, bool isHidden, bool canEdit, bool canDelete, bool canPin, bool canReport, bool canModerate, List<CommentModel>? replies, bool isAuthorMuted, bool isFollowingAuthor, bool reportedByMe, bool isUnavailable
 });
 
 
@@ -596,7 +598,7 @@ class _$CommentModelCopyWithImpl<$Res>
 
 /// Create a copy of CommentModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? articleId = null,Object? parentId = freezed,Object? body = freezed,Object? author = freezed,Object? isArticleAuthor = null,Object? mentions = null,Object? likeCount = null,Object? likedByMe = null,Object? replyCount = null,Object? isPinned = null,Object? createdAt = null,Object? editedAt = freezed,Object? isDeleted = null,Object? isHidden = null,Object? canEdit = null,Object? canDelete = null,Object? canPin = null,Object? canReport = null,Object? canModerate = null,Object? replies = freezed,Object? isAuthorMuted = null,Object? isFollowingAuthor = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? articleId = null,Object? parentId = freezed,Object? body = freezed,Object? author = freezed,Object? isArticleAuthor = null,Object? mentions = null,Object? likeCount = null,Object? likedByMe = null,Object? replyCount = null,Object? isPinned = null,Object? createdAt = null,Object? editedAt = freezed,Object? isDeleted = null,Object? isHidden = null,Object? canEdit = null,Object? canDelete = null,Object? canPin = null,Object? canReport = null,Object? canModerate = null,Object? replies = freezed,Object? isAuthorMuted = null,Object? isFollowingAuthor = null,Object? reportedByMe = null,Object? isUnavailable = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,articleId: null == articleId ? _self.articleId : articleId // ignore: cast_nullable_to_non_nullable
@@ -621,6 +623,8 @@ as bool,canModerate: null == canModerate ? _self.canModerate : canModerate // ig
 as bool,replies: freezed == replies ? _self.replies : replies // ignore: cast_nullable_to_non_nullable
 as List<CommentModel>?,isAuthorMuted: null == isAuthorMuted ? _self.isAuthorMuted : isAuthorMuted // ignore: cast_nullable_to_non_nullable
 as bool,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable
+as bool,reportedByMe: null == reportedByMe ? _self.reportedByMe : reportedByMe // ignore: cast_nullable_to_non_nullable
+as bool,isUnavailable: null == isUnavailable ? _self.isUnavailable : isUnavailable // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -718,10 +722,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String articleId,  String? parentId,  String? body,  AuthorModel? author,  bool isArticleAuthor,  List<CommentMentionModel> mentions,  int likeCount,  bool likedByMe,  int replyCount,  bool isPinned,  DateTime createdAt,  DateTime? editedAt,  bool isDeleted,  bool isHidden,  bool canEdit,  bool canDelete,  bool canPin,  bool canReport,  bool canModerate,  List<CommentModel>? replies,  bool isAuthorMuted,  bool isFollowingAuthor)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String articleId,  String? parentId,  String? body,  AuthorModel? author,  bool isArticleAuthor,  List<CommentMentionModel> mentions,  int likeCount,  bool likedByMe,  int replyCount,  bool isPinned,  DateTime createdAt,  DateTime? editedAt,  bool isDeleted,  bool isHidden,  bool canEdit,  bool canDelete,  bool canPin,  bool canReport,  bool canModerate,  List<CommentModel>? replies,  bool isAuthorMuted,  bool isFollowingAuthor,  bool reportedByMe,  bool isUnavailable)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CommentModel() when $default != null:
-return $default(_that.id,_that.articleId,_that.parentId,_that.body,_that.author,_that.isArticleAuthor,_that.mentions,_that.likeCount,_that.likedByMe,_that.replyCount,_that.isPinned,_that.createdAt,_that.editedAt,_that.isDeleted,_that.isHidden,_that.canEdit,_that.canDelete,_that.canPin,_that.canReport,_that.canModerate,_that.replies,_that.isAuthorMuted,_that.isFollowingAuthor);case _:
+return $default(_that.id,_that.articleId,_that.parentId,_that.body,_that.author,_that.isArticleAuthor,_that.mentions,_that.likeCount,_that.likedByMe,_that.replyCount,_that.isPinned,_that.createdAt,_that.editedAt,_that.isDeleted,_that.isHidden,_that.canEdit,_that.canDelete,_that.canPin,_that.canReport,_that.canModerate,_that.replies,_that.isAuthorMuted,_that.isFollowingAuthor,_that.reportedByMe,_that.isUnavailable);case _:
   return orElse();
 
 }
@@ -739,10 +743,10 @@ return $default(_that.id,_that.articleId,_that.parentId,_that.body,_that.author,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String articleId,  String? parentId,  String? body,  AuthorModel? author,  bool isArticleAuthor,  List<CommentMentionModel> mentions,  int likeCount,  bool likedByMe,  int replyCount,  bool isPinned,  DateTime createdAt,  DateTime? editedAt,  bool isDeleted,  bool isHidden,  bool canEdit,  bool canDelete,  bool canPin,  bool canReport,  bool canModerate,  List<CommentModel>? replies,  bool isAuthorMuted,  bool isFollowingAuthor)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String articleId,  String? parentId,  String? body,  AuthorModel? author,  bool isArticleAuthor,  List<CommentMentionModel> mentions,  int likeCount,  bool likedByMe,  int replyCount,  bool isPinned,  DateTime createdAt,  DateTime? editedAt,  bool isDeleted,  bool isHidden,  bool canEdit,  bool canDelete,  bool canPin,  bool canReport,  bool canModerate,  List<CommentModel>? replies,  bool isAuthorMuted,  bool isFollowingAuthor,  bool reportedByMe,  bool isUnavailable)  $default,) {final _that = this;
 switch (_that) {
 case _CommentModel():
-return $default(_that.id,_that.articleId,_that.parentId,_that.body,_that.author,_that.isArticleAuthor,_that.mentions,_that.likeCount,_that.likedByMe,_that.replyCount,_that.isPinned,_that.createdAt,_that.editedAt,_that.isDeleted,_that.isHidden,_that.canEdit,_that.canDelete,_that.canPin,_that.canReport,_that.canModerate,_that.replies,_that.isAuthorMuted,_that.isFollowingAuthor);case _:
+return $default(_that.id,_that.articleId,_that.parentId,_that.body,_that.author,_that.isArticleAuthor,_that.mentions,_that.likeCount,_that.likedByMe,_that.replyCount,_that.isPinned,_that.createdAt,_that.editedAt,_that.isDeleted,_that.isHidden,_that.canEdit,_that.canDelete,_that.canPin,_that.canReport,_that.canModerate,_that.replies,_that.isAuthorMuted,_that.isFollowingAuthor,_that.reportedByMe,_that.isUnavailable);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -759,10 +763,10 @@ return $default(_that.id,_that.articleId,_that.parentId,_that.body,_that.author,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String articleId,  String? parentId,  String? body,  AuthorModel? author,  bool isArticleAuthor,  List<CommentMentionModel> mentions,  int likeCount,  bool likedByMe,  int replyCount,  bool isPinned,  DateTime createdAt,  DateTime? editedAt,  bool isDeleted,  bool isHidden,  bool canEdit,  bool canDelete,  bool canPin,  bool canReport,  bool canModerate,  List<CommentModel>? replies,  bool isAuthorMuted,  bool isFollowingAuthor)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String articleId,  String? parentId,  String? body,  AuthorModel? author,  bool isArticleAuthor,  List<CommentMentionModel> mentions,  int likeCount,  bool likedByMe,  int replyCount,  bool isPinned,  DateTime createdAt,  DateTime? editedAt,  bool isDeleted,  bool isHidden,  bool canEdit,  bool canDelete,  bool canPin,  bool canReport,  bool canModerate,  List<CommentModel>? replies,  bool isAuthorMuted,  bool isFollowingAuthor,  bool reportedByMe,  bool isUnavailable)?  $default,) {final _that = this;
 switch (_that) {
 case _CommentModel() when $default != null:
-return $default(_that.id,_that.articleId,_that.parentId,_that.body,_that.author,_that.isArticleAuthor,_that.mentions,_that.likeCount,_that.likedByMe,_that.replyCount,_that.isPinned,_that.createdAt,_that.editedAt,_that.isDeleted,_that.isHidden,_that.canEdit,_that.canDelete,_that.canPin,_that.canReport,_that.canModerate,_that.replies,_that.isAuthorMuted,_that.isFollowingAuthor);case _:
+return $default(_that.id,_that.articleId,_that.parentId,_that.body,_that.author,_that.isArticleAuthor,_that.mentions,_that.likeCount,_that.likedByMe,_that.replyCount,_that.isPinned,_that.createdAt,_that.editedAt,_that.isDeleted,_that.isHidden,_that.canEdit,_that.canDelete,_that.canPin,_that.canReport,_that.canModerate,_that.replies,_that.isAuthorMuted,_that.isFollowingAuthor,_that.reportedByMe,_that.isUnavailable);case _:
   return null;
 
 }
@@ -774,7 +778,7 @@ return $default(_that.id,_that.articleId,_that.parentId,_that.body,_that.author,
 @JsonSerializable()
 
 class _CommentModel extends CommentModel {
-  const _CommentModel({required this.id, required this.articleId, this.parentId, this.body, this.author, this.isArticleAuthor = false, final  List<CommentMentionModel> mentions = const <CommentMentionModel>[], this.likeCount = 0, this.likedByMe = false, this.replyCount = 0, this.isPinned = false, required this.createdAt, this.editedAt, this.isDeleted = false, this.isHidden = false, this.canEdit = false, this.canDelete = false, this.canPin = false, this.canReport = false, this.canModerate = false, final  List<CommentModel>? replies, this.isAuthorMuted = false, this.isFollowingAuthor = false}): _mentions = mentions,_replies = replies,super._();
+  const _CommentModel({required this.id, required this.articleId, this.parentId, this.body, this.author, this.isArticleAuthor = false, final  List<CommentMentionModel> mentions = const <CommentMentionModel>[], this.likeCount = 0, this.likedByMe = false, this.replyCount = 0, this.isPinned = false, required this.createdAt, this.editedAt, this.isDeleted = false, this.isHidden = false, this.canEdit = false, this.canDelete = false, this.canPin = false, this.canReport = false, this.canModerate = false, final  List<CommentModel>? replies, this.isAuthorMuted = false, this.isFollowingAuthor = false, this.reportedByMe = false, this.isUnavailable = false}): _mentions = mentions,_replies = replies,super._();
   factory _CommentModel.fromJson(Map<String, dynamic> json) => _$CommentModelFromJson(json);
 
 @override final  String id;
@@ -816,6 +820,10 @@ class _CommentModel extends CommentModel {
 @override@JsonKey() final  bool isAuthorMuted;
 // F11: the viewer follows the author (the row's "متابعة"; seeds the follow store).
 @override@JsonKey() final  bool isFollowingAuthor;
+// F22 store additions: the viewer reported it (collapsed for them, with "Show").
+@override@JsonKey() final  bool reportedByMe;
+// F36: someone the viewer is blocked with, kept as a placeholder for others' replies (body and author null).
+@override@JsonKey() final  bool isUnavailable;
 
 /// Create a copy of CommentModel
 /// with the given fields replaced by the non-null parameter values.
@@ -830,16 +838,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CommentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.articleId, articleId) || other.articleId == articleId)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.body, body) || other.body == body)&&(identical(other.author, author) || other.author == author)&&(identical(other.isArticleAuthor, isArticleAuthor) || other.isArticleAuthor == isArticleAuthor)&&const DeepCollectionEquality().equals(other._mentions, _mentions)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.likedByMe, likedByMe) || other.likedByMe == likedByMe)&&(identical(other.replyCount, replyCount) || other.replyCount == replyCount)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.editedAt, editedAt) || other.editedAt == editedAt)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden)&&(identical(other.canEdit, canEdit) || other.canEdit == canEdit)&&(identical(other.canDelete, canDelete) || other.canDelete == canDelete)&&(identical(other.canPin, canPin) || other.canPin == canPin)&&(identical(other.canReport, canReport) || other.canReport == canReport)&&(identical(other.canModerate, canModerate) || other.canModerate == canModerate)&&const DeepCollectionEquality().equals(other._replies, _replies)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CommentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.articleId, articleId) || other.articleId == articleId)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.body, body) || other.body == body)&&(identical(other.author, author) || other.author == author)&&(identical(other.isArticleAuthor, isArticleAuthor) || other.isArticleAuthor == isArticleAuthor)&&const DeepCollectionEquality().equals(other._mentions, _mentions)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.likedByMe, likedByMe) || other.likedByMe == likedByMe)&&(identical(other.replyCount, replyCount) || other.replyCount == replyCount)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.editedAt, editedAt) || other.editedAt == editedAt)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden)&&(identical(other.canEdit, canEdit) || other.canEdit == canEdit)&&(identical(other.canDelete, canDelete) || other.canDelete == canDelete)&&(identical(other.canPin, canPin) || other.canPin == canPin)&&(identical(other.canReport, canReport) || other.canReport == canReport)&&(identical(other.canModerate, canModerate) || other.canModerate == canModerate)&&const DeepCollectionEquality().equals(other._replies, _replies)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&(identical(other.reportedByMe, reportedByMe) || other.reportedByMe == reportedByMe)&&(identical(other.isUnavailable, isUnavailable) || other.isUnavailable == isUnavailable));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,articleId,parentId,body,author,isArticleAuthor,const DeepCollectionEquality().hash(_mentions),likeCount,likedByMe,replyCount,isPinned,createdAt,editedAt,isDeleted,isHidden,canEdit,canDelete,canPin,canReport,canModerate,const DeepCollectionEquality().hash(_replies),isAuthorMuted,isFollowingAuthor]);
+int get hashCode => Object.hashAll([runtimeType,id,articleId,parentId,body,author,isArticleAuthor,const DeepCollectionEquality().hash(_mentions),likeCount,likedByMe,replyCount,isPinned,createdAt,editedAt,isDeleted,isHidden,canEdit,canDelete,canPin,canReport,canModerate,const DeepCollectionEquality().hash(_replies),isAuthorMuted,isFollowingAuthor,reportedByMe,isUnavailable]);
 
 @override
 String toString() {
-  return 'CommentModel(id: $id, articleId: $articleId, parentId: $parentId, body: $body, author: $author, isArticleAuthor: $isArticleAuthor, mentions: $mentions, likeCount: $likeCount, likedByMe: $likedByMe, replyCount: $replyCount, isPinned: $isPinned, createdAt: $createdAt, editedAt: $editedAt, isDeleted: $isDeleted, isHidden: $isHidden, canEdit: $canEdit, canDelete: $canDelete, canPin: $canPin, canReport: $canReport, canModerate: $canModerate, replies: $replies, isAuthorMuted: $isAuthorMuted, isFollowingAuthor: $isFollowingAuthor)';
+  return 'CommentModel(id: $id, articleId: $articleId, parentId: $parentId, body: $body, author: $author, isArticleAuthor: $isArticleAuthor, mentions: $mentions, likeCount: $likeCount, likedByMe: $likedByMe, replyCount: $replyCount, isPinned: $isPinned, createdAt: $createdAt, editedAt: $editedAt, isDeleted: $isDeleted, isHidden: $isHidden, canEdit: $canEdit, canDelete: $canDelete, canPin: $canPin, canReport: $canReport, canModerate: $canModerate, replies: $replies, isAuthorMuted: $isAuthorMuted, isFollowingAuthor: $isFollowingAuthor, reportedByMe: $reportedByMe, isUnavailable: $isUnavailable)';
 }
 
 
@@ -850,7 +858,7 @@ abstract mixin class _$CommentModelCopyWith<$Res> implements $CommentModelCopyWi
   factory _$CommentModelCopyWith(_CommentModel value, $Res Function(_CommentModel) _then) = __$CommentModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String articleId, String? parentId, String? body, AuthorModel? author, bool isArticleAuthor, List<CommentMentionModel> mentions, int likeCount, bool likedByMe, int replyCount, bool isPinned, DateTime createdAt, DateTime? editedAt, bool isDeleted, bool isHidden, bool canEdit, bool canDelete, bool canPin, bool canReport, bool canModerate, List<CommentModel>? replies, bool isAuthorMuted, bool isFollowingAuthor
+ String id, String articleId, String? parentId, String? body, AuthorModel? author, bool isArticleAuthor, List<CommentMentionModel> mentions, int likeCount, bool likedByMe, int replyCount, bool isPinned, DateTime createdAt, DateTime? editedAt, bool isDeleted, bool isHidden, bool canEdit, bool canDelete, bool canPin, bool canReport, bool canModerate, List<CommentModel>? replies, bool isAuthorMuted, bool isFollowingAuthor, bool reportedByMe, bool isUnavailable
 });
 
 
@@ -867,7 +875,7 @@ class __$CommentModelCopyWithImpl<$Res>
 
 /// Create a copy of CommentModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? articleId = null,Object? parentId = freezed,Object? body = freezed,Object? author = freezed,Object? isArticleAuthor = null,Object? mentions = null,Object? likeCount = null,Object? likedByMe = null,Object? replyCount = null,Object? isPinned = null,Object? createdAt = null,Object? editedAt = freezed,Object? isDeleted = null,Object? isHidden = null,Object? canEdit = null,Object? canDelete = null,Object? canPin = null,Object? canReport = null,Object? canModerate = null,Object? replies = freezed,Object? isAuthorMuted = null,Object? isFollowingAuthor = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? articleId = null,Object? parentId = freezed,Object? body = freezed,Object? author = freezed,Object? isArticleAuthor = null,Object? mentions = null,Object? likeCount = null,Object? likedByMe = null,Object? replyCount = null,Object? isPinned = null,Object? createdAt = null,Object? editedAt = freezed,Object? isDeleted = null,Object? isHidden = null,Object? canEdit = null,Object? canDelete = null,Object? canPin = null,Object? canReport = null,Object? canModerate = null,Object? replies = freezed,Object? isAuthorMuted = null,Object? isFollowingAuthor = null,Object? reportedByMe = null,Object? isUnavailable = null,}) {
   return _then(_CommentModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,articleId: null == articleId ? _self.articleId : articleId // ignore: cast_nullable_to_non_nullable
@@ -892,6 +900,8 @@ as bool,canModerate: null == canModerate ? _self.canModerate : canModerate // ig
 as bool,replies: freezed == replies ? _self._replies : replies // ignore: cast_nullable_to_non_nullable
 as List<CommentModel>?,isAuthorMuted: null == isAuthorMuted ? _self.isAuthorMuted : isAuthorMuted // ignore: cast_nullable_to_non_nullable
 as bool,isFollowingAuthor: null == isFollowingAuthor ? _self.isFollowingAuthor : isFollowingAuthor // ignore: cast_nullable_to_non_nullable
+as bool,reportedByMe: null == reportedByMe ? _self.reportedByMe : reportedByMe // ignore: cast_nullable_to_non_nullable
+as bool,isUnavailable: null == isUnavailable ? _self.isUnavailable : isUnavailable // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

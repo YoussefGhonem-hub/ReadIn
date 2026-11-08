@@ -133,11 +133,13 @@ void main() {
   }
 
   group('the menu', () {
+    // Changed on purpose (F36): Block author comes right under Mute author.
     test("items: someone else's article, your own, a deleted author's; moderators add theirs last", () {
       expect(articleMenuItems(own: false, moderator: false, hidden: false), [
         ArticleMenuItem.showLess,
         ArticleMenuItem.follow,
         ArticleMenuItem.muteAuthor,
+        ArticleMenuItem.blockAuthor,
         ArticleMenuItem.muteTopics,
         ArticleMenuItem.report,
       ]);
@@ -154,6 +156,7 @@ void main() {
         ArticleMenuItem.showLess,
         ArticleMenuItem.follow,
         ArticleMenuItem.muteAuthor,
+        ArticleMenuItem.blockAuthor,
         ArticleMenuItem.muteTopics,
         ArticleMenuItem.downloadPdf,
         ArticleMenuItem.report,
@@ -426,12 +429,14 @@ void main() {
       await tester.pumpAndSettle();
     }
 
+    // Changed on purpose (F36): Block comes under Mute, on the official account too (it can't be muted).
     test('Mute comes first; never on your own profile or the official account; moderators add theirs', () {
-      expect(profileMenuItems(moderator: false, canSuspend: false), [ProfileMenuItem.mute, ProfileMenuItem.report]);
+      expect(profileMenuItems(moderator: false, canSuspend: false), [ProfileMenuItem.mute, ProfileMenuItem.block, ProfileMenuItem.report]);
       expect(profileMenuItems(moderator: false, canSuspend: false, own: true), [ProfileMenuItem.report]);
-      expect(profileMenuItems(moderator: false, canSuspend: false, systemAccount: true), [ProfileMenuItem.report]);
+      expect(profileMenuItems(moderator: false, canSuspend: false, systemAccount: true), [ProfileMenuItem.block, ProfileMenuItem.report]);
       expect(profileMenuItems(moderator: true, canSuspend: true), [
         ProfileMenuItem.mute,
+        ProfileMenuItem.block,
         ProfileMenuItem.report,
         ProfileMenuItem.warn,
         ProfileMenuItem.suspend,

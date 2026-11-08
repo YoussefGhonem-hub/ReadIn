@@ -15,6 +15,7 @@ import '../../../article_pdf/presentation/widgets/article_pdf_widgets.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
+import '../../../blocks/presentation/widgets/block_actions.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../highlights/presentation/cubit/article_highlights_cubit.dart';
 import '../../../moderation/domain/entities/moderation.dart';
@@ -37,11 +38,17 @@ enum ArticleMenuItem {
   highlights,
   follow,
   muteAuthor,
+
+  /// «حظر @username» (F36), under Mute: blocks the writer.
+  blockAuthor,
   muteTopics,
 
   /// "تحميل PDF" (F33): in the reader, on every article (guests get the sign-in prompt).
   downloadPdf,
   report,
+
+  /// "Report repost" on a card a repost placed (F22 store additions): the repost and its caption, not the article.
+  reportRepost,
   hide,
   unhide,
 
@@ -64,6 +71,8 @@ enum ArticleMenuItem {
 /// highlights. The reader ([highlights]) has "إخفاء الـ Highlights" right after Show less (F30), on your own article too.
 /// F23: holders of `articles.feature` get Feature or Unfeature in the reader ([featured]: the article's state, null
 /// where it isn't known or not allowed; a hidden article can only be unfeatured), and [console] adds "Open in console".
+/// F36: Block author comes under Mute author. F22 store additions: a card someone else's repost placed ([repost])
+/// also reports the repost.
 List<ArticleMenuItem> articleMenuItems({
   required bool own,
   required bool moderator,
@@ -73,14 +82,16 @@ List<ArticleMenuItem> articleMenuItems({
   bool highlights = false,
   bool? featured,
   bool console = false,
+  bool repost = false,
 }) =>
     [
       if (!own) ArticleMenuItem.showLess,
       if (highlights) ArticleMenuItem.highlights,
-      if (!own && hasAuthor) ...[ArticleMenuItem.follow, ArticleMenuItem.muteAuthor],
+      if (!own && hasAuthor) ...[ArticleMenuItem.follow, ArticleMenuItem.muteAuthor, ArticleMenuItem.blockAuthor],
       ArticleMenuItem.muteTopics,
       if (pdf && (own || !hidden)) ArticleMenuItem.downloadPdf,
       if (!own) ArticleMenuItem.report,
+      if (repost) ArticleMenuItem.reportRepost,
       if (moderator) hidden ? ArticleMenuItem.unhide : ArticleMenuItem.hide,
       if (featured == true) ArticleMenuItem.unfeature,
       if (featured == false && !hidden) ArticleMenuItem.feature,
@@ -160,13 +171,25 @@ class ArticleMenuView extends StatelessWidget {
         } else {
           await MuteActions.muteAuthor(context, author);
         }
+      case ArticleMenuItem.blockAuthor:
+        if (author == null) return;
+        await BlockActions.block(context, userId: author.id, username: author.username);
       case ArticleMenuItem.muteTopics:
         await showMuteTopicsSheet(context, article: card);
       case ArticleMenuItem.downloadPdf:
         // The page's context, never the popup's: this menu's own button anchors the share sheet (iPad).
         await downloadArticlePdf(context, articleId: card.id, languages: [card.language]);
       case ArticleMenuItem.report:
-        await showReportSheet(context, target: target);
+        await showReportSheet(context, target: target, author: author == null ? null : ReportAuthor(author.id, author.username));
+      case ArticleMenuItem.reportRepost:
+        final repost = card.repostedBy;
+        if (repost?.repostId case final repostId?) {
+          await showReportSheet(
+            context,
+            target: ModerationTargetRef.repost(repostId),
+            author: ReportAuthor(repost!.user.id, repost.user.username),
+          );
+        }
       case ArticleMenuItem.hide:
         if (await ModerationFlows.hideWithNote(context, target) case final note?) {
           onModerated(ArticleModeration(hiddenAt: DateTime.now().toUtc(), note: note.isEmpty ? null : note));
@@ -209,6 +232,7 @@ class ArticleMenuView extends StatelessWidget {
       // F23: Feature / Unfeature in the reader for `articles.feature`, "Open in console" for `moderation.manage`.
       featured: onFeatured != null && (me?.canFeature ?? false) ? featured : null,
       console: me?.isModerator ?? false,
+      repost: card.repostedBy?.repostId != null && card.repostedBy!.user.id != me?.id,
     );
     if (items.isEmpty) return const SizedBox.shrink();
     final firstTool = items.where((item) => item.isModeration).firstOrNull;
@@ -230,6 +254,7 @@ class ArticleMenuView extends StatelessWidget {
               authorMuted: me != null && authorMuted,
               pdfBuilding: pdfBuilding == true,
               highlightsShown: highlightsShown,
+              username: card.author?.username ?? '',
             ),
           ),
         ],
@@ -245,9 +270,13 @@ class _ArticleMenuLabel extends StatelessWidget {
     required this.authorMuted,
     this.pdfBuilding = false,
     this.highlightsShown = true,
+    this.username = '',
   });
 
   final ArticleMenuItem item;
+
+  /// The writer, for «حظر @username».
+  final String username;
 
   /// The viewer follows the author: "Unfollow author".
   final bool following;
@@ -276,9 +305,11 @@ class _ArticleMenuLabel extends StatelessWidget {
       ArticleMenuItem.muteAuthor => authorMuted
           ? (Icons.volume_up_outlined, l10n.articleMenuUnmuteAuthor)
           : (Icons.volume_off_outlined, l10n.articleMenuMuteAuthor),
+      ArticleMenuItem.blockAuthor => (Icons.block_outlined, l10n.blockMenuUser(BlockActions.handle(username))),
       ArticleMenuItem.muteTopics => (Icons.label_off_outlined, l10n.articleMenuMuteTopics),
       ArticleMenuItem.downloadPdf => (Icons.picture_as_pdf_outlined, pdfBuilding ? l10n.pdfPreparing : l10n.pdfDownload),
       ArticleMenuItem.report => (Icons.flag_outlined, l10n.articleMenuReport),
+      ArticleMenuItem.reportRepost => (Icons.flag_outlined, l10n.reportTitleRepost),
       ArticleMenuItem.hide => (Icons.visibility_off_outlined, l10n.articleMenuHide),
       ArticleMenuItem.unhide => (Icons.visibility_outlined, l10n.articleMenuUnhide),
       ArticleMenuItem.feature => (Icons.star_rounded, l10n.adminFeature),
@@ -286,7 +317,7 @@ class _ArticleMenuLabel extends StatelessWidget {
       ArticleMenuItem.openInConsole => (Icons.admin_panel_settings_outlined, l10n.adminOpenInConsole),
     };
     final color = switch (item) {
-      ArticleMenuItem.report => colors.error,
+      ArticleMenuItem.report || ArticleMenuItem.reportRepost => colors.error,
       ArticleMenuItem.downloadPdf when pdfBuilding => colors.textSecondary,
       _ => colors.textPrimary,
     };

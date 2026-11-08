@@ -31,6 +31,8 @@ _RepostLabelModel _$RepostLabelModelFromJson(Map<String, dynamic> json) =>
       othersCount: (json['othersCount'] as num?)?.toInt() ?? 0,
       repostedAt: DateTime.parse(json['repostedAt'] as String),
       caption: json['caption'] as String?,
+      repostId: json['repostId'] as String?,
+      reportedByMe: json['reportedByMe'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$RepostLabelModelToJson(_RepostLabelModel instance) =>
@@ -39,6 +41,8 @@ Map<String, dynamic> _$RepostLabelModelToJson(_RepostLabelModel instance) =>
       'othersCount': instance.othersCount,
       'repostedAt': instance.repostedAt.toIso8601String(),
       'caption': ?instance.caption,
+      'repostId': ?instance.repostId,
+      'reportedByMe': instance.reportedByMe,
     };
 
 _FieldRefModel _$FieldRefModelFromJson(Map<String, dynamic> json) =>
@@ -126,6 +130,7 @@ _ArticleCardModel _$ArticleCardModelFromJson(
   repostedBy: json['repostedBy'] == null
       ? null
       : RepostLabelModel.fromJson(json['repostedBy'] as Map<String, dynamic>),
+  reportedByMe: json['reportedByMe'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
@@ -161,6 +166,7 @@ Map<String, dynamic> _$ArticleCardModelToJson(_ArticleCardModel instance) =>
       'repostCount': instance.repostCount,
       'isReposted': instance.isReposted,
       'repostedBy': ?instance.repostedBy?.toJson(),
+      'reportedByMe': instance.reportedByMe,
     };
 
 _ArticlePreviewModel _$ArticlePreviewModelFromJson(Map<String, dynamic> json) =>
@@ -312,6 +318,12 @@ _ArticleDetailsModel _$ArticleDetailsModelFromJson(
   repostCount: (json['repostCount'] as num?)?.toInt() ?? 0,
   isReposted: json['isReposted'] as bool? ?? false,
   isFeatured: json['isFeatured'] as bool? ?? false,
+  reportedByMe: json['reportedByMe'] as bool? ?? false,
+  unlinkedMentionIds:
+      (json['unlinkedMentionIds'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
 );
 
 Map<String, dynamic> _$ArticleDetailsModelToJson(
@@ -354,4 +366,6 @@ Map<String, dynamic> _$ArticleDetailsModelToJson(
   'repostCount': instance.repostCount,
   'isReposted': instance.isReposted,
   'isFeatured': instance.isFeatured,
+  'reportedByMe': instance.reportedByMe,
+  'unlinkedMentionIds': instance.unlinkedMentionIds,
 };

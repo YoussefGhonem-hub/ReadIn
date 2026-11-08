@@ -90,12 +90,15 @@ class SignUpCubit extends Cubit<SignUpState> {
     required bool phoneEmpty,
     required String password,
     required String confirmPassword,
+    required bool acceptedTerms,
   }) {
     if (state.submitting) return;
     final errors = Validate.collect({
       Fields.phone: Validate.phone(empty: phoneEmpty, e164: phoneE164),
       Fields.password: Validate.newPassword(password, state.config.password, phoneE164: phoneE164),
       Fields.confirmPassword: Validate.confirmation(confirmPassword, password, CredentialCodes.passwordMismatch),
+      // F37: the Terms checkbox (the API refuses a sign up without it, `auth.terms_required`).
+      Fields.terms: acceptedTerms ? null : FailureCodes.authTermsRequired,
     });
     if (errors.isNotEmpty) return emit(state.copyWith(errors: errors, failure: () => null));
     _password = password;

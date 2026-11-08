@@ -833,7 +833,8 @@ mixin _$NotificationDataModel {
 
  int? get threshold; int? get streakDays; Object? get securityChange; bool? get approved; int? get articleCount;// F23 `announcement`: its title and body in the UI language.
  String? get title; String? get body;// F35 `support_reply` / `support_ticket`: the ticket; `closed` when support closed it.
- int? get ticketNumber; String? get subject; bool? get closed;
+ int? get ticketNumber; String? get subject; bool? get closed;// F22 store additions `report_new` / `report_resolved`.
+ String? get targetType; String? get targetLabel; int? get reportCount; bool? get system; String? get outcome;
 /// Create a copy of NotificationDataModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -846,16 +847,16 @@ $NotificationDataModelCopyWith<NotificationDataModel> get copyWith => _$Notifica
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationDataModel&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.securityChange, securityChange)&&(identical(other.approved, approved) || other.approved == approved)&&(identical(other.articleCount, articleCount) || other.articleCount == articleCount)&&(identical(other.title, title) || other.title == title)&&(identical(other.body, body) || other.body == body)&&(identical(other.ticketNumber, ticketNumber) || other.ticketNumber == ticketNumber)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.closed, closed) || other.closed == closed));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationDataModel&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.securityChange, securityChange)&&(identical(other.approved, approved) || other.approved == approved)&&(identical(other.articleCount, articleCount) || other.articleCount == articleCount)&&(identical(other.title, title) || other.title == title)&&(identical(other.body, body) || other.body == body)&&(identical(other.ticketNumber, ticketNumber) || other.ticketNumber == ticketNumber)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.closed, closed) || other.closed == closed)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.targetLabel, targetLabel) || other.targetLabel == targetLabel)&&(identical(other.reportCount, reportCount) || other.reportCount == reportCount)&&(identical(other.system, system) || other.system == system)&&(identical(other.outcome, outcome) || other.outcome == outcome));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,threshold,streakDays,const DeepCollectionEquality().hash(securityChange),approved,articleCount,title,body,ticketNumber,subject,closed);
+int get hashCode => Object.hash(runtimeType,threshold,streakDays,const DeepCollectionEquality().hash(securityChange),approved,articleCount,title,body,ticketNumber,subject,closed,targetType,targetLabel,reportCount,system,outcome);
 
 @override
 String toString() {
-  return 'NotificationDataModel(threshold: $threshold, streakDays: $streakDays, securityChange: $securityChange, approved: $approved, articleCount: $articleCount, title: $title, body: $body, ticketNumber: $ticketNumber, subject: $subject, closed: $closed)';
+  return 'NotificationDataModel(threshold: $threshold, streakDays: $streakDays, securityChange: $securityChange, approved: $approved, articleCount: $articleCount, title: $title, body: $body, ticketNumber: $ticketNumber, subject: $subject, closed: $closed, targetType: $targetType, targetLabel: $targetLabel, reportCount: $reportCount, system: $system, outcome: $outcome)';
 }
 
 
@@ -866,7 +867,7 @@ abstract mixin class $NotificationDataModelCopyWith<$Res>  {
   factory $NotificationDataModelCopyWith(NotificationDataModel value, $Res Function(NotificationDataModel) _then) = _$NotificationDataModelCopyWithImpl;
 @useResult
 $Res call({
- int? threshold, int? streakDays, Object? securityChange, bool? approved, int? articleCount, String? title, String? body, int? ticketNumber, String? subject, bool? closed
+ int? threshold, int? streakDays, Object? securityChange, bool? approved, int? articleCount, String? title, String? body, int? ticketNumber, String? subject, bool? closed, String? targetType, String? targetLabel, int? reportCount, bool? system, String? outcome
 });
 
 
@@ -883,7 +884,7 @@ class _$NotificationDataModelCopyWithImpl<$Res>
 
 /// Create a copy of NotificationDataModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? threshold = freezed,Object? streakDays = freezed,Object? securityChange = freezed,Object? approved = freezed,Object? articleCount = freezed,Object? title = freezed,Object? body = freezed,Object? ticketNumber = freezed,Object? subject = freezed,Object? closed = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? threshold = freezed,Object? streakDays = freezed,Object? securityChange = freezed,Object? approved = freezed,Object? articleCount = freezed,Object? title = freezed,Object? body = freezed,Object? ticketNumber = freezed,Object? subject = freezed,Object? closed = freezed,Object? targetType = freezed,Object? targetLabel = freezed,Object? reportCount = freezed,Object? system = freezed,Object? outcome = freezed,}) {
   return _then(_self.copyWith(
 threshold: freezed == threshold ? _self.threshold : threshold // ignore: cast_nullable_to_non_nullable
 as int?,streakDays: freezed == streakDays ? _self.streakDays : streakDays // ignore: cast_nullable_to_non_nullable
@@ -894,7 +895,12 @@ as String?,body: freezed == body ? _self.body : body // ignore: cast_nullable_to
 as String?,ticketNumber: freezed == ticketNumber ? _self.ticketNumber : ticketNumber // ignore: cast_nullable_to_non_nullable
 as int?,subject: freezed == subject ? _self.subject : subject // ignore: cast_nullable_to_non_nullable
 as String?,closed: freezed == closed ? _self.closed : closed // ignore: cast_nullable_to_non_nullable
-as bool?,
+as bool?,targetType: freezed == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
+as String?,targetLabel: freezed == targetLabel ? _self.targetLabel : targetLabel // ignore: cast_nullable_to_non_nullable
+as String?,reportCount: freezed == reportCount ? _self.reportCount : reportCount // ignore: cast_nullable_to_non_nullable
+as int?,system: freezed == system ? _self.system : system // ignore: cast_nullable_to_non_nullable
+as bool?,outcome: freezed == outcome ? _self.outcome : outcome // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -979,10 +985,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? threshold,  int? streakDays,  Object? securityChange,  bool? approved,  int? articleCount,  String? title,  String? body,  int? ticketNumber,  String? subject,  bool? closed)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? threshold,  int? streakDays,  Object? securityChange,  bool? approved,  int? articleCount,  String? title,  String? body,  int? ticketNumber,  String? subject,  bool? closed,  String? targetType,  String? targetLabel,  int? reportCount,  bool? system,  String? outcome)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NotificationDataModel() when $default != null:
-return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.approved,_that.articleCount,_that.title,_that.body,_that.ticketNumber,_that.subject,_that.closed);case _:
+return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.approved,_that.articleCount,_that.title,_that.body,_that.ticketNumber,_that.subject,_that.closed,_that.targetType,_that.targetLabel,_that.reportCount,_that.system,_that.outcome);case _:
   return orElse();
 
 }
@@ -1000,10 +1006,10 @@ return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.appr
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? threshold,  int? streakDays,  Object? securityChange,  bool? approved,  int? articleCount,  String? title,  String? body,  int? ticketNumber,  String? subject,  bool? closed)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? threshold,  int? streakDays,  Object? securityChange,  bool? approved,  int? articleCount,  String? title,  String? body,  int? ticketNumber,  String? subject,  bool? closed,  String? targetType,  String? targetLabel,  int? reportCount,  bool? system,  String? outcome)  $default,) {final _that = this;
 switch (_that) {
 case _NotificationDataModel():
-return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.approved,_that.articleCount,_that.title,_that.body,_that.ticketNumber,_that.subject,_that.closed);case _:
+return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.approved,_that.articleCount,_that.title,_that.body,_that.ticketNumber,_that.subject,_that.closed,_that.targetType,_that.targetLabel,_that.reportCount,_that.system,_that.outcome);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1020,10 +1026,10 @@ return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.appr
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? threshold,  int? streakDays,  Object? securityChange,  bool? approved,  int? articleCount,  String? title,  String? body,  int? ticketNumber,  String? subject,  bool? closed)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? threshold,  int? streakDays,  Object? securityChange,  bool? approved,  int? articleCount,  String? title,  String? body,  int? ticketNumber,  String? subject,  bool? closed,  String? targetType,  String? targetLabel,  int? reportCount,  bool? system,  String? outcome)?  $default,) {final _that = this;
 switch (_that) {
 case _NotificationDataModel() when $default != null:
-return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.approved,_that.articleCount,_that.title,_that.body,_that.ticketNumber,_that.subject,_that.closed);case _:
+return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.approved,_that.articleCount,_that.title,_that.body,_that.ticketNumber,_that.subject,_that.closed,_that.targetType,_that.targetLabel,_that.reportCount,_that.system,_that.outcome);case _:
   return null;
 
 }
@@ -1035,7 +1041,7 @@ return $default(_that.threshold,_that.streakDays,_that.securityChange,_that.appr
 @JsonSerializable()
 
 class _NotificationDataModel implements NotificationDataModel {
-  const _NotificationDataModel({this.threshold, this.streakDays, this.securityChange, this.approved, this.articleCount, this.title, this.body, this.ticketNumber, this.subject, this.closed});
+  const _NotificationDataModel({this.threshold, this.streakDays, this.securityChange, this.approved, this.articleCount, this.title, this.body, this.ticketNumber, this.subject, this.closed, this.targetType, this.targetLabel, this.reportCount, this.system, this.outcome});
   factory _NotificationDataModel.fromJson(Map<String, dynamic> json) => _$NotificationDataModelFromJson(json);
 
 @override final  int? threshold;
@@ -1050,6 +1056,12 @@ class _NotificationDataModel implements NotificationDataModel {
 @override final  int? ticketNumber;
 @override final  String? subject;
 @override final  bool? closed;
+// F22 store additions `report_new` / `report_resolved`.
+@override final  String? targetType;
+@override final  String? targetLabel;
+@override final  int? reportCount;
+@override final  bool? system;
+@override final  String? outcome;
 
 /// Create a copy of NotificationDataModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1064,16 +1076,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NotificationDataModel&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.securityChange, securityChange)&&(identical(other.approved, approved) || other.approved == approved)&&(identical(other.articleCount, articleCount) || other.articleCount == articleCount)&&(identical(other.title, title) || other.title == title)&&(identical(other.body, body) || other.body == body)&&(identical(other.ticketNumber, ticketNumber) || other.ticketNumber == ticketNumber)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.closed, closed) || other.closed == closed));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NotificationDataModel&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.securityChange, securityChange)&&(identical(other.approved, approved) || other.approved == approved)&&(identical(other.articleCount, articleCount) || other.articleCount == articleCount)&&(identical(other.title, title) || other.title == title)&&(identical(other.body, body) || other.body == body)&&(identical(other.ticketNumber, ticketNumber) || other.ticketNumber == ticketNumber)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.closed, closed) || other.closed == closed)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.targetLabel, targetLabel) || other.targetLabel == targetLabel)&&(identical(other.reportCount, reportCount) || other.reportCount == reportCount)&&(identical(other.system, system) || other.system == system)&&(identical(other.outcome, outcome) || other.outcome == outcome));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,threshold,streakDays,const DeepCollectionEquality().hash(securityChange),approved,articleCount,title,body,ticketNumber,subject,closed);
+int get hashCode => Object.hash(runtimeType,threshold,streakDays,const DeepCollectionEquality().hash(securityChange),approved,articleCount,title,body,ticketNumber,subject,closed,targetType,targetLabel,reportCount,system,outcome);
 
 @override
 String toString() {
-  return 'NotificationDataModel(threshold: $threshold, streakDays: $streakDays, securityChange: $securityChange, approved: $approved, articleCount: $articleCount, title: $title, body: $body, ticketNumber: $ticketNumber, subject: $subject, closed: $closed)';
+  return 'NotificationDataModel(threshold: $threshold, streakDays: $streakDays, securityChange: $securityChange, approved: $approved, articleCount: $articleCount, title: $title, body: $body, ticketNumber: $ticketNumber, subject: $subject, closed: $closed, targetType: $targetType, targetLabel: $targetLabel, reportCount: $reportCount, system: $system, outcome: $outcome)';
 }
 
 
@@ -1084,7 +1096,7 @@ abstract mixin class _$NotificationDataModelCopyWith<$Res> implements $Notificat
   factory _$NotificationDataModelCopyWith(_NotificationDataModel value, $Res Function(_NotificationDataModel) _then) = __$NotificationDataModelCopyWithImpl;
 @override @useResult
 $Res call({
- int? threshold, int? streakDays, Object? securityChange, bool? approved, int? articleCount, String? title, String? body, int? ticketNumber, String? subject, bool? closed
+ int? threshold, int? streakDays, Object? securityChange, bool? approved, int? articleCount, String? title, String? body, int? ticketNumber, String? subject, bool? closed, String? targetType, String? targetLabel, int? reportCount, bool? system, String? outcome
 });
 
 
@@ -1101,7 +1113,7 @@ class __$NotificationDataModelCopyWithImpl<$Res>
 
 /// Create a copy of NotificationDataModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? threshold = freezed,Object? streakDays = freezed,Object? securityChange = freezed,Object? approved = freezed,Object? articleCount = freezed,Object? title = freezed,Object? body = freezed,Object? ticketNumber = freezed,Object? subject = freezed,Object? closed = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? threshold = freezed,Object? streakDays = freezed,Object? securityChange = freezed,Object? approved = freezed,Object? articleCount = freezed,Object? title = freezed,Object? body = freezed,Object? ticketNumber = freezed,Object? subject = freezed,Object? closed = freezed,Object? targetType = freezed,Object? targetLabel = freezed,Object? reportCount = freezed,Object? system = freezed,Object? outcome = freezed,}) {
   return _then(_NotificationDataModel(
 threshold: freezed == threshold ? _self.threshold : threshold // ignore: cast_nullable_to_non_nullable
 as int?,streakDays: freezed == streakDays ? _self.streakDays : streakDays // ignore: cast_nullable_to_non_nullable
@@ -1112,7 +1124,12 @@ as String?,body: freezed == body ? _self.body : body // ignore: cast_nullable_to
 as String?,ticketNumber: freezed == ticketNumber ? _self.ticketNumber : ticketNumber // ignore: cast_nullable_to_non_nullable
 as int?,subject: freezed == subject ? _self.subject : subject // ignore: cast_nullable_to_non_nullable
 as String?,closed: freezed == closed ? _self.closed : closed // ignore: cast_nullable_to_non_nullable
-as bool?,
+as bool?,targetType: freezed == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
+as String?,targetLabel: freezed == targetLabel ? _self.targetLabel : targetLabel // ignore: cast_nullable_to_non_nullable
+as String?,reportCount: freezed == reportCount ? _self.reportCount : reportCount // ignore: cast_nullable_to_non_nullable
+as int?,system: freezed == system ? _self.system : system // ignore: cast_nullable_to_non_nullable
+as bool?,outcome: freezed == outcome ? _self.outcome : outcome // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

@@ -89,12 +89,14 @@ void main() {
     await auth.register(phoneNumber: '+201001234567', password: 'reading4life', recoveryPin: '4831', uiLanguage: 'ar');
 
     final body = verify(() => api.register(captureAny())).captured.single as RegisterRequest;
+    // Changed on purpose (F37): sign up sends the ticked Terms checkbox.
     expect(body.toJson(), {
       'phoneNumber': '+201001234567',
       'password': 'reading4life',
       'recoveryPin': '4831',
       'uiLanguage': 'ar',
       'timeZone': 'Africa/Cairo',
+      'acceptTerms': true,
     });
   });
 
@@ -244,9 +246,11 @@ void main() {
 
     final bodies = verify(() => api.external(captureAny())).captured.cast<ExternalSignInRequest>();
     expect(bodies.first.toJson(), containsPair('createAccount', true));
+    expect(bodies.first.toJson(), containsPair('acceptTerms', true), reason: 'F37: a new account accepts the Terms');
     expect(bodies.first.toJson().containsKey('link'), isFalse);
     expect(bodies.last.toJson()['link'], {'phoneNumber': '+201001234567', 'password': 'pw-123456'});
     expect(bodies.last.toJson().containsKey('createAccount'), isFalse);
+    expect(bodies.last.toJson().containsKey('acceptTerms'), isFalse, reason: 'linking an existing account needs no Terms');
   });
 
   test('auth.external_not_linked keeps the user signed out', () async {

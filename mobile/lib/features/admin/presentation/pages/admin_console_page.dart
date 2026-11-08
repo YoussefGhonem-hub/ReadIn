@@ -87,7 +87,11 @@ class AdminConsoleView extends StatelessWidget {
                 children: [
                   for (var i = 0; i < sections.length; i++) ...[
                     if (i > 0) const Divider(height: 1, indent: PageBlock.gutter, endIndent: PageBlock.gutter),
-                    _SectionTile(section: sections[i], count: sections[i].countIn(summary)),
+                    _SectionTile(
+                      section: sections[i],
+                      count: sections[i].countIn(summary),
+                      over24h: summary?.openReportsOver24h,
+                    ),
                   ],
                 ],
               ),
@@ -113,10 +117,13 @@ class AdminConsoleView extends StatelessWidget {
 }
 
 class _SectionTile extends StatelessWidget {
-  const _SectionTile({required this.section, required this.count});
+  const _SectionTile({required this.section, required this.count, this.over24h});
 
   final AdminConsoleSection section;
   final int? count;
+
+  /// Open reports past the 24-hour target: the Reports row says so instead of its hint.
+  final int? over24h;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +141,13 @@ class _SectionTile extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: PageBlock.gutter),
       leading: Icon(icon),
       title: Text(title),
-      subtitle: Text(hint),
+      subtitle: Text(
+        switch (section) {
+          // Reports past the 24-hour target (F22 store additions).
+          AdminConsoleSection.reports when (over24h ?? 0) > 0 => l10n.adminReportsOver24h(over24h!),
+          _ => hint,
+        },
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [AdminCountBadge(count: count), const Icon(Icons.chevron_right_rounded)],

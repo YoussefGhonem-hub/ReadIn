@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/tokens.g.dart';
 import '../../../article/domain/entities/article.dart';
+import '../../../blocks/presentation/cubit/blocks_cubit.dart';
 import '../cubit/mutes_cubit.dart';
 
 /// A card of a list that applies mutes (F28: Home, field pages, Explore, tag pages, Related). It folds away once the
@@ -10,7 +11,8 @@ import '../cubit/mutes_cubit.dart';
 /// with its gap, so nothing is left behind. The writer's own pages (profile tabs, category pages) don't use it.
 ///
 /// A field page passes its own field and the picked topic ([keepFieldId], [keepTopicId]): those stay, as on the
-/// server. Without a [MutesCubit] above (tests of other screens), nothing folds.
+/// server. Without a [MutesCubit] above (tests of other screens), nothing folds. A card whose writer (or the only
+/// reposter who placed it) the viewer blocks in this session folds away too (F36, [BlocksCubit]).
 class MuteGate extends StatelessWidget {
   const MuteGate({super.key, required this.article, required this.child, this.keepFieldId, this.keepTopicId});
 
@@ -24,19 +26,24 @@ class MuteGate extends StatelessWidget {
     final hidden = context.select(
       (MutesCubit? c) => c?.state.hides(article, keepFieldId: keepFieldId, keepTopicId: keepTopicId) ?? false,
     );
-    return FoldAway(folded: hidden, child: child);
+    final blocked = context.select((BlocksCubit? c) => c?.state.hides(article) ?? false);
+    return FoldAway(folded: hidden || blocked, child: child);
   }
 }
 
 /// Whether mutes and "show less" fold away every one of [cards] (F28), as [MuteGate] decides it, so the list shows its
 /// own empty state (or keeps loading, [LoadMoreWhileHidden]) and a section hides its heading. False for no cards (the
 /// list's own empty case) and without a [MutesCubit] above. Call it while building: it follows [MutesCubit].
-bool mutesHideAll(BuildContext context, Iterable<ArticleCard> cards, {String? keepFieldId, String? keepTopicId}) =>
-    cards.isNotEmpty &&
-    context.select(
-      (MutesCubit? c) =>
-          c != null && cards.every((card) => c.state.hides(card, keepFieldId: keepFieldId, keepTopicId: keepTopicId)),
-    );
+bool mutesHideAll(BuildContext context, Iterable<ArticleCard> cards, {String? keepFieldId, String? keepTopicId}) {
+  if (cards.isEmpty) return false;
+  final mutes = context.select((MutesCubit? c) => c?.state);
+  final blocks = context.select((BlocksCubit? c) => c?.state);
+  if (mutes == null && blocks == null) return false;
+  return cards.every(
+    (card) =>
+        (mutes?.hides(card, keepFieldId: keepFieldId, keepTopicId: keepTopicId) ?? false) || (blocks?.hides(card) ?? false),
+  );
+}
 
 /// The footer of a paged list that applies mutes, which asks for the next page itself while [active]: every card
 /// loaded so far is folded away ([mutesHideAll]) and the list has more, so no scroll would. The list's empty state

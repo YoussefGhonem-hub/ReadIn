@@ -25,6 +25,7 @@ import '../features/auth/presentation/pages/sign_in_page.dart';
 import '../features/auth/presentation/pages/sign_up_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/presentation/session/session_cubit.dart';
+import '../features/blocks/presentation/pages/blocked_page.dart';
 import '../features/categories/presentation/category_routes.dart';
 import '../features/categories/presentation/pages/category_page.dart';
 import '../features/editor/presentation/pages/article_editor_page.dart';
@@ -35,6 +36,7 @@ import '../features/explore/presentation/pages/explore_page.dart';
 import '../features/explore/presentation/pages/explore_ranking_page.dart';
 import '../features/explore/presentation/pages/field_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
+import '../features/legal/presentation/pages/accept_terms_page.dart';
 import '../features/moderation/domain/entities/moderation.dart';
 import '../features/moderation/presentation/moderation_routes.dart';
 import '../features/moderation/presentation/pages/moderation_case_page.dart';
@@ -87,6 +89,9 @@ abstract final class AppRoutes {
   static const changePhone = '/account/phone';
   static const addPhoneSignIn = '/account/phone-sign-in';
   static const deleteAccount = '/account/delete';
+
+  /// The blocking terms screen (F37), after the password and PIN guards.
+  static const acceptTerms = AcceptTermsPage.path;
   static const home = '/home';
   static const explore = '/explore';
   static const write = EditorRoutes.myArticles;
@@ -134,6 +139,7 @@ abstract final class AppRoutes {
         AccountGate.setRecoveryPin => setRecoveryPin,
         AccountGate.completeProfile => completeProfile,
         AccountGate.onboarding => onboarding,
+        AccountGate.acceptTerms => acceptTerms,
       };
 }
 
@@ -171,6 +177,7 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
       targetPath == AppRoutes.notificationSettings ||
       targetPath == AppRoutes.interests ||
       targetPath == MutedPage.path || // Settings → Muted (F28)
+      targetPath == BlockedPage.path || // Settings → Blocked accounts (F36)
       targetPath == AppRoutes.readingStats ||
       targetPath == AppRoutes.verification ||
       // The admin console (F23) and Help & support (F35); the pages check the permissions.
@@ -185,6 +192,8 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
   String? stay() => atSplash ? target : null;
 
   if (session.isAuthenticated) {
+    // Declining new terms (F37) offers deleting the account: that screen opens over the terms screen.
+    if (session.gate == AccountGate.acceptTerms && targetPath == AppRoutes.deleteAccount) return stay();
     if (session.gate case final gate?) {
       final gateRoute = AppRoutes.forGate(gate);
       return targetPath == gateRoute ? stay() : gateRoute;
@@ -195,8 +204,11 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
     final landing = isAuthRoute ||
         targetPath == AppRoutes.setRecoveryPin ||
         targetPath == AppRoutes.completeProfile ||
+        targetPath == AppRoutes.acceptTerms ||
         (atSplash && targetPath == AppRoutes.home);
     if (isAdmin && landing) return AdminRoutes.consoleDashboard;
+    // The terms screen once accepted (F37): on to Home.
+    if (targetPath == AppRoutes.acceptTerms) return AppRoutes.home;
     // The console's old home (`/admin`) is the dashboard tab now; its pages (`/admin/...`) still open as before.
     if (targetPath == AdminRoutes.home) return isAdmin ? AdminRoutes.consoleDashboard : AppRoutes.home;
     if (AdminRoutes.isConsoleTab(targetPath)) {
@@ -257,6 +269,9 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(path: AppRoutes.interests, builder: (_, _) => const InterestsPage()),
       // Settings → Muted (F28); it needs an account (the redirect above).
       GoRoute(path: MutedPage.path, builder: (_, _) => const MutedPage()),
+      // Settings → Blocked accounts (F36) and the blocking terms screen (F37); both need an account.
+      GoRoute(path: BlockedPage.path, builder: (_, _) => const BlockedPage()),
+      GoRoute(path: AcceptTermsPage.path, builder: (_, _) => const AcceptTermsPage()),
       GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
       GoRoute(path: AppRoutes.readingStats, builder: (_, _) => const ReadingStatsPage()),
       GoRoute(path: AppRoutes.verification, builder: (_, _) => const VerificationPage()),

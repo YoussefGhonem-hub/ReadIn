@@ -17,6 +17,9 @@ abstract class ReportRequest with _$ReportRequest {
     required String targetId,
     required String reason,
     String? details,
+
+    /// F36: block the target's author in the same step; left out unless true.
+    @JsonKey(includeIfNull: false) bool? alsoBlock,
   }) = _ReportRequest;
 
   factory ReportRequest.fromJson(Map<String, dynamic> json) => _$ReportRequestFromJson(json);
@@ -146,6 +149,8 @@ abstract class ModerationQueueItemModel with _$ModerationQueueItemModel {
     required DateTime lastReportedAt,
     DateTime? closedAt,
     required ModerationTargetModel target,
+    int? ageHours,
+    @Default(false) bool urgent,
   }) = _ModerationQueueItemModel;
 
   factory ModerationQueueItemModel.fromJson(Map<String, dynamic> json) => _$ModerationQueueItemModelFromJson(json);
@@ -170,6 +175,8 @@ abstract class ModerationQueueItemModel with _$ModerationQueueItemModel {
       lastReportedAt: lastReportedAt,
       closedAt: closedAt,
       target: target.toEntity(),
+      ageHours: ageHours,
+      urgent: urgent,
     );
   }
 }
@@ -199,6 +206,8 @@ abstract class ModerationReportModel with _$ModerationReportModel {
     required DateTime createdAt,
     DateTime? closedAt,
     UserSummaryModel? closedBy,
+    @Default(false) bool isSystem,
+    List<String>? matchedTerms,
   }) = _ModerationReportModel;
 
   factory ModerationReportModel.fromJson(Map<String, dynamic> json) => _$ModerationReportModelFromJson(json);
@@ -212,6 +221,8 @@ abstract class ModerationReportModel with _$ModerationReportModel {
         createdAt: createdAt,
         closedAt: closedAt,
         closedBy: closedBy?.toEntity(),
+        isSystem: isSystem,
+        matchedTerms: matchedTerms,
       );
 }
 

@@ -11083,6 +11083,396 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Page {page} of {pages}'**
   String adminPageOf(String page, String pages);
+
+  /// No description provided for @reportTitleRepost.
+  ///
+  /// In en, this message translates to:
+  /// **'Report repost'**
+  String get reportTitleRepost;
+
+  /// No description provided for @moderationTypeRepost.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost'**
+  String get moderationTypeRepost;
+
+  /// No description provided for @moderationFilterReposts.
+  ///
+  /// In en, this message translates to:
+  /// **'Reposts'**
+  String get moderationFilterReposts;
+
+  /// No description provided for @moderationCaseRepost.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported repost'**
+  String get moderationCaseRepost;
+
+  /// No description provided for @moderationLogRepostDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted a repost'**
+  String get moderationLogRepostDelete;
+
+  /// No description provided for @moderationRepostOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost of “{title}”'**
+  String moderationRepostOf(String title);
+
+  /// No description provided for @moderationDeleteRepost.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete repost'**
+  String get moderationDeleteRepost;
+
+  /// No description provided for @moderationDeleteRepostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this repost?'**
+  String get moderationDeleteRepostTitle;
+
+  /// No description provided for @moderationDeleteRepostBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s removed as if its owner had undone it, and recorded in the moderation log.'**
+  String get moderationDeleteRepostBody;
+
+  /// No description provided for @moderationRepostDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost deleted'**
+  String get moderationRepostDeleted;
+
+  /// No description provided for @moderationUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get moderationUrgent;
+
+  /// No description provided for @moderationCaseAge.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Waiting less than an hour} =1{Waiting 1 hour} other{Waiting {count} hours}}'**
+  String moderationCaseAge(int count);
+
+  /// No description provided for @moderationContentFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Content filter'**
+  String get moderationContentFilter;
+
+  /// No description provided for @moderationMatchedTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched: {terms}'**
+  String moderationMatchedTerms(String terms);
+
+  /// No description provided for @adminCardReportsOver24h.
+  ///
+  /// In en, this message translates to:
+  /// **'Open reports past 24 hours'**
+  String get adminCardReportsOver24h;
+
+  /// No description provided for @adminReportsOver24h.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 report waiting over 24 hours} other{{count} reports waiting over 24 hours}}'**
+  String adminReportsOver24h(int count);
+
+  /// No description provided for @errBlockSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t block yourself.'**
+  String get errBlockSelf;
+
+  /// No description provided for @errBlockLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached the limit of 1,000 blocked accounts.'**
+  String get errBlockLimit;
+
+  /// No description provided for @errBlockBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'You blocked this account. Unblock it first.'**
+  String get errBlockBlocked;
+
+  /// No description provided for @errRepostNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This repost no longer exists.'**
+  String get errRepostNotFound;
+
+  /// No description provided for @errTermsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must agree to the Terms of Use and Community Guidelines to create an account.'**
+  String get errTermsRequired;
+
+  /// No description provided for @errContentObjectionable.
+  ///
+  /// In en, this message translates to:
+  /// **'This text breaks our Community Guidelines. Edit it and try again.'**
+  String get errContentObjectionable;
+
+  /// No description provided for @errContentTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached the limit: 5 articles a day and 60 comments an hour.'**
+  String get errContentTooMany;
+
+  /// No description provided for @blockAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get blockAction;
+
+  /// No description provided for @blockMenuUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {username}'**
+  String blockMenuUser(String username);
+
+  /// No description provided for @blockMenuUnblockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock {username}'**
+  String blockMenuUnblockUser(String username);
+
+  /// No description provided for @blockConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {username}?'**
+  String blockConfirmTitle(String username);
+
+  /// No description provided for @blockConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You won\'t see each other\'s articles or comments, and neither of you can follow, mention or comment on the other\'s content. They won\'t be notified.'**
+  String get blockConfirmBody;
+
+  /// No description provided for @blockDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} blocked'**
+  String blockDone(String username);
+
+  /// No description provided for @blockUnblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} unblocked'**
+  String blockUnblocked(String username);
+
+  /// No description provided for @blockUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get blockUnblock;
+
+  /// No description provided for @blockAccountUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This account isn\'t available'**
+  String get blockAccountUnavailable;
+
+  /// No description provided for @blockContentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This content isn\'t available'**
+  String get blockContentUnavailable;
+
+  /// No description provided for @blockYouBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'You blocked {username}.'**
+  String blockYouBlocked(String username);
+
+  /// No description provided for @blockCommentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This comment isn\'t available'**
+  String get blockCommentUnavailable;
+
+  /// No description provided for @blockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked accounts'**
+  String get blockedTitle;
+
+  /// No description provided for @blockedSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'People you blocked, and Unblock'**
+  String get blockedSettingsHint;
+
+  /// No description provided for @blockedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t blocked anyone'**
+  String get blockedEmptyTitle;
+
+  /// No description provided for @blockedEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Block someone from their profile or from the \"⋯\" of their article or comment.'**
+  String get blockedEmptyBody;
+
+  /// No description provided for @blockedSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked {date}'**
+  String blockedSince(String date);
+
+  /// No description provided for @blockedFollowsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblocking doesn\'t bring back follows.'**
+  String get blockedFollowsNote;
+
+  /// No description provided for @reportedHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You reported this. It\'s hidden for you'**
+  String get reportedHidden;
+
+  /// No description provided for @reportAlsoBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Also block {username}'**
+  String reportAlsoBlock(String username);
+
+  /// No description provided for @reportAlsoBlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You won\'t see each other\'s content. They won\'t be notified.'**
+  String get reportAlsoBlockHint;
+
+  /// No description provided for @reportThanksBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks, we\'ll review it. {username} is blocked.'**
+  String reportThanksBlocked(String username);
+
+  /// No description provided for @notifReportNew.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind, select, article{New report: article} comment{New report: comment} user{New report: account} repost{New report: repost} other{New report}}'**
+  String notifReportNew(String kind);
+
+  /// No description provided for @notifReportSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Caught by the content filter'**
+  String get notifReportSystem;
+
+  /// No description provided for @notifReportResolvedRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'We reviewed your report and removed the content'**
+  String get notifReportResolvedRemoved;
+
+  /// No description provided for @notifReportResolvedUser.
+  ///
+  /// In en, this message translates to:
+  /// **'We reviewed your report and took action'**
+  String get notifReportResolvedUser;
+
+  /// No description provided for @notifReportResolvedNoViolation.
+  ///
+  /// In en, this message translates to:
+  /// **'We reviewed your report; the content doesn\'t break our guidelines'**
+  String get notifReportResolvedNoViolation;
+
+  /// No description provided for @notifReportResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'We reviewed your report'**
+  String get notifReportResolved;
+
+  /// No description provided for @notifTypeReportNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New reports'**
+  String get notifTypeReportNew;
+
+  /// No description provided for @notifTypeReportNewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone reports content (moderators only)'**
+  String get notifTypeReportNewHint;
+
+  /// No description provided for @legalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get legalTitle;
+
+  /// No description provided for @legalTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use'**
+  String get legalTerms;
+
+  /// No description provided for @legalGuidelines.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Guidelines'**
+  String get legalGuidelines;
+
+  /// No description provided for @legalPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get legalPrivacy;
+
+  /// No description provided for @termsAgreeLead.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the '**
+  String get termsAgreeLead;
+
+  /// No description provided for @termsAgreeAnd.
+  ///
+  /// In en, this message translates to:
+  /// **' and the '**
+  String get termsAgreeAnd;
+
+  /// No description provided for @termsGateTitleFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use and Community Guidelines'**
+  String get termsGateTitleFirst;
+
+  /// No description provided for @termsGateTitleUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve updated our terms'**
+  String get termsGateTitleUpdated;
+
+  /// No description provided for @termsGateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To keep using ReadIn, read and agree to the Terms of Use and the Community Guidelines. There\'s no tolerance for objectionable content or abusive users.'**
+  String get termsGateBody;
+
+  /// No description provided for @termsGateChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'What changed'**
+  String get termsGateChanges;
+
+  /// No description provided for @termsGateAgree.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree'**
+  String get termsGateAgree;
+
+  /// No description provided for @termsGateDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get termsGateDeleteAccount;
 }
 
 class _AppLocalizationsDelegate

@@ -12,6 +12,7 @@ import '../../../admin/presentation/widgets/admin_flows.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../auth/presentation/widgets/require_account.dart';
+import '../../../blocks/presentation/widgets/block_actions.dart';
 import '../../../moderation/domain/entities/moderation.dart';
 import '../../../moderation/presentation/widgets/moderation_flows.dart';
 import '../../../moderation/presentation/widgets/report_sheet.dart';
@@ -21,11 +22,12 @@ import '../../domain/entities/profile.dart';
 
 /// The items of the "⋯" on someone else's profile: Mute or Unmute (F28), Report, then the moderator tools (F22) and
 /// the admin's (F23).
-enum ProfileMenuItem { mute, report, warn, suspend, unsuspend, removeBadge, openInConsole }
+enum ProfileMenuItem { mute, block, report, warn, suspend, unsuspend, removeBadge, openInConsole }
 
 /// Anyone can mute and report the user (guests get the sign-in prompt); moderators can warn, and suspend with
 /// `users.suspend`. Mute comes first, but never on your own profile ([own]) or the official ReadIn account
-/// ([systemAccount], `ProfileDto.isSystemAccount`), which can't be muted.
+/// ([systemAccount], `ProfileDto.isSystemAccount`), which can't be muted. Block (F36) comes under Mute, on everyone but
+/// yourself (the official account and staff included).
 ///
 /// F23, with `ProfileDto.admin` (holders of `users.read`): no Warn or Suspend for staff ([staff]); "Unsuspend" instead
 /// of "Suspend…" while [suspended]; "Remove verified badge" ([canRemoveBadge]: `verification.manage` on a verified,
@@ -42,6 +44,7 @@ List<ProfileMenuItem> profileMenuItems({
 }) =>
     [
       if (!own && !systemAccount) ProfileMenuItem.mute,
+      if (!own) ProfileMenuItem.block,
       ProfileMenuItem.report,
       if (moderator && !staff) ProfileMenuItem.warn,
       if (moderator && canSuspend && !staff) suspended ? ProfileMenuItem.unsuspend : ProfileMenuItem.suspend,
@@ -64,8 +67,15 @@ class ProfileMenuButton extends StatelessWidget {
       case ProfileMenuItem.mute:
         if (!requireAccount(context)) return;
         await MuteActions.toggleUser(context, userId: profile.id, name: profile.displayName, fallback: profile.isMuted);
+      case ProfileMenuItem.block:
+        // The profile then reads «هذا الحساب غير متاح» with Unblock (the page follows [BlocksCubit]).
+        await BlockActions.block(context, userId: profile.id, username: profile.username);
       case ProfileMenuItem.report:
-        await showReportSheet(context, target: ModerationTargetRef.user(profile.id));
+        await showReportSheet(
+          context,
+          target: ModerationTargetRef.user(profile.id),
+          author: ReportAuthor(profile.id, profile.username),
+        );
       case ProfileMenuItem.warn:
         await ModerationFlows.warn(context, userId: profile.id, name: profile.displayName);
       case ProfileMenuItem.suspend:
@@ -100,7 +110,9 @@ class ProfileMenuButton extends StatelessWidget {
       console: !own && (me?.canReadUsers ?? false),
     );
     // The moderator and admin tools sit apart, after a divider.
-    final firstTool = items.where((item) => item != ProfileMenuItem.mute && item != ProfileMenuItem.report).firstOrNull;
+    final firstTool = items
+        .where((item) => item != ProfileMenuItem.mute && item != ProfileMenuItem.block && item != ProfileMenuItem.report)
+        .firstOrNull;
     return PopupMenuButton<ProfileMenuItem>(
       tooltip: l10n.profileMenu,
       icon: const Icon(Icons.more_horiz_rounded),
@@ -108,7 +120,10 @@ class ProfileMenuButton extends StatelessWidget {
       itemBuilder: (context) => [
         for (final item in items) ...[
           if (item == firstTool) const PopupMenuDivider(),
-          PopupMenuItem(value: item, child: _ProfileMenuLabel(item: item, muted: me != null && muted)),
+          PopupMenuItem(
+            value: item,
+            child: _ProfileMenuLabel(item: item, muted: me != null && muted, username: profile.username),
+          ),
         ],
       ],
     );
@@ -116,9 +131,12 @@ class ProfileMenuButton extends StatelessWidget {
 }
 
 class _ProfileMenuLabel extends StatelessWidget {
-  const _ProfileMenuLabel({required this.item, required this.muted});
+  const _ProfileMenuLabel({required this.item, required this.muted, this.username = ''});
 
   final ProfileMenuItem item;
+
+  /// For «حظر @username».
+  final String username;
 
   /// The viewer muted this user: "Unmute user".
   final bool muted;
@@ -131,6 +149,7 @@ class _ProfileMenuLabel extends StatelessWidget {
       ProfileMenuItem.mute => muted
           ? (Icons.volume_up_outlined, l10n.muteMenuUnmuteUser)
           : (Icons.volume_off_outlined, l10n.muteMenuUser),
+      ProfileMenuItem.block => (Icons.block_outlined, l10n.blockMenuUser(BlockActions.handle(username))),
       ProfileMenuItem.report => (Icons.flag_outlined, l10n.profileMenuReport),
       ProfileMenuItem.warn => (Icons.report_gmailerrorred_rounded, l10n.profileMenuWarn),
       ProfileMenuItem.suspend => (Icons.block_rounded, l10n.profileMenuSuspend),

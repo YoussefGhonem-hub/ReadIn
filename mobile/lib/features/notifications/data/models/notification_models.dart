@@ -76,6 +76,12 @@ abstract class NotificationDataModel with _$NotificationDataModel {
     int? ticketNumber,
     String? subject,
     bool? closed,
+    // F22 store additions `report_new` / `report_resolved`.
+    String? targetType,
+    String? targetLabel,
+    int? reportCount,
+    bool? system,
+    String? outcome,
   }) = _NotificationDataModel;
 
   factory NotificationDataModel.fromJson(Map<String, dynamic> json) => _$NotificationDataModelFromJson(json);
@@ -123,6 +129,11 @@ abstract class NotificationModel with _$NotificationModel {
         ticketNumber: data?.ticketNumber,
         subject: data?.subject,
         closed: data?.closed ?? false,
+        reportTargetType: data?.targetType,
+        targetLabel: data?.targetLabel,
+        reportCount: data?.reportCount,
+        systemReport: data?.system ?? false,
+        reportOutcome: ReportOutcome.fromWire(data?.outcome),
       );
 }
 

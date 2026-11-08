@@ -6588,4 +6588,260 @@ class AppLocalizationsEn extends AppLocalizations {
   String adminPageOf(String page, String pages) {
     return 'Page $page of $pages';
   }
+
+  @override
+  String get reportTitleRepost => 'Report repost';
+
+  @override
+  String get moderationTypeRepost => 'Repost';
+
+  @override
+  String get moderationFilterReposts => 'Reposts';
+
+  @override
+  String get moderationCaseRepost => 'Reported repost';
+
+  @override
+  String get moderationLogRepostDelete => 'Deleted a repost';
+
+  @override
+  String moderationRepostOf(String title) {
+    return 'Repost of “$title”';
+  }
+
+  @override
+  String get moderationDeleteRepost => 'Delete repost';
+
+  @override
+  String get moderationDeleteRepostTitle => 'Delete this repost?';
+
+  @override
+  String get moderationDeleteRepostBody =>
+      'It\'s removed as if its owner had undone it, and recorded in the moderation log.';
+
+  @override
+  String get moderationRepostDeleted => 'Repost deleted';
+
+  @override
+  String get moderationUrgent => 'Urgent';
+
+  @override
+  String moderationCaseAge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Waiting $count hours',
+      one: 'Waiting 1 hour',
+      zero: 'Waiting less than an hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moderationContentFilter => 'Content filter';
+
+  @override
+  String moderationMatchedTerms(String terms) {
+    return 'Matched: $terms';
+  }
+
+  @override
+  String get adminCardReportsOver24h => 'Open reports past 24 hours';
+
+  @override
+  String adminReportsOver24h(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reports waiting over 24 hours',
+      one: '1 report waiting over 24 hours',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get errBlockSelf => 'You can\'t block yourself.';
+
+  @override
+  String get errBlockLimit =>
+      'You\'ve reached the limit of 1,000 blocked accounts.';
+
+  @override
+  String get errBlockBlocked => 'You blocked this account. Unblock it first.';
+
+  @override
+  String get errRepostNotFound => 'This repost no longer exists.';
+
+  @override
+  String get errTermsRequired =>
+      'You must agree to the Terms of Use and Community Guidelines to create an account.';
+
+  @override
+  String get errContentObjectionable =>
+      'This text breaks our Community Guidelines. Edit it and try again.';
+
+  @override
+  String get errContentTooMany =>
+      'You\'ve reached the limit: 5 articles a day and 60 comments an hour.';
+
+  @override
+  String get blockAction => 'Block';
+
+  @override
+  String blockMenuUser(String username) {
+    return 'Block $username';
+  }
+
+  @override
+  String blockMenuUnblockUser(String username) {
+    return 'Unblock $username';
+  }
+
+  @override
+  String blockConfirmTitle(String username) {
+    return 'Block $username?';
+  }
+
+  @override
+  String get blockConfirmBody =>
+      'You won\'t see each other\'s articles or comments, and neither of you can follow, mention or comment on the other\'s content. They won\'t be notified.';
+
+  @override
+  String blockDone(String username) {
+    return '$username blocked';
+  }
+
+  @override
+  String blockUnblocked(String username) {
+    return '$username unblocked';
+  }
+
+  @override
+  String get blockUnblock => 'Unblock';
+
+  @override
+  String get blockAccountUnavailable => 'This account isn\'t available';
+
+  @override
+  String get blockContentUnavailable => 'This content isn\'t available';
+
+  @override
+  String blockYouBlocked(String username) {
+    return 'You blocked $username.';
+  }
+
+  @override
+  String get blockCommentUnavailable => 'This comment isn\'t available';
+
+  @override
+  String get blockedTitle => 'Blocked accounts';
+
+  @override
+  String get blockedSettingsHint => 'People you blocked, and Unblock';
+
+  @override
+  String get blockedEmptyTitle => 'You haven\'t blocked anyone';
+
+  @override
+  String get blockedEmptyBody =>
+      'Block someone from their profile or from the \"⋯\" of their article or comment.';
+
+  @override
+  String blockedSince(String date) {
+    return 'Blocked $date';
+  }
+
+  @override
+  String get blockedFollowsNote => 'Unblocking doesn\'t bring back follows.';
+
+  @override
+  String get reportedHidden => 'You reported this. It\'s hidden for you';
+
+  @override
+  String reportAlsoBlock(String username) {
+    return 'Also block $username';
+  }
+
+  @override
+  String get reportAlsoBlockHint =>
+      'You won\'t see each other\'s content. They won\'t be notified.';
+
+  @override
+  String reportThanksBlocked(String username) {
+    return 'Thanks, we\'ll review it. $username is blocked.';
+  }
+
+  @override
+  String notifReportNew(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'article': 'New report: article',
+      'comment': 'New report: comment',
+      'user': 'New report: account',
+      'repost': 'New report: repost',
+      'other': 'New report',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get notifReportSystem => 'Caught by the content filter';
+
+  @override
+  String get notifReportResolvedRemoved =>
+      'We reviewed your report and removed the content';
+
+  @override
+  String get notifReportResolvedUser =>
+      'We reviewed your report and took action';
+
+  @override
+  String get notifReportResolvedNoViolation =>
+      'We reviewed your report; the content doesn\'t break our guidelines';
+
+  @override
+  String get notifReportResolved => 'We reviewed your report';
+
+  @override
+  String get notifTypeReportNew => 'New reports';
+
+  @override
+  String get notifTypeReportNewHint =>
+      'When someone reports content (moderators only)';
+
+  @override
+  String get legalTitle => 'Legal';
+
+  @override
+  String get legalTerms => 'Terms of Use';
+
+  @override
+  String get legalGuidelines => 'Community Guidelines';
+
+  @override
+  String get legalPrivacy => 'Privacy Policy';
+
+  @override
+  String get termsAgreeLead => 'I agree to the ';
+
+  @override
+  String get termsAgreeAnd => ' and the ';
+
+  @override
+  String get termsGateTitleFirst => 'Terms of Use and Community Guidelines';
+
+  @override
+  String get termsGateTitleUpdated => 'We\'ve updated our terms';
+
+  @override
+  String get termsGateBody =>
+      'To keep using ReadIn, read and agree to the Terms of Use and the Community Guidelines. There\'s no tolerance for objectionable content or abusive users.';
+
+  @override
+  String get termsGateChanges => 'What changed';
+
+  @override
+  String get termsGateAgree => 'I agree';
+
+  @override
+  String get termsGateDeleteAccount => 'Delete my account';
 }

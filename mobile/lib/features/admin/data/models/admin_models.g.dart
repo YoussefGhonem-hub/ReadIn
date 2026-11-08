@@ -12,6 +12,7 @@ _AdminSummaryModel _$AdminSummaryModelFromJson(Map<String, dynamic> json) =>
       openTickets: (json['openTickets'] as num?)?.toInt(),
       pendingVerifications: (json['pendingVerifications'] as num?)?.toInt(),
       total: (json['total'] as num?)?.toInt() ?? 0,
+      openReportsOver24h: (json['openReportsOver24h'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$AdminSummaryModelToJson(_AdminSummaryModel instance) =>
@@ -20,6 +21,7 @@ Map<String, dynamic> _$AdminSummaryModelToJson(_AdminSummaryModel instance) =>
       'openTickets': ?instance.openTickets,
       'pendingVerifications': ?instance.pendingVerifications,
       'total': instance.total,
+      'openReportsOver24h': ?instance.openReportsOver24h,
     };
 
 _DashboardValueModel _$DashboardValueModelFromJson(Map<String, dynamic> json) =>
@@ -73,6 +75,7 @@ _DashboardCardsModel _$DashboardCardsModelFromJson(
   openTickets: (json['openTickets'] as num?)?.toInt(),
   pendingVerifications: (json['pendingVerifications'] as num?)?.toInt(),
   suspendedNow: (json['suspendedNow'] as num?)?.toInt() ?? 0,
+  openReportsOver24h: (json['openReportsOver24h'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$DashboardCardsModelToJson(
@@ -89,6 +92,7 @@ Map<String, dynamic> _$DashboardCardsModelToJson(
   'openTickets': ?instance.openTickets,
   'pendingVerifications': ?instance.pendingVerifications,
   'suspendedNow': instance.suspendedNow,
+  'openReportsOver24h': ?instance.openReportsOver24h,
 };
 
 _DashboardDayModel _$DashboardDayModelFromJson(Map<String, dynamic> json) =>

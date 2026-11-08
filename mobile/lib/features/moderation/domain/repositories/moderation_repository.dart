@@ -4,8 +4,9 @@ import '../entities/moderation.dart';
 
 /// Reports, the moderation queue, actions, the log and the notices of the affected user (F22).
 abstract interface class ModerationRepository {
-  /// `POST /reports` (`reports.create`). Reporting the same target again is a no-op.
-  Future<Result<void>> report(ModerationTargetRef target, ReportReason reason, {String? details});
+  /// `POST /reports` (`reports.create`). Reporting the same target again is a no-op. [alsoBlock] blocks the target's
+  /// author too (F36; `400 block.limit` saves neither).
+  Future<Result<void>> report(ModerationTargetRef target, ReportReason reason, {String? details, bool alsoBlock = false});
 
   /// `GET /moderation/summary`: targets with open reports.
   Future<Result<ModerationSummary>> summary();

@@ -30,6 +30,13 @@ enum NotificationType {
   /// A new ticket or a member's reply, for holders of `support.manage` (F35).
   supportTicket('support_ticket'),
 
+  /// Something was reported, for holders of `moderation.manage` (F22 store additions); opens the console's case.
+  reportNew('report_new'),
+
+  /// A moderator closed the viewer's report (F22 store additions): a receipt in the center only, never pushed and
+  /// never configurable; it never says who acted or what was done to a user.
+  reportResolved('report_resolved'),
+
   /// A type this app version doesn't know yet: shown with generic text.
   unknown('');
 
@@ -54,13 +61,28 @@ enum NotificationType {
     articleReposted,
     announcement,
     supportTicket,
+    reportNew,
   ];
 
   /// Configurable types Settings lists only when the API sends their mode: announcements (an API before F23 has
-  /// none) and new tickets (only holders of `support.manage` get them, F35).
-  static const listedWhenSent = {announcement, supportTicket};
+  /// none), new tickets (only holders of `support.manage` get them, F35) and new reports (holders of
+  /// `moderation.manage`, F22 store additions).
+  static const listedWhenSent = {announcement, supportTicket, reportNew};
 
   bool get isConfigurable => configurable.contains(this);
+}
+
+/// `report_resolved` (F22 store additions): the content was dealt with ([actioned]) or breaks no guideline
+/// ([noViolation]).
+enum ReportOutcome {
+  actioned('actioned'),
+  noViolation('no_violation');
+
+  const ReportOutcome(this.wire);
+
+  final String wire;
+
+  static ReportOutcome? fromWire(Object? wire) => values.where((outcome) => outcome.wire == wire).firstOrNull;
 }
 
 /// `SecurityChange`: what a security alert is about (SPEC §9.5). [other] is a change this app version doesn't know.
@@ -156,6 +178,11 @@ class AppNotification extends Equatable {
     this.ticketNumber,
     this.subject,
     this.closed = false,
+    this.reportTargetType,
+    this.targetLabel,
+    this.reportCount,
+    this.systemReport = false,
+    this.reportOutcome,
   });
 
   final String id;
@@ -202,6 +229,20 @@ class AppNotification extends Equatable {
   /// `support_reply`: support closed the ticket.
   final bool closed;
 
+  /// `report_new` / `report_resolved` (F22 store additions): what was reported (`article` | `comment` | `user` |
+  /// `repost`) and its label (a title, a comment's start, `@username` or a caption).
+  final String? reportTargetType;
+  final String? targetLabel;
+
+  /// `report_new`: the reports in the entry so far.
+  final int? reportCount;
+
+  /// `report_new`: filed by the content filter (F37).
+  final bool systemReport;
+
+  /// `report_resolved`: how the report was closed.
+  final ReportOutcome? reportOutcome;
+
   /// The "and N others" of an aggregated row.
   int get otherActors => math.max(0, actorCount - 1);
 
@@ -226,6 +267,11 @@ class AppNotification extends Equatable {
         ticketNumber: ticketNumber,
         subject: subject,
         closed: closed,
+        reportTargetType: reportTargetType,
+        targetLabel: targetLabel,
+        reportCount: reportCount,
+        systemReport: systemReport,
+        reportOutcome: reportOutcome,
       );
 
   @override
@@ -250,5 +296,10 @@ class AppNotification extends Equatable {
         ticketNumber,
         subject,
         closed,
+        reportTargetType,
+        targetLabel,
+        reportCount,
+        systemReport,
+        reportOutcome,
       ];
 }

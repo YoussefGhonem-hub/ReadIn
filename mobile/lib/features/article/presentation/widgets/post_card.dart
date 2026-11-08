@@ -25,6 +25,7 @@ import '../../../follow/presentation/widgets/follow_button.dart';
 import '../../../glossary/presentation/widgets/glossary_sheet.dart';
 import '../../../media/domain/entities/media.dart';
 import '../../../moderation/presentation/cubit/moderation_action_cubit.dart';
+import '../../../moderation/presentation/widgets/reported_collapse.dart';
 import '../../../profile/presentation/profile_routes.dart';
 import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../../reactions/presentation/widgets/reaction_button.dart';
@@ -181,7 +182,7 @@ class _PostCardState extends State<PostCard> {
           final view = cards.of(article.id);
           final language = view.preview?.language ?? article.language;
           final colors = context.colors;
-          return Semantics(
+          final card = Semantics(
             container: true,
             explicitChildNodes: true,
             child: Material(
@@ -236,6 +237,8 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
           );
+          // F22 store additions: an article or repost the viewer reported folds to a line with "Show".
+          return ReportedCollapse(reported: cardReportedByMe(context, article), child: card);
         },
       );
 }

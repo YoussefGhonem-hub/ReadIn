@@ -48,6 +48,9 @@ abstract class RepostLabelModel with _$RepostLabelModel {
     required DateTime repostedAt,
     // `user`'s thoughts on it; missing, null or blank is none.
     String? caption,
+    // F22 store additions: the repost (a report target) and whether the viewer reported it.
+    String? repostId,
+    @Default(false) bool reportedByMe,
   }) = _RepostLabelModel;
 
   factory RepostLabelModel.fromJson(Map<String, dynamic> json) => _$RepostLabelModelFromJson(json);
@@ -57,6 +60,8 @@ abstract class RepostLabelModel with _$RepostLabelModel {
         othersCount: math.max(0, othersCount),
         repostedAt: repostedAt,
         caption: caption == null || caption!.trim().isEmpty ? null : caption,
+        repostId: repostId,
+        reportedByMe: reportedByMe,
       );
 }
 
@@ -137,6 +142,8 @@ abstract class ArticleCardModel with _$ArticleCardModel {
     @Default(0) int repostCount,
     @Default(false) bool isReposted,
     RepostLabelModel? repostedBy,
+    // F22 store additions: the viewer reported it (collapsed for them).
+    @Default(false) bool reportedByMe,
   }) = _ArticleCardModel;
 
   factory ArticleCardModel.fromJson(Map<String, dynamic> json) => _$ArticleCardModelFromJson(json);
@@ -173,6 +180,7 @@ abstract class ArticleCardModel with _$ArticleCardModel {
         repostCount: math.max(0, repostCount),
         isReposted: isReposted,
         repostedBy: repostedBy?.toEntity(),
+        reportedByMe: reportedByMe,
       );
 }
 
@@ -295,6 +303,9 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
     @Default(false) bool isReposted,
     // F23: featured on Explore (the "⋯" offers Feature / Unfeature with `articles.feature`).
     @Default(false) bool isFeatured,
+    // F22 store additions and F36: the viewer reported it; people they're blocked with (mentions as plain text).
+    @Default(false) bool reportedByMe,
+    @Default(<String>[]) List<String> unlinkedMentionIds,
   }) = _ArticleDetailsModel;
 
   factory ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
@@ -328,6 +339,7 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         isTopicMuted: isTopicMuted,
         repostCount: math.max(0, repostCount),
         isReposted: isReposted,
+        reportedByMe: reportedByMe,
       );
 
   ArticleDetails toEntity({bool offline = false}) => ArticleDetails(
@@ -346,5 +358,6 @@ abstract class ArticleDetailsModel with _$ArticleDetailsModel {
         moderation: moderation?.toEntity(),
         category: category?.toEntity(),
         isFeatured: isFeatured,
+        unlinkedMentionIds: unlinkedMentionIds,
       );
 }

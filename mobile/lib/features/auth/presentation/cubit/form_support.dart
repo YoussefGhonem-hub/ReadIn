@@ -14,6 +14,9 @@ abstract final class Fields {
   static const confirmPin = 'confirmPin';
   static const displayName = 'displayName';
   static const username = 'username';
+
+  /// The sign-up Terms checkbox (F37).
+  static const terms = 'acceptTerms';
 }
 
 /// Field errors (field → error code) plus an error for the whole form, from a failed call.

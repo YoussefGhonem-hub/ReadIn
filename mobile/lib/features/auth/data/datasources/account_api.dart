@@ -53,4 +53,8 @@ abstract class AccountApi {
   /// `200 SessionDto` for this device; every other session ends.
   @POST('/me/phone-sign-in')
   Future<SessionModel> addPhoneSignIn(@Body() AddPhoneSignInRequest body);
+
+  /// F37: the current Terms version, accepted now (idempotent) → the new `MeDto`.
+  @POST('/me/terms/accept')
+  Future<MeModel> acceptTerms();
 }

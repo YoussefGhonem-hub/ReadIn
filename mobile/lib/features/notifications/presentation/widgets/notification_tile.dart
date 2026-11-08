@@ -79,6 +79,11 @@ class NotificationTile extends StatelessWidget {
                         child: BidiText(detail, maxLines: 3, overflow: TextOverflow.ellipsis, style: secondary),
                       ),
                     ],
+                    // A report of the content filter (F22, F37): «رصده فلتر المحتوى».
+                    if (notificationSource(l10n, notification) case final source?) ...[
+                      const SizedBox(height: 2),
+                      Text(source, style: secondary),
+                    ],
                     if (notification.type == NotificationType.securityAlert) ...[
                       const SizedBox(height: 2),
                       Text(l10n.notifSecurityHint, style: secondary),
@@ -278,6 +283,8 @@ class _Leading extends StatelessWidget {
         NotificationType.announcement => (Icons.campaign_outlined, colors.calloutInfo, colors.calloutInfoAccent),
         NotificationType.supportReply => (Icons.support_agent_rounded, colors.calloutTip, colors.success),
         NotificationType.supportTicket => (Icons.confirmation_number_outlined, colors.primary, colors.onPrimary),
+        NotificationType.reportNew => (Icons.flag_rounded, colors.calloutDanger, colors.calloutDangerAccent),
+        NotificationType.reportResolved => (Icons.task_alt_rounded, colors.calloutTip, colors.success),
         NotificationType.unknown => (Icons.notifications_none_rounded, colors.surfaceVariant, colors.textSecondary),
       };
 }

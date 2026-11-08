@@ -39,6 +39,8 @@ class Comment extends Equatable {
     this.replies = const [],
     this.isAuthorMuted = false,
     this.isFollowingAuthor = false,
+    this.reportedByMe = false,
+    this.isUnavailable = false,
   });
 
   final String id;
@@ -89,6 +91,13 @@ class Comment extends Equatable {
   /// In lists: the first replies of a top-level comment, oldest first.
   final List<Comment> replies;
 
+  /// The viewer reported it (F22 store additions): collapsed for them with «عرض» / "Show"; its replies stay.
+  final bool reportedByMe;
+
+  /// By someone the viewer is blocked with (F36), kept as a placeholder because others replied: «هذا التعليق غير
+  /// متاح», no text, no author.
+  final bool isUnavailable;
+
   bool get isReply => parentId != null;
 
   /// Deleted, or hidden from this viewer: no text, no author, no actions.
@@ -130,6 +139,8 @@ class Comment extends Equatable {
         replies: replies ?? this.replies,
         isAuthorMuted: isAuthorMuted,
         isFollowingAuthor: isFollowingAuthor,
+        reportedByMe: reportedByMe,
+        isUnavailable: isUnavailable,
       );
 
   /// What a deleted top-level comment with replies becomes: a placeholder that keeps its thread.
@@ -168,6 +179,8 @@ class Comment extends Equatable {
         replies,
         isAuthorMuted,
         isFollowingAuthor,
+        reportedByMe,
+        isUnavailable,
       ];
 }
 

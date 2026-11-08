@@ -11,7 +11,8 @@ import '../../domain/usecases/auth_usecases.dart';
 enum SessionStatus { unknown, guest, authenticated }
 
 /// Screens a signed-in user must pass, in this order, before anything else (SPEC §9.2).
-enum AccountGate { changePassword, setRecoveryPin, completeProfile, onboarding }
+/// The account guards, in the SPEC §9.2 order; [acceptTerms] is F37's blocking terms screen.
+enum AccountGate { changePassword, setRecoveryPin, acceptTerms, completeProfile, onboarding }
 
 class SessionState extends Equatable {
   const SessionState({this.status = SessionStatus.unknown, this.me, this.failure});
@@ -30,6 +31,7 @@ class SessionState extends Equatable {
     if (!isAuthenticated || me == null) return null;
     if (me.mustChangePassword) return AccountGate.changePassword;
     if (me.mustSetRecoveryPin) return AccountGate.setRecoveryPin;
+    if (me.mustAcceptTerms) return AccountGate.acceptTerms;
     if (!me.isProfileComplete) return AccountGate.completeProfile;
     if (!me.onboardingCompleted) return AccountGate.onboarding;
     return null;

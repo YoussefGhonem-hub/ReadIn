@@ -392,9 +392,10 @@ void main() {
     test("a guest's menu offers Mute and Report although the API's canReport is false; a reader's follows canReport", () {
       final guestsView = comment('c1', canReport: false);
       // Mute the commenter (F28) comes right before Report.
-      expect(commentMenuActions(guestsView, guest: true), [CommentMenuAction.mute, CommentMenuAction.report]);
+      // Changed on purpose (F36): Block the commenter under Mute.
+      expect(commentMenuActions(guestsView, guest: true), [CommentMenuAction.mute, CommentMenuAction.block, CommentMenuAction.report]);
       expect(commentMenuActions(guestsView), isEmpty);
-      expect(commentMenuActions(comment('c1')), [CommentMenuAction.mute, CommentMenuAction.report]);
+      expect(commentMenuActions(comment('c1')), [CommentMenuAction.mute, CommentMenuAction.block, CommentMenuAction.report]);
       expect(commentMenuActions(comment('c1', author: null)), [CommentMenuAction.report], reason: 'a deleted account');
     });
 

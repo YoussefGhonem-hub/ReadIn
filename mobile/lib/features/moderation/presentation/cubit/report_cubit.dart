@@ -21,7 +21,8 @@ class ReportState extends Equatable {
   List<Object?> get props => [reason, sending, sent, failure];
 }
 
-/// The report sheet (F22): one reason and optional details for an article, a comment or a user.
+/// The report sheet (F22): one reason and optional details for an article, a comment, a user or a repost; with
+/// [send]'s `alsoBlock` the author is blocked in the same step (F36).
 @injectable
 class ReportCubit extends Cubit<ReportState> {
   ReportCubit(this._submit) : super(const ReportState());
@@ -32,11 +33,11 @@ class ReportCubit extends Cubit<ReportState> {
     if (!state.sending && !state.sent) emit(ReportState(reason: reason));
   }
 
-  Future<void> send(ModerationTargetRef target, {String? details}) async {
+  Future<void> send(ModerationTargetRef target, {String? details, bool alsoBlock = false}) async {
     final reason = state.reason;
     if (reason == null || !state.canSend) return;
     emit(ReportState(reason: reason, sending: true));
-    final result = await _submit(target, reason, details: details);
+    final result = await _submit(target, reason, details: details, alsoBlock: alsoBlock);
     if (isClosed) return;
     emit(ReportState(reason: reason, sent: result.isOk, failure: result.failureOrNull));
   }

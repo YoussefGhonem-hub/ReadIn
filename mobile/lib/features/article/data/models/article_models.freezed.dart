@@ -296,7 +296,8 @@ as String?,
 mixin _$RepostLabelModel {
 
  AuthorModel get user; int get othersCount; DateTime get repostedAt;// `user`'s thoughts on it; missing, null or blank is none.
- String? get caption;
+ String? get caption;// F22 store additions: the repost (a report target) and whether the viewer reported it.
+ String? get repostId; bool get reportedByMe;
 /// Create a copy of RepostLabelModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -309,16 +310,16 @@ $RepostLabelModelCopyWith<RepostLabelModel> get copyWith => _$RepostLabelModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RepostLabelModel&&(identical(other.user, user) || other.user == user)&&(identical(other.othersCount, othersCount) || other.othersCount == othersCount)&&(identical(other.repostedAt, repostedAt) || other.repostedAt == repostedAt)&&(identical(other.caption, caption) || other.caption == caption));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RepostLabelModel&&(identical(other.user, user) || other.user == user)&&(identical(other.othersCount, othersCount) || other.othersCount == othersCount)&&(identical(other.repostedAt, repostedAt) || other.repostedAt == repostedAt)&&(identical(other.caption, caption) || other.caption == caption)&&(identical(other.repostId, repostId) || other.repostId == repostId)&&(identical(other.reportedByMe, reportedByMe) || other.reportedByMe == reportedByMe));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,user,othersCount,repostedAt,caption);
+int get hashCode => Object.hash(runtimeType,user,othersCount,repostedAt,caption,repostId,reportedByMe);
 
 @override
 String toString() {
-  return 'RepostLabelModel(user: $user, othersCount: $othersCount, repostedAt: $repostedAt, caption: $caption)';
+  return 'RepostLabelModel(user: $user, othersCount: $othersCount, repostedAt: $repostedAt, caption: $caption, repostId: $repostId, reportedByMe: $reportedByMe)';
 }
 
 
@@ -329,7 +330,7 @@ abstract mixin class $RepostLabelModelCopyWith<$Res>  {
   factory $RepostLabelModelCopyWith(RepostLabelModel value, $Res Function(RepostLabelModel) _then) = _$RepostLabelModelCopyWithImpl;
 @useResult
 $Res call({
- AuthorModel user, int othersCount, DateTime repostedAt, String? caption
+ AuthorModel user, int othersCount, DateTime repostedAt, String? caption, String? repostId, bool reportedByMe
 });
 
 
@@ -346,13 +347,15 @@ class _$RepostLabelModelCopyWithImpl<$Res>
 
 /// Create a copy of RepostLabelModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? user = null,Object? othersCount = null,Object? repostedAt = null,Object? caption = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? user = null,Object? othersCount = null,Object? repostedAt = null,Object? caption = freezed,Object? repostId = freezed,Object? reportedByMe = null,}) {
   return _then(_self.copyWith(
 user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as AuthorModel,othersCount: null == othersCount ? _self.othersCount : othersCount // ignore: cast_nullable_to_non_nullable
 as int,repostedAt: null == repostedAt ? _self.repostedAt : repostedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,caption: freezed == caption ? _self.caption : caption // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,repostId: freezed == repostId ? _self.repostId : repostId // ignore: cast_nullable_to_non_nullable
+as String?,reportedByMe: null == reportedByMe ? _self.reportedByMe : reportedByMe // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of RepostLabelModel
@@ -446,10 +449,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthorModel user,  int othersCount,  DateTime repostedAt,  String? caption)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthorModel user,  int othersCount,  DateTime repostedAt,  String? caption,  String? repostId,  bool reportedByMe)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RepostLabelModel() when $default != null:
-return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption);case _:
+return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption,_that.repostId,_that.reportedByMe);case _:
   return orElse();
 
 }
@@ -467,10 +470,10 @@ return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthorModel user,  int othersCount,  DateTime repostedAt,  String? caption)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthorModel user,  int othersCount,  DateTime repostedAt,  String? caption,  String? repostId,  bool reportedByMe)  $default,) {final _that = this;
 switch (_that) {
 case _RepostLabelModel():
-return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption);case _:
+return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption,_that.repostId,_that.reportedByMe);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -487,10 +490,10 @@ return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthorModel user,  int othersCount,  DateTime repostedAt,  String? caption)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthorModel user,  int othersCount,  DateTime repostedAt,  String? caption,  String? repostId,  bool reportedByMe)?  $default,) {final _that = this;
 switch (_that) {
 case _RepostLabelModel() when $default != null:
-return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption);case _:
+return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption,_that.repostId,_that.reportedByMe);case _:
   return null;
 
 }
@@ -502,7 +505,7 @@ return $default(_that.user,_that.othersCount,_that.repostedAt,_that.caption);cas
 @JsonSerializable()
 
 class _RepostLabelModel extends RepostLabelModel {
-  const _RepostLabelModel({required this.user, this.othersCount = 0, required this.repostedAt, this.caption}): super._();
+  const _RepostLabelModel({required this.user, this.othersCount = 0, required this.repostedAt, this.caption, this.repostId, this.reportedByMe = false}): super._();
   factory _RepostLabelModel.fromJson(Map<String, dynamic> json) => _$RepostLabelModelFromJson(json);
 
 @override final  AuthorModel user;
@@ -510,6 +513,9 @@ class _RepostLabelModel extends RepostLabelModel {
 @override final  DateTime repostedAt;
 // `user`'s thoughts on it; missing, null or blank is none.
 @override final  String? caption;
+// F22 store additions: the repost (a report target) and whether the viewer reported it.
+@override final  String? repostId;
+@override@JsonKey() final  bool reportedByMe;
 
 /// Create a copy of RepostLabelModel
 /// with the given fields replaced by the non-null parameter values.
@@ -524,16 +530,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RepostLabelModel&&(identical(other.user, user) || other.user == user)&&(identical(other.othersCount, othersCount) || other.othersCount == othersCount)&&(identical(other.repostedAt, repostedAt) || other.repostedAt == repostedAt)&&(identical(other.caption, caption) || other.caption == caption));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RepostLabelModel&&(identical(other.user, user) || other.user == user)&&(identical(other.othersCount, othersCount) || other.othersCount == othersCount)&&(identical(other.repostedAt, repostedAt) || other.repostedAt == repostedAt)&&(identical(other.caption, caption) || other.caption == caption)&&(identical(other.repostId, repostId) || other.repostId == repostId)&&(identical(other.reportedByMe, reportedByMe) || other.reportedByMe == reportedByMe));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,user,othersCount,repostedAt,caption);
+int get hashCode => Object.hash(runtimeType,user,othersCount,repostedAt,caption,repostId,reportedByMe);
 
 @override
 String toString() {
-  return 'RepostLabelModel(user: $user, othersCount: $othersCount, repostedAt: $repostedAt, caption: $caption)';
+  return 'RepostLabelModel(user: $user, othersCount: $othersCount, repostedAt: $repostedAt, caption: $caption, repostId: $repostId, reportedByMe: $reportedByMe)';
 }
 
 
@@ -544,7 +550,7 @@ abstract mixin class _$RepostLabelModelCopyWith<$Res> implements $RepostLabelMod
   factory _$RepostLabelModelCopyWith(_RepostLabelModel value, $Res Function(_RepostLabelModel) _then) = __$RepostLabelModelCopyWithImpl;
 @override @useResult
 $Res call({
- AuthorModel user, int othersCount, DateTime repostedAt, String? caption
+ AuthorModel user, int othersCount, DateTime repostedAt, String? caption, String? repostId, bool reportedByMe
 });
 
 
@@ -561,13 +567,15 @@ class __$RepostLabelModelCopyWithImpl<$Res>
 
 /// Create a copy of RepostLabelModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? user = null,Object? othersCount = null,Object? repostedAt = null,Object? caption = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? user = null,Object? othersCount = null,Object? repostedAt = null,Object? caption = freezed,Object? repostId = freezed,Object? reportedByMe = null,}) {
   return _then(_RepostLabelModel(
 user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as AuthorModel,othersCount: null == othersCount ? _self.othersCount : othersCount // ignore: cast_nullable_to_non_nullable
 as int,repostedAt: null == repostedAt ? _self.repostedAt : repostedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,caption: freezed == caption ? _self.caption : caption // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,repostId: freezed == repostId ? _self.repostId : repostId // ignore: cast_nullable_to_non_nullable
+as String?,reportedByMe: null == reportedByMe ? _self.reportedByMe : reportedByMe // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -1139,7 +1147,8 @@ mixin _$ArticleCardModel {
 
  String get id; String get slug; String get language; String get title; String? get subtitle; String? get coverUrl; FieldRefModel get field; AuthorModel? get author; int get readingTimeMinutes; bool get isAiAssisted; String? get versionBadge; DateTime get publishedAt; int get reactionCount; int get commentCount; ArticleAttachmentsModel? get attachments; ReactionCountsModel? get reactions; int get saveCount; String? get myReaction; bool get isSaved; String? get excerpt; bool get hasMore; bool get isFollowingAuthor;@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> get tags; int get tagCount;// F28: the card's topic and the viewer's mutes.
  FieldRefModel? get topic; bool get isAuthorMuted; bool get isFieldMuted; bool get isTopicMuted;// F29: reposts, and the label on Following-feed cards a repost placed and on a profile's Reposts tab.
- int get repostCount; bool get isReposted; RepostLabelModel? get repostedBy;
+ int get repostCount; bool get isReposted; RepostLabelModel? get repostedBy;// F22 store additions: the viewer reported it (collapsed for them).
+ bool get reportedByMe;
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1152,16 +1161,16 @@ $ArticleCardModelCopyWith<ArticleCardModel> get copyWith => _$ArticleCardModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleCardModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.tagCount, tagCount) || other.tagCount == tagCount)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFieldMuted, isFieldMuted) || other.isFieldMuted == isFieldMuted)&&(identical(other.isTopicMuted, isTopicMuted) || other.isTopicMuted == isTopicMuted)&&(identical(other.repostCount, repostCount) || other.repostCount == repostCount)&&(identical(other.isReposted, isReposted) || other.isReposted == isReposted)&&(identical(other.repostedBy, repostedBy) || other.repostedBy == repostedBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleCardModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.tagCount, tagCount) || other.tagCount == tagCount)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFieldMuted, isFieldMuted) || other.isFieldMuted == isFieldMuted)&&(identical(other.isTopicMuted, isTopicMuted) || other.isTopicMuted == isTopicMuted)&&(identical(other.repostCount, repostCount) || other.repostCount == repostCount)&&(identical(other.isReposted, isReposted) || other.isReposted == isReposted)&&(identical(other.repostedBy, repostedBy) || other.repostedBy == repostedBy)&&(identical(other.reportedByMe, reportedByMe) || other.reportedByMe == reportedByMe));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,saveCount,myReaction,isSaved,excerpt,hasMore,isFollowingAuthor,const DeepCollectionEquality().hash(tags),tagCount,topic,isAuthorMuted,isFieldMuted,isTopicMuted,repostCount,isReposted,repostedBy]);
+int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,saveCount,myReaction,isSaved,excerpt,hasMore,isFollowingAuthor,const DeepCollectionEquality().hash(tags),tagCount,topic,isAuthorMuted,isFieldMuted,isTopicMuted,repostCount,isReposted,repostedBy,reportedByMe]);
 
 @override
 String toString() {
-  return 'ArticleCardModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, saveCount: $saveCount, myReaction: $myReaction, isSaved: $isSaved, excerpt: $excerpt, hasMore: $hasMore, isFollowingAuthor: $isFollowingAuthor, tags: $tags, tagCount: $tagCount, topic: $topic, isAuthorMuted: $isAuthorMuted, isFieldMuted: $isFieldMuted, isTopicMuted: $isTopicMuted, repostCount: $repostCount, isReposted: $isReposted, repostedBy: $repostedBy)';
+  return 'ArticleCardModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, saveCount: $saveCount, myReaction: $myReaction, isSaved: $isSaved, excerpt: $excerpt, hasMore: $hasMore, isFollowingAuthor: $isFollowingAuthor, tags: $tags, tagCount: $tagCount, topic: $topic, isAuthorMuted: $isAuthorMuted, isFieldMuted: $isFieldMuted, isTopicMuted: $isTopicMuted, repostCount: $repostCount, isReposted: $isReposted, repostedBy: $repostedBy, reportedByMe: $reportedByMe)';
 }
 
 
@@ -1172,7 +1181,7 @@ abstract mixin class $ArticleCardModelCopyWith<$Res>  {
   factory $ArticleCardModelCopyWith(ArticleCardModel value, $Res Function(ArticleCardModel) _then) = _$ArticleCardModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, int tagCount, FieldRefModel? topic, bool isAuthorMuted, bool isFieldMuted, bool isTopicMuted, int repostCount, bool isReposted, RepostLabelModel? repostedBy
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, int tagCount, FieldRefModel? topic, bool isAuthorMuted, bool isFieldMuted, bool isTopicMuted, int repostCount, bool isReposted, RepostLabelModel? repostedBy, bool reportedByMe
 });
 
 
@@ -1189,7 +1198,7 @@ class _$ArticleCardModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,Object? excerpt = freezed,Object? hasMore = null,Object? isFollowingAuthor = null,Object? tags = null,Object? tagCount = null,Object? topic = freezed,Object? isAuthorMuted = null,Object? isFieldMuted = null,Object? isTopicMuted = null,Object? repostCount = null,Object? isReposted = null,Object? repostedBy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,Object? excerpt = freezed,Object? hasMore = null,Object? isFollowingAuthor = null,Object? tags = null,Object? tagCount = null,Object? topic = freezed,Object? isAuthorMuted = null,Object? isFieldMuted = null,Object? isTopicMuted = null,Object? repostCount = null,Object? isReposted = null,Object? repostedBy = freezed,Object? reportedByMe = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -1222,7 +1231,8 @@ as bool,isTopicMuted: null == isTopicMuted ? _self.isTopicMuted : isTopicMuted /
 as bool,repostCount: null == repostCount ? _self.repostCount : repostCount // ignore: cast_nullable_to_non_nullable
 as int,isReposted: null == isReposted ? _self.isReposted : isReposted // ignore: cast_nullable_to_non_nullable
 as bool,repostedBy: freezed == repostedBy ? _self.repostedBy : repostedBy // ignore: cast_nullable_to_non_nullable
-as RepostLabelModel?,
+as RepostLabelModel?,reportedByMe: null == reportedByMe ? _self.reportedByMe : reportedByMe // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of ArticleCardModel
@@ -1376,10 +1386,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  int tagCount,  FieldRefModel? topic,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  RepostLabelModel? repostedBy)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  int tagCount,  FieldRefModel? topic,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  RepostLabelModel? repostedBy,  bool reportedByMe)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ArticleCardModel() when $default != null:
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount,_that.topic,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.repostedBy);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount,_that.topic,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.repostedBy,_that.reportedByMe);case _:
   return orElse();
 
 }
@@ -1397,10 +1407,10 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  int tagCount,  FieldRefModel? topic,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  RepostLabelModel? repostedBy)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  int tagCount,  FieldRefModel? topic,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  RepostLabelModel? repostedBy,  bool reportedByMe)  $default,) {final _that = this;
 switch (_that) {
 case _ArticleCardModel():
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount,_that.topic,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.repostedBy);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount,_that.topic,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.repostedBy,_that.reportedByMe);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1417,10 +1427,10 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  int tagCount,  FieldRefModel? topic,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  RepostLabelModel? repostedBy)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  int saveCount,  String? myReaction,  bool isSaved,  String? excerpt,  bool hasMore,  bool isFollowingAuthor, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  int tagCount,  FieldRefModel? topic,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  RepostLabelModel? repostedBy,  bool reportedByMe)?  $default,) {final _that = this;
 switch (_that) {
 case _ArticleCardModel() when $default != null:
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount,_that.topic,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.repostedBy);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.saveCount,_that.myReaction,_that.isSaved,_that.excerpt,_that.hasMore,_that.isFollowingAuthor,_that.tags,_that.tagCount,_that.topic,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.repostedBy,_that.reportedByMe);case _:
   return null;
 
 }
@@ -1432,7 +1442,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 @JsonSerializable()
 
 class _ArticleCardModel extends ArticleCardModel {
-  const _ArticleCardModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.saveCount = 0, this.myReaction, this.isSaved = false, this.excerpt, this.hasMore = false, this.isFollowingAuthor = false, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) final  List<TagRefModel> tags = const <TagRefModel>[], this.tagCount = 0, this.topic, this.isAuthorMuted = false, this.isFieldMuted = false, this.isTopicMuted = false, this.repostCount = 0, this.isReposted = false, this.repostedBy}): _tags = tags,super._();
+  const _ArticleCardModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.saveCount = 0, this.myReaction, this.isSaved = false, this.excerpt, this.hasMore = false, this.isFollowingAuthor = false, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) final  List<TagRefModel> tags = const <TagRefModel>[], this.tagCount = 0, this.topic, this.isAuthorMuted = false, this.isFieldMuted = false, this.isTopicMuted = false, this.repostCount = 0, this.isReposted = false, this.repostedBy, this.reportedByMe = false}): _tags = tags,super._();
   factory _ArticleCardModel.fromJson(Map<String, dynamic> json) => _$ArticleCardModelFromJson(json);
 
 @override final  String id;
@@ -1474,6 +1484,8 @@ class _ArticleCardModel extends ArticleCardModel {
 @override@JsonKey() final  int repostCount;
 @override@JsonKey() final  bool isReposted;
 @override final  RepostLabelModel? repostedBy;
+// F22 store additions: the viewer reported it (collapsed for them).
+@override@JsonKey() final  bool reportedByMe;
 
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
@@ -1488,16 +1500,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleCardModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.tagCount, tagCount) || other.tagCount == tagCount)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFieldMuted, isFieldMuted) || other.isFieldMuted == isFieldMuted)&&(identical(other.isTopicMuted, isTopicMuted) || other.isTopicMuted == isTopicMuted)&&(identical(other.repostCount, repostCount) || other.repostCount == repostCount)&&(identical(other.isReposted, isReposted) || other.isReposted == isReposted)&&(identical(other.repostedBy, repostedBy) || other.repostedBy == repostedBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleCardModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.tagCount, tagCount) || other.tagCount == tagCount)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFieldMuted, isFieldMuted) || other.isFieldMuted == isFieldMuted)&&(identical(other.isTopicMuted, isTopicMuted) || other.isTopicMuted == isTopicMuted)&&(identical(other.repostCount, repostCount) || other.repostCount == repostCount)&&(identical(other.isReposted, isReposted) || other.isReposted == isReposted)&&(identical(other.repostedBy, repostedBy) || other.repostedBy == repostedBy)&&(identical(other.reportedByMe, reportedByMe) || other.reportedByMe == reportedByMe));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,saveCount,myReaction,isSaved,excerpt,hasMore,isFollowingAuthor,const DeepCollectionEquality().hash(_tags),tagCount,topic,isAuthorMuted,isFieldMuted,isTopicMuted,repostCount,isReposted,repostedBy]);
+int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,saveCount,myReaction,isSaved,excerpt,hasMore,isFollowingAuthor,const DeepCollectionEquality().hash(_tags),tagCount,topic,isAuthorMuted,isFieldMuted,isTopicMuted,repostCount,isReposted,repostedBy,reportedByMe]);
 
 @override
 String toString() {
-  return 'ArticleCardModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, saveCount: $saveCount, myReaction: $myReaction, isSaved: $isSaved, excerpt: $excerpt, hasMore: $hasMore, isFollowingAuthor: $isFollowingAuthor, tags: $tags, tagCount: $tagCount, topic: $topic, isAuthorMuted: $isAuthorMuted, isFieldMuted: $isFieldMuted, isTopicMuted: $isTopicMuted, repostCount: $repostCount, isReposted: $isReposted, repostedBy: $repostedBy)';
+  return 'ArticleCardModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, saveCount: $saveCount, myReaction: $myReaction, isSaved: $isSaved, excerpt: $excerpt, hasMore: $hasMore, isFollowingAuthor: $isFollowingAuthor, tags: $tags, tagCount: $tagCount, topic: $topic, isAuthorMuted: $isAuthorMuted, isFieldMuted: $isFieldMuted, isTopicMuted: $isTopicMuted, repostCount: $repostCount, isReposted: $isReposted, repostedBy: $repostedBy, reportedByMe: $reportedByMe)';
 }
 
 
@@ -1508,7 +1520,7 @@ abstract mixin class _$ArticleCardModelCopyWith<$Res> implements $ArticleCardMod
   factory _$ArticleCardModelCopyWith(_ArticleCardModel value, $Res Function(_ArticleCardModel) _then) = __$ArticleCardModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, int tagCount, FieldRefModel? topic, bool isAuthorMuted, bool isFieldMuted, bool isTopicMuted, int repostCount, bool isReposted, RepostLabelModel? repostedBy
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, int saveCount, String? myReaction, bool isSaved, String? excerpt, bool hasMore, bool isFollowingAuthor,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, int tagCount, FieldRefModel? topic, bool isAuthorMuted, bool isFieldMuted, bool isTopicMuted, int repostCount, bool isReposted, RepostLabelModel? repostedBy, bool reportedByMe
 });
 
 
@@ -1525,7 +1537,7 @@ class __$ArticleCardModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleCardModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,Object? excerpt = freezed,Object? hasMore = null,Object? isFollowingAuthor = null,Object? tags = null,Object? tagCount = null,Object? topic = freezed,Object? isAuthorMuted = null,Object? isFieldMuted = null,Object? isTopicMuted = null,Object? repostCount = null,Object? isReposted = null,Object? repostedBy = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? saveCount = null,Object? myReaction = freezed,Object? isSaved = null,Object? excerpt = freezed,Object? hasMore = null,Object? isFollowingAuthor = null,Object? tags = null,Object? tagCount = null,Object? topic = freezed,Object? isAuthorMuted = null,Object? isFieldMuted = null,Object? isTopicMuted = null,Object? repostCount = null,Object? isReposted = null,Object? repostedBy = freezed,Object? reportedByMe = null,}) {
   return _then(_ArticleCardModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -1558,7 +1570,8 @@ as bool,isTopicMuted: null == isTopicMuted ? _self.isTopicMuted : isTopicMuted /
 as bool,repostCount: null == repostCount ? _self.repostCount : repostCount // ignore: cast_nullable_to_non_nullable
 as int,isReposted: null == isReposted ? _self.isReposted : isReposted // ignore: cast_nullable_to_non_nullable
 as bool,repostedBy: freezed == repostedBy ? _self.repostedBy : repostedBy // ignore: cast_nullable_to_non_nullable
-as RepostLabelModel?,
+as RepostLabelModel?,reportedByMe: null == reportedByMe ? _self.reportedByMe : reportedByMe // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -2996,7 +3009,8 @@ mixin _$ArticleDetailsModel {
  WriterCategoryRefModel? get category;// F28: the viewer's mutes ("انت كاتم الكاتب ده" and the "كتم المواضيع" sheet).
  bool get isAuthorMuted; bool get isFieldMuted; bool get isTopicMuted;// F29: the reader's Repost button.
  int get repostCount; bool get isReposted;// F23: featured on Explore (the "⋯" offers Feature / Unfeature with `articles.feature`).
- bool get isFeatured;
+ bool get isFeatured;// F22 store additions and F36: the viewer reported it; people they're blocked with (mentions as plain text).
+ bool get reportedByMe; List<String> get unlinkedMentionIds;
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3009,16 +3023,16 @@ $ArticleDetailsModelCopyWith<ArticleDetailsModel> get copyWith => _$ArticleDetai
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleDetailsModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&const DeepCollectionEquality().equals(other.availableLanguages, availableLanguages)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other.content, content)&&(identical(other.topic, topic) || other.topic == topic)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.sources, sources)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other.collectionIds, collectionIds)&&(identical(other.myProgress, myProgress) || other.myProgress == myProgress)&&(identical(other.moderation, moderation) || other.moderation == moderation)&&(identical(other.category, category) || other.category == category)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFieldMuted, isFieldMuted) || other.isFieldMuted == isFieldMuted)&&(identical(other.isTopicMuted, isTopicMuted) || other.isTopicMuted == isTopicMuted)&&(identical(other.repostCount, repostCount) || other.repostCount == repostCount)&&(identical(other.isReposted, isReposted) || other.isReposted == isReposted)&&(identical(other.isFeatured, isFeatured) || other.isFeatured == isFeatured));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleDetailsModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&const DeepCollectionEquality().equals(other.availableLanguages, availableLanguages)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other.content, content)&&(identical(other.topic, topic) || other.topic == topic)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.sources, sources)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other.collectionIds, collectionIds)&&(identical(other.myProgress, myProgress) || other.myProgress == myProgress)&&(identical(other.moderation, moderation) || other.moderation == moderation)&&(identical(other.category, category) || other.category == category)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFieldMuted, isFieldMuted) || other.isFieldMuted == isFieldMuted)&&(identical(other.isTopicMuted, isTopicMuted) || other.isTopicMuted == isTopicMuted)&&(identical(other.repostCount, repostCount) || other.repostCount == repostCount)&&(identical(other.isReposted, isReposted) || other.isReposted == isReposted)&&(identical(other.isFeatured, isFeatured) || other.isFeatured == isFeatured)&&(identical(other.reportedByMe, reportedByMe) || other.reportedByMe == reportedByMe)&&const DeepCollectionEquality().equals(other.unlinkedMentionIds, unlinkedMentionIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,myReaction,isSaved,const DeepCollectionEquality().hash(availableLanguages),summary,const DeepCollectionEquality().hash(content),topic,const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(sources),saveCount,readCount,isFollowingAuthor,const DeepCollectionEquality().hash(collectionIds),myProgress,moderation,category,isAuthorMuted,isFieldMuted,isTopicMuted,repostCount,isReposted,isFeatured]);
+int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,myReaction,isSaved,const DeepCollectionEquality().hash(availableLanguages),summary,const DeepCollectionEquality().hash(content),topic,const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(sources),saveCount,readCount,isFollowingAuthor,const DeepCollectionEquality().hash(collectionIds),myProgress,moderation,category,isAuthorMuted,isFieldMuted,isTopicMuted,repostCount,isReposted,isFeatured,reportedByMe,const DeepCollectionEquality().hash(unlinkedMentionIds)]);
 
 @override
 String toString() {
-  return 'ArticleDetailsModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, myReaction: $myReaction, isSaved: $isSaved, availableLanguages: $availableLanguages, summary: $summary, content: $content, topic: $topic, tags: $tags, sources: $sources, saveCount: $saveCount, readCount: $readCount, isFollowingAuthor: $isFollowingAuthor, collectionIds: $collectionIds, myProgress: $myProgress, moderation: $moderation, category: $category, isAuthorMuted: $isAuthorMuted, isFieldMuted: $isFieldMuted, isTopicMuted: $isTopicMuted, repostCount: $repostCount, isReposted: $isReposted, isFeatured: $isFeatured)';
+  return 'ArticleDetailsModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, myReaction: $myReaction, isSaved: $isSaved, availableLanguages: $availableLanguages, summary: $summary, content: $content, topic: $topic, tags: $tags, sources: $sources, saveCount: $saveCount, readCount: $readCount, isFollowingAuthor: $isFollowingAuthor, collectionIds: $collectionIds, myProgress: $myProgress, moderation: $moderation, category: $category, isAuthorMuted: $isAuthorMuted, isFieldMuted: $isFieldMuted, isTopicMuted: $isTopicMuted, repostCount: $repostCount, isReposted: $isReposted, isFeatured: $isFeatured, reportedByMe: $reportedByMe, unlinkedMentionIds: $unlinkedMentionIds)';
 }
 
 
@@ -3029,7 +3043,7 @@ abstract mixin class $ArticleDetailsModelCopyWith<$Res>  {
   factory $ArticleDetailsModelCopyWith(ArticleDetailsModel value, $Res Function(ArticleDetailsModel) _then) = _$ArticleDetailsModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, List<SourceModel> sources, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, MyProgressModel? myProgress, ArticleModerationModel? moderation, WriterCategoryRefModel? category, bool isAuthorMuted, bool isFieldMuted, bool isTopicMuted, int repostCount, bool isReposted, bool isFeatured
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, List<SourceModel> sources, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, MyProgressModel? myProgress, ArticleModerationModel? moderation, WriterCategoryRefModel? category, bool isAuthorMuted, bool isFieldMuted, bool isTopicMuted, int repostCount, bool isReposted, bool isFeatured, bool reportedByMe, List<String> unlinkedMentionIds
 });
 
 
@@ -3046,7 +3060,7 @@ class _$ArticleDetailsModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,Object? myProgress = freezed,Object? moderation = freezed,Object? category = freezed,Object? isAuthorMuted = null,Object? isFieldMuted = null,Object? isTopicMuted = null,Object? repostCount = null,Object? isReposted = null,Object? isFeatured = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,Object? myProgress = freezed,Object? moderation = freezed,Object? category = freezed,Object? isAuthorMuted = null,Object? isFieldMuted = null,Object? isTopicMuted = null,Object? repostCount = null,Object? isReposted = null,Object? isFeatured = null,Object? reportedByMe = null,Object? unlinkedMentionIds = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -3085,7 +3099,9 @@ as bool,isTopicMuted: null == isTopicMuted ? _self.isTopicMuted : isTopicMuted /
 as bool,repostCount: null == repostCount ? _self.repostCount : repostCount // ignore: cast_nullable_to_non_nullable
 as int,isReposted: null == isReposted ? _self.isReposted : isReposted // ignore: cast_nullable_to_non_nullable
 as bool,isFeatured: null == isFeatured ? _self.isFeatured : isFeatured // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,reportedByMe: null == reportedByMe ? _self.reportedByMe : reportedByMe // ignore: cast_nullable_to_non_nullable
+as bool,unlinkedMentionIds: null == unlinkedMentionIds ? _self.unlinkedMentionIds : unlinkedMentionIds // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 /// Create a copy of ArticleDetailsModel
@@ -3263,10 +3279,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation,  WriterCategoryRefModel? category,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  bool isFeatured)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation,  WriterCategoryRefModel? category,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  bool isFeatured,  bool reportedByMe,  List<String> unlinkedMentionIds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel() when $default != null:
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.myProgress,_that.moderation,_that.category,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.isFeatured);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.myProgress,_that.moderation,_that.category,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.isFeatured,_that.reportedByMe,_that.unlinkedMentionIds);case _:
   return orElse();
 
 }
@@ -3284,10 +3300,10 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation,  WriterCategoryRefModel? category,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  bool isFeatured)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation,  WriterCategoryRefModel? category,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  bool isFeatured,  bool reportedByMe,  List<String> unlinkedMentionIds)  $default,) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel():
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.myProgress,_that.moderation,_that.category,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.isFeatured);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.myProgress,_that.moderation,_that.category,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.isFeatured,_that.reportedByMe,_that.unlinkedMentionIds);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3304,10 +3320,10 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation,  WriterCategoryRefModel? category,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  bool isFeatured)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String slug,  String language,  String title,  String? subtitle,  String? coverUrl,  FieldRefModel field,  AuthorModel? author,  int readingTimeMinutes,  bool isAiAssisted,  String? versionBadge,  DateTime publishedAt,  int reactionCount,  int commentCount,  ArticleAttachmentsModel? attachments,  ReactionCountsModel? reactions,  String? myReaction,  bool isSaved,  List<String> availableLanguages,  String? summary,  Map<String, dynamic> content,  FieldRefModel? topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson)  List<TagRefModel> tags,  List<SourceModel> sources,  int saveCount,  int readCount,  bool isFollowingAuthor,  List<String> collectionIds,  MyProgressModel? myProgress,  ArticleModerationModel? moderation,  WriterCategoryRefModel? category,  bool isAuthorMuted,  bool isFieldMuted,  bool isTopicMuted,  int repostCount,  bool isReposted,  bool isFeatured,  bool reportedByMe,  List<String> unlinkedMentionIds)?  $default,) {final _that = this;
 switch (_that) {
 case _ArticleDetailsModel() when $default != null:
-return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.myProgress,_that.moderation,_that.category,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.isFeatured);case _:
+return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_that.coverUrl,_that.field,_that.author,_that.readingTimeMinutes,_that.isAiAssisted,_that.versionBadge,_that.publishedAt,_that.reactionCount,_that.commentCount,_that.attachments,_that.reactions,_that.myReaction,_that.isSaved,_that.availableLanguages,_that.summary,_that.content,_that.topic,_that.tags,_that.sources,_that.saveCount,_that.readCount,_that.isFollowingAuthor,_that.collectionIds,_that.myProgress,_that.moderation,_that.category,_that.isAuthorMuted,_that.isFieldMuted,_that.isTopicMuted,_that.repostCount,_that.isReposted,_that.isFeatured,_that.reportedByMe,_that.unlinkedMentionIds);case _:
   return null;
 
 }
@@ -3319,7 +3335,7 @@ return $default(_that.id,_that.slug,_that.language,_that.title,_that.subtitle,_t
 @JsonSerializable()
 
 class _ArticleDetailsModel extends ArticleDetailsModel {
-  const _ArticleDetailsModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.myReaction, this.isSaved = false, final  List<String> availableLanguages = const <String>[], this.summary, final  Map<String, dynamic> content = const <String, dynamic>{}, this.topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) final  List<TagRefModel> tags = const <TagRefModel>[], final  List<SourceModel> sources = const <SourceModel>[], this.saveCount = 0, this.readCount = 0, this.isFollowingAuthor = false, final  List<String> collectionIds = const <String>[], this.myProgress, this.moderation, this.category, this.isAuthorMuted = false, this.isFieldMuted = false, this.isTopicMuted = false, this.repostCount = 0, this.isReposted = false, this.isFeatured = false}): _availableLanguages = availableLanguages,_content = content,_tags = tags,_sources = sources,_collectionIds = collectionIds,super._();
+  const _ArticleDetailsModel({required this.id, required this.slug, required this.language, required this.title, this.subtitle, this.coverUrl, required this.field, required this.author, this.readingTimeMinutes = 1, this.isAiAssisted = false, this.versionBadge, required this.publishedAt, this.reactionCount = 0, this.commentCount = 0, this.attachments, this.reactions, this.myReaction, this.isSaved = false, final  List<String> availableLanguages = const <String>[], this.summary, final  Map<String, dynamic> content = const <String, dynamic>{}, this.topic, @JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) final  List<TagRefModel> tags = const <TagRefModel>[], final  List<SourceModel> sources = const <SourceModel>[], this.saveCount = 0, this.readCount = 0, this.isFollowingAuthor = false, final  List<String> collectionIds = const <String>[], this.myProgress, this.moderation, this.category, this.isAuthorMuted = false, this.isFieldMuted = false, this.isTopicMuted = false, this.repostCount = 0, this.isReposted = false, this.isFeatured = false, this.reportedByMe = false, final  List<String> unlinkedMentionIds = const <String>[]}): _availableLanguages = availableLanguages,_content = content,_tags = tags,_sources = sources,_collectionIds = collectionIds,_unlinkedMentionIds = unlinkedMentionIds,super._();
   factory _ArticleDetailsModel.fromJson(Map<String, dynamic> json) => _$ArticleDetailsModelFromJson(json);
 
 @override final  String id;
@@ -3393,6 +3409,15 @@ class _ArticleDetailsModel extends ArticleDetailsModel {
 @override@JsonKey() final  bool isReposted;
 // F23: featured on Explore (the "⋯" offers Feature / Unfeature with `articles.feature`).
 @override@JsonKey() final  bool isFeatured;
+// F22 store additions and F36: the viewer reported it; people they're blocked with (mentions as plain text).
+@override@JsonKey() final  bool reportedByMe;
+ final  List<String> _unlinkedMentionIds;
+@override@JsonKey() List<String> get unlinkedMentionIds {
+  if (_unlinkedMentionIds is EqualUnmodifiableListView) return _unlinkedMentionIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_unlinkedMentionIds);
+}
+
 
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
@@ -3407,16 +3432,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleDetailsModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&const DeepCollectionEquality().equals(other._availableLanguages, _availableLanguages)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other._content, _content)&&(identical(other.topic, topic) || other.topic == topic)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._sources, _sources)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other._collectionIds, _collectionIds)&&(identical(other.myProgress, myProgress) || other.myProgress == myProgress)&&(identical(other.moderation, moderation) || other.moderation == moderation)&&(identical(other.category, category) || other.category == category)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFieldMuted, isFieldMuted) || other.isFieldMuted == isFieldMuted)&&(identical(other.isTopicMuted, isTopicMuted) || other.isTopicMuted == isTopicMuted)&&(identical(other.repostCount, repostCount) || other.repostCount == repostCount)&&(identical(other.isReposted, isReposted) || other.isReposted == isReposted)&&(identical(other.isFeatured, isFeatured) || other.isFeatured == isFeatured));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleDetailsModel&&(identical(other.id, id) || other.id == id)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.language, language) || other.language == language)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.coverUrl, coverUrl) || other.coverUrl == coverUrl)&&(identical(other.field, field) || other.field == field)&&(identical(other.author, author) || other.author == author)&&(identical(other.readingTimeMinutes, readingTimeMinutes) || other.readingTimeMinutes == readingTimeMinutes)&&(identical(other.isAiAssisted, isAiAssisted) || other.isAiAssisted == isAiAssisted)&&(identical(other.versionBadge, versionBadge) || other.versionBadge == versionBadge)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.reactionCount, reactionCount) || other.reactionCount == reactionCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.attachments, attachments) || other.attachments == attachments)&&(identical(other.reactions, reactions) || other.reactions == reactions)&&(identical(other.myReaction, myReaction) || other.myReaction == myReaction)&&(identical(other.isSaved, isSaved) || other.isSaved == isSaved)&&const DeepCollectionEquality().equals(other._availableLanguages, _availableLanguages)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other._content, _content)&&(identical(other.topic, topic) || other.topic == topic)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._sources, _sources)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.readCount, readCount) || other.readCount == readCount)&&(identical(other.isFollowingAuthor, isFollowingAuthor) || other.isFollowingAuthor == isFollowingAuthor)&&const DeepCollectionEquality().equals(other._collectionIds, _collectionIds)&&(identical(other.myProgress, myProgress) || other.myProgress == myProgress)&&(identical(other.moderation, moderation) || other.moderation == moderation)&&(identical(other.category, category) || other.category == category)&&(identical(other.isAuthorMuted, isAuthorMuted) || other.isAuthorMuted == isAuthorMuted)&&(identical(other.isFieldMuted, isFieldMuted) || other.isFieldMuted == isFieldMuted)&&(identical(other.isTopicMuted, isTopicMuted) || other.isTopicMuted == isTopicMuted)&&(identical(other.repostCount, repostCount) || other.repostCount == repostCount)&&(identical(other.isReposted, isReposted) || other.isReposted == isReposted)&&(identical(other.isFeatured, isFeatured) || other.isFeatured == isFeatured)&&(identical(other.reportedByMe, reportedByMe) || other.reportedByMe == reportedByMe)&&const DeepCollectionEquality().equals(other._unlinkedMentionIds, _unlinkedMentionIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,myReaction,isSaved,const DeepCollectionEquality().hash(_availableLanguages),summary,const DeepCollectionEquality().hash(_content),topic,const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_sources),saveCount,readCount,isFollowingAuthor,const DeepCollectionEquality().hash(_collectionIds),myProgress,moderation,category,isAuthorMuted,isFieldMuted,isTopicMuted,repostCount,isReposted,isFeatured]);
+int get hashCode => Object.hashAll([runtimeType,id,slug,language,title,subtitle,coverUrl,field,author,readingTimeMinutes,isAiAssisted,versionBadge,publishedAt,reactionCount,commentCount,attachments,reactions,myReaction,isSaved,const DeepCollectionEquality().hash(_availableLanguages),summary,const DeepCollectionEquality().hash(_content),topic,const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_sources),saveCount,readCount,isFollowingAuthor,const DeepCollectionEquality().hash(_collectionIds),myProgress,moderation,category,isAuthorMuted,isFieldMuted,isTopicMuted,repostCount,isReposted,isFeatured,reportedByMe,const DeepCollectionEquality().hash(_unlinkedMentionIds)]);
 
 @override
 String toString() {
-  return 'ArticleDetailsModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, myReaction: $myReaction, isSaved: $isSaved, availableLanguages: $availableLanguages, summary: $summary, content: $content, topic: $topic, tags: $tags, sources: $sources, saveCount: $saveCount, readCount: $readCount, isFollowingAuthor: $isFollowingAuthor, collectionIds: $collectionIds, myProgress: $myProgress, moderation: $moderation, category: $category, isAuthorMuted: $isAuthorMuted, isFieldMuted: $isFieldMuted, isTopicMuted: $isTopicMuted, repostCount: $repostCount, isReposted: $isReposted, isFeatured: $isFeatured)';
+  return 'ArticleDetailsModel(id: $id, slug: $slug, language: $language, title: $title, subtitle: $subtitle, coverUrl: $coverUrl, field: $field, author: $author, readingTimeMinutes: $readingTimeMinutes, isAiAssisted: $isAiAssisted, versionBadge: $versionBadge, publishedAt: $publishedAt, reactionCount: $reactionCount, commentCount: $commentCount, attachments: $attachments, reactions: $reactions, myReaction: $myReaction, isSaved: $isSaved, availableLanguages: $availableLanguages, summary: $summary, content: $content, topic: $topic, tags: $tags, sources: $sources, saveCount: $saveCount, readCount: $readCount, isFollowingAuthor: $isFollowingAuthor, collectionIds: $collectionIds, myProgress: $myProgress, moderation: $moderation, category: $category, isAuthorMuted: $isAuthorMuted, isFieldMuted: $isFieldMuted, isTopicMuted: $isTopicMuted, repostCount: $repostCount, isReposted: $isReposted, isFeatured: $isFeatured, reportedByMe: $reportedByMe, unlinkedMentionIds: $unlinkedMentionIds)';
 }
 
 
@@ -3427,7 +3452,7 @@ abstract mixin class _$ArticleDetailsModelCopyWith<$Res> implements $ArticleDeta
   factory _$ArticleDetailsModelCopyWith(_ArticleDetailsModel value, $Res Function(_ArticleDetailsModel) _then) = __$ArticleDetailsModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, List<SourceModel> sources, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, MyProgressModel? myProgress, ArticleModerationModel? moderation, WriterCategoryRefModel? category, bool isAuthorMuted, bool isFieldMuted, bool isTopicMuted, int repostCount, bool isReposted, bool isFeatured
+ String id, String slug, String language, String title, String? subtitle, String? coverUrl, FieldRefModel field, AuthorModel? author, int readingTimeMinutes, bool isAiAssisted, String? versionBadge, DateTime publishedAt, int reactionCount, int commentCount, ArticleAttachmentsModel? attachments, ReactionCountsModel? reactions, String? myReaction, bool isSaved, List<String> availableLanguages, String? summary, Map<String, dynamic> content, FieldRefModel? topic,@JsonKey(fromJson: tagRefsFromJson, toJson: tagRefsToJson) List<TagRefModel> tags, List<SourceModel> sources, int saveCount, int readCount, bool isFollowingAuthor, List<String> collectionIds, MyProgressModel? myProgress, ArticleModerationModel? moderation, WriterCategoryRefModel? category, bool isAuthorMuted, bool isFieldMuted, bool isTopicMuted, int repostCount, bool isReposted, bool isFeatured, bool reportedByMe, List<String> unlinkedMentionIds
 });
 
 
@@ -3444,7 +3469,7 @@ class __$ArticleDetailsModelCopyWithImpl<$Res>
 
 /// Create a copy of ArticleDetailsModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,Object? myProgress = freezed,Object? moderation = freezed,Object? category = freezed,Object? isAuthorMuted = null,Object? isFieldMuted = null,Object? isTopicMuted = null,Object? repostCount = null,Object? isReposted = null,Object? isFeatured = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? slug = null,Object? language = null,Object? title = null,Object? subtitle = freezed,Object? coverUrl = freezed,Object? field = null,Object? author = freezed,Object? readingTimeMinutes = null,Object? isAiAssisted = null,Object? versionBadge = freezed,Object? publishedAt = null,Object? reactionCount = null,Object? commentCount = null,Object? attachments = freezed,Object? reactions = freezed,Object? myReaction = freezed,Object? isSaved = null,Object? availableLanguages = null,Object? summary = freezed,Object? content = null,Object? topic = freezed,Object? tags = null,Object? sources = null,Object? saveCount = null,Object? readCount = null,Object? isFollowingAuthor = null,Object? collectionIds = null,Object? myProgress = freezed,Object? moderation = freezed,Object? category = freezed,Object? isAuthorMuted = null,Object? isFieldMuted = null,Object? isTopicMuted = null,Object? repostCount = null,Object? isReposted = null,Object? isFeatured = null,Object? reportedByMe = null,Object? unlinkedMentionIds = null,}) {
   return _then(_ArticleDetailsModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -3483,7 +3508,9 @@ as bool,isTopicMuted: null == isTopicMuted ? _self.isTopicMuted : isTopicMuted /
 as bool,repostCount: null == repostCount ? _self.repostCount : repostCount // ignore: cast_nullable_to_non_nullable
 as int,isReposted: null == isReposted ? _self.isReposted : isReposted // ignore: cast_nullable_to_non_nullable
 as bool,isFeatured: null == isFeatured ? _self.isFeatured : isFeatured // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,reportedByMe: null == reportedByMe ? _self.reportedByMe : reportedByMe // ignore: cast_nullable_to_non_nullable
+as bool,unlinkedMentionIds: null == unlinkedMentionIds ? _self._unlinkedMentionIds : unlinkedMentionIds // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

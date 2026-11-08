@@ -100,6 +100,9 @@ void main() {
       final privacy = await pumpSettings(tester, variant);
       await tester.scrollUntilVisible(find.text(l10n.profileWhoCanMentionNobody), 200);
       await tester.pumpAndSettle();
+      // The privacy block has more rows since F36 (Blocked accounts): bring the choice fully into view.
+      await tester.ensureVisible(find.text(l10n.profileWhoCanMentionFollowing));
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text(l10n.profileWhoCanMentionFollowing));
       await tester.pump();

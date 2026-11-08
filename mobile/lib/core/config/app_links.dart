@@ -27,6 +27,11 @@ abstract final class AppLinks {
   static String article(String slug, {required String language}) =>
       '$webOrigin/${language == 'en' ? 'en' : 'ar'}/a/${Uri.encodeComponent(slug)}';
 
+  /// A legal page of the web (F37: `/terms`, `/community-guidelines`, `/privacy`, bilingual), in [language]
+  /// (`ar` | `en`).
+  static String legalPage(String path, {required String language}) =>
+      '$webOrigin${path.startsWith('/') ? path : '/$path'}?lang=${language == 'en' ? 'en' : 'ar'}';
+
   /// The public "Delete your account" page (`public/delete-account.html` on Firebase Hosting): what is deleted, and
   /// the email route. "Delete by email instead" opens it in [language] (`ar` | `en`).
   static String accountDeletion(String language) =>

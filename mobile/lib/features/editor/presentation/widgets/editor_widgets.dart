@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/bidi/bidi.dart';
+import '../../../../core/errors/failure.dart';
 import '../../../../core/l10n/failure_messages.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
@@ -174,6 +175,10 @@ enum ProblemTarget { settings, title, content, block }
 
 ProblemTarget problemTarget(DraftProblem problem) => switch (problem.code) {
       DraftProblemCodes.titleLength => ProblemTarget.title,
+      // F37: the content filter's refusal, where it is.
+      FailureCodes.contentObjectionable when problem.blockId != null => ProblemTarget.block,
+      FailureCodes.contentObjectionable when problem.field == 'title' || problem.field == 'subtitle' => ProblemTarget.title,
+      FailureCodes.contentObjectionable when problem.field == 'content' => ProblemTarget.content,
       DraftProblemCodes.imageAltRequired when problem.blockId != null => ProblemTarget.block,
       DraftProblemCodes.contentEmpty || DraftProblemCodes.contentInvalid || DraftProblemCodes.imageAltRequired =>
         ProblemTarget.content,

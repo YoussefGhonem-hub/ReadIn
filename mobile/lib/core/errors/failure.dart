@@ -289,6 +289,21 @@ abstract final class FailureCodes {
   static const supportTooManyAttachments = 'support.too_many_attachments';
   static const supportCategoryInvalid = 'support.category_invalid';
 
+  // Block (F36), terms and the content filter (F37), report additions (F22 store requirements).
+  static const blockSelf = 'block.self';
+  static const blockLimit = 'block.limit';
+
+  /// To the blocker only, with the person ([BlockedFailure]); the blocked person gets `404`s, as if it were deleted.
+  static const blockBlocked = 'block.blocked';
+  static const repostNotFound = 'repost.not_found';
+  static const authTermsRequired = 'auth.terms_required';
+
+  /// A word of the content filter's block list, in the field [ObjectionableContentFailure.field] names.
+  static const contentObjectionable = 'content.objectionable';
+
+  /// 5 new articles in 24 hours or 60 comments an hour ([ContentLimitFailure]).
+  static const contentTooMany = 'content.too_many';
+
   // Client-side
   static const requestCancelled = 'request.cancelled';
   static const networkOffline = 'network.offline';
@@ -299,4 +314,66 @@ abstract final class FailureCodes {
 
   /// Deleting needs a fresh Apple sign in, which this device can't show (Android): the iPhone app, or email.
   static const authAppleUnavailable = 'auth.apple_unavailable';
+}
+
+/// `403 block.blocked` (F36): the viewer blocked this person, whose article, comment or profile they opened. The
+/// screen shows "isn't available" with «إلغاء الحظر» / "Unblock" for [blockedUserId].
+class BlockedFailure extends Failure {
+  const BlockedFailure({
+    required this.blockedUserId,
+    required this.blockedUsername,
+    this.blockedDisplayName = '',
+    super.message,
+  }) : super(FailureCodes.blockBlocked, statusCode: 403);
+
+  final String blockedUserId;
+  final String blockedUsername;
+  final String blockedDisplayName;
+
+  @override
+  List<Object?> get props => [...super.props, blockedUserId, blockedUsername, blockedDisplayName];
+}
+
+/// `422 content.objectionable` (F37): the text in [field] (e.g. `displayName`, `body`, `caption`, `subject`, `title`,
+/// `content`) breaks the Community Guidelines; for an article also its [language] and, in the text, the [blockId].
+/// The matched words are never sent. [fieldErrors] holds `{field: [content.objectionable]}`, so forms show it on
+/// that input.
+class ObjectionableContentFailure extends Failure {
+  ObjectionableContentFailure({required this.field, this.language, this.blockId, super.message})
+      : super(
+          FailureCodes.contentObjectionable,
+          statusCode: 422,
+          fieldErrors: {
+            if (field.isNotEmpty) field: const [FailureCodes.contentObjectionable],
+          },
+        );
+
+  final String field;
+  final String? language;
+  final String? blockId;
+
+  @override
+  List<Object?> get props => [...super.props, field, language, blockId];
+}
+
+/// Which spam limit of the content filter was reached (F37).
+enum ContentLimitKind {
+  articlesPerDay('articles_per_day'),
+  commentsPerHour('comments_per_hour');
+
+  const ContentLimitKind(this.wire);
+
+  final String wire;
+
+  static ContentLimitKind? fromWire(Object? wire) => values.where((kind) => kind.wire == wire).firstOrNull;
+}
+
+/// `429 content.too_many` (F37): 5 new articles in 24 hours, or 60 comments and replies an hour ([limit]).
+class ContentLimitFailure extends Failure {
+  const ContentLimitFailure({this.limit, super.message}) : super(FailureCodes.contentTooMany, statusCode: 429);
+
+  final ContentLimitKind? limit;
+
+  @override
+  List<Object?> get props => [...super.props, limit];
 }

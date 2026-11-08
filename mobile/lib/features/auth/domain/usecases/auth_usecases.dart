@@ -138,6 +138,16 @@ class CompleteProfile {
       );
 }
 
+/// "I agree" on the blocking terms screen (F37); the new `MeDto` moves the guards on.
+@injectable
+class AcceptTerms {
+  const AcceptTerms(this._accounts);
+
+  final AccountRepository _accounts;
+
+  Future<Result<Me>> call() => _accounts.acceptTerms();
+}
+
 @injectable
 class SetRecoveryPin {
   const SetRecoveryPin(this._accounts);

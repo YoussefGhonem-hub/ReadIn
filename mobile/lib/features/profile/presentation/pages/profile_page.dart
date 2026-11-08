@@ -15,6 +15,9 @@ import '../../../../shared/widgets/state_views.dart';
 import '../../../admin/presentation/widgets/admin_profile_banner.dart';
 import '../../../article/presentation/cubit/post_cards_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../blocks/domain/entities/blocks.dart';
+import '../../../blocks/presentation/cubit/blocks_cubit.dart';
+import '../../../blocks/presentation/widgets/blocked_notice.dart';
 import '../../../categories/presentation/widgets/categories_tab.dart';
 import '../../../highlights/presentation/cubit/my_highlights_cubit.dart';
 import '../../../highlights/presentation/widgets/saved_highlights_list.dart';
@@ -160,6 +163,10 @@ class ProfileView extends StatelessWidget {
       builder: (context, state) {
         final profile = state.profile;
         final own = isTab || (profile?.isMe ?? false);
+        // Blocked from this page's "⋯" (F36): the profile goes away at once.
+        final blockedHere = !own &&
+            profile != null &&
+            context.select((BlocksCubit? c) => c?.state.isBlocked(profile.id) ?? false);
         return Scaffold(
           appBar: AppBar(
             title: isTab || profile == null
@@ -179,7 +186,7 @@ class ProfileView extends StatelessWidget {
             actions: [
               if (own)
                 const _SettingsButton()
-              else if (profile != null && state.status == ProfileStatus.ready)
+              else if (profile != null && state.status == ProfileStatus.ready && !blockedHere)
                 // After an admin action (suspend, unsuspend, remove the badge, F23) the profile is read again.
                 ProfileMenuButton(profile: profile, onChanged: () => unawaited(context.read<ProfileCubit>().refresh())),
             ],
@@ -194,6 +201,17 @@ class ProfileView extends StatelessWidget {
                     PageBlock(margin: EdgeInsets.only(top: PageBlock.gap), padding: PageBlock.gutters, child: ArticleListSkeleton()),
                   ],
                 ),
+              ),
+            // F36: someone the viewer blocked: «هذا الحساب غير متاح» with Unblock.
+            ProfileStatus.failure when BlockedNotice.personOf(state.failure) != null => BlockedNotice(
+                person: BlockedNotice.personOf(state.failure)!,
+                account: true,
+                onUnblocked: () => unawaited(context.read<ProfileCubit>().refresh()),
+              ),
+            ProfileStatus.ready when blockedHere => BlockedNotice(
+                person: BlockedPerson(id: profile.id, username: profile.username, displayName: profile.displayName),
+                account: true,
+                onUnblocked: () => unawaited(context.read<ProfileCubit>().refresh()),
               ),
             ProfileStatus.failure when state.notFound => PageBlock(
                 margin: const EdgeInsets.only(top: PageBlock.gap),

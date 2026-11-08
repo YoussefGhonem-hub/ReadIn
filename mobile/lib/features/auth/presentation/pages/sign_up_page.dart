@@ -9,6 +9,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/inputs/password_field.dart';
 import '../../../../shared/widgets/inputs/phone_field.dart';
 import '../../../../shared/widgets/inputs/pin_input.dart';
+import '../../../legal/presentation/widgets/legal_links.dart';
 import '../cubit/form_support.dart';
 import '../cubit/sign_up_cubit.dart';
 import '../widgets/auth_widgets.dart';
@@ -39,6 +40,9 @@ class _SignUpViewState extends State<SignUpView> {
   final _pin = TextEditingController();
   final _confirmPin = TextEditingController();
 
+  /// «أوافق على شروط الاستخدام وقواعد المجتمع» (F37): sign up goes on only once it is ticked.
+  bool _agreed = false;
+
   @override
   void dispose() {
     for (final c in [_password, _confirmPassword, _pin, _confirmPin]) {
@@ -55,6 +59,7 @@ class _SignUpViewState extends State<SignUpView> {
         phoneEmpty: _phone.isEmpty,
         password: _password.text,
         confirmPassword: _confirmPassword.text,
+        acceptedTerms: _agreed,
       );
 
   void _submitPin() => _cubit.submitPin(pin: _pin.text, confirmPin: _confirmPin.text);
@@ -148,7 +153,14 @@ class _SignUpViewState extends State<SignUpView> {
           ],
         ),
       ),
-      const SizedBox(height: ReadInSpace.s5),
+      const SizedBox(height: ReadInSpace.s3),
+      TermsAgreement(
+        value: _agreed,
+        enabled: !busy,
+        errorText: _agreed ? null : errorText(context, state.errors[Fields.terms]),
+        onChanged: (on) => setState(() => _agreed = on),
+      ),
+      const SizedBox(height: ReadInSpace.s4),
       SubmitButton(label: l10n.next, submitting: busy, onPressed: _submitCredentials),
     ];
   }

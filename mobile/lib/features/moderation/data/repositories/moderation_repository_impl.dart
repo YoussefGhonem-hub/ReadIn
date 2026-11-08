@@ -15,8 +15,15 @@ class ModerationRepositoryImpl implements ModerationRepository {
   final ModerationApi _api;
 
   @override
-  Future<Result<void>> report(ModerationTargetRef target, ReportReason reason, {String? details}) => guardApi(
-        () => _api.report(ReportRequest(targetType: target.type.name, targetId: target.id, reason: reason.name, details: details)),
+  Future<Result<void>> report(ModerationTargetRef target, ReportReason reason, {String? details, bool alsoBlock = false}) =>
+      guardApi(
+        () => _api.report(ReportRequest(
+          targetType: target.type.name,
+          targetId: target.id,
+          reason: reason.name,
+          details: details,
+          alsoBlock: alsoBlock ? true : null,
+        )),
       );
 
   @override

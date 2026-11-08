@@ -92,6 +92,9 @@ class _RDocTextState extends State<RDocText> {
             decorationColor: colors.primary,
           );
           if (scope.onTermTap != null) recognizer = _tap(() => scope.onTermTap!(node));
+        // F36: someone the reader is blocked with stays plain text.
+        case RMention() when scope.unlinkedMentionIds.contains(node.userId):
+          break;
         case RMention():
           style = TextStyle(color: colors.primary, fontWeight: FontWeight.w600);
           if (scope.onMentionTap != null) recognizer = _tap(() => scope.onMentionTap!(node));

@@ -656,6 +656,24 @@ class ArticleEditorCubit extends Cubit<ArticleEditorState> {
             checksFresh: true,
             notice: failure,
           ));
+        } else if (failure is ObjectionableContentFailure) {
+          // F37: the content filter refused a text; the checks point at the title or the block, like a publish check.
+          emit(state.copyWith(
+            busy: EditorBusy.none,
+            checks: DraftChecks(
+              readingTime: state.checks.readingTime,
+              problems: [
+                DraftProblem(
+                  FailureCodes.contentObjectionable,
+                  language: failure.language,
+                  blockId: failure.blockId,
+                  field: failure.field,
+                ),
+              ],
+            ),
+            checksFresh: true,
+            notice: failure,
+          ));
         } else if (failure.code == FailureCodes.articleDraftConflict) {
           emit(state.copyWith(busy: EditorBusy.none));
           await _enterConflict();

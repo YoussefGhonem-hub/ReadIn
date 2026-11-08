@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/bidi/bidi.dart';
 import '../../../../core/l10n/l10n_x.dart';
 import '../../../../core/theme/theme_x.dart';
 import '../../../../core/theme/tokens.g.dart';
@@ -13,8 +14,11 @@ import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
 import '../../../article/domain/entities/article.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../blocks/presentation/cubit/blocks_cubit.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
+import '../../../moderation/domain/entities/moderation.dart';
+import '../../../moderation/presentation/cubit/reported_content_cubit.dart';
 import '../../../mutes/presentation/cubit/mutes_cubit.dart';
 import '../../../profile/presentation/profile_routes.dart';
 import '../../../profile/presentation/widgets/profile_link.dart';
@@ -23,7 +27,7 @@ import '../cubit/comments_cubit.dart';
 import 'comment_body.dart';
 
 /// The overflow menu of a comment, from its `can*` flags. [mute] mutes or unmutes the commenter (F28).
-enum CommentMenuAction { edit, delete, pin, unpin, mute, report, hide, unhide, moderatorDelete }
+enum CommentMenuAction { edit, delete, pin, unpin, mute, block, report, hide, unhide, moderatorDelete }
 
 /// What a comment's buttons do. The comments sheet wires them to [CommentsCubit]; goldens pass no-ops.
 class CommentCallbacks {
@@ -55,6 +59,8 @@ List<CommentMenuAction> commentMenuActions(Comment comment, {bool guest = false}
       if (comment.canDelete) CommentMenuAction.delete,
       if (comment.canPin && !comment.isReply) comment.isPinned ? CommentMenuAction.unpin : CommentMenuAction.pin,
       if ((comment.canReport || guest) && comment.author != null && !comment.isPlaceholder) CommentMenuAction.mute,
+      // Block the commenter (F36), under Mute.
+      if ((comment.canReport || guest) && comment.author != null && !comment.isPlaceholder) CommentMenuAction.block,
       if (comment.canReport || guest) CommentMenuAction.report,
       if (comment.canModerate) comment.isHidden ? CommentMenuAction.unhide : CommentMenuAction.hide,
       if (comment.canModerate && !comment.canDelete) CommentMenuAction.moderatorDelete,
@@ -259,11 +265,20 @@ class CommentTile extends StatelessWidget {
           authorId != null &&
           (c?.state.isUserMuted(authorId, fallback: comment.isAuthorMuted) ?? comment.isAuthorMuted),
     );
-    final Widget content = comment.isPlaceholder
-        ? _Placeholder(comment: comment, avatarSize: size)
+    // F36: by someone the viewer blocked in this session (a server placeholder, `isUnavailable`, reads the same).
+    final blocked = authorId != null && context.select((BlocksCubit? c) => c?.state.isBlocked(authorId) ?? false);
+    // F22 store additions: reported by the viewer, now or before (`reportedByMe`): collapsed, with "Show".
+    final reported = !comment.isPlaceholder &&
+        context.select(
+          (ReportedContentCubit? c) =>
+              c?.isReported(ModerationTargetType.comment, comment.id, fallback: comment.reportedByMe) ?? comment.reportedByMe,
+        );
+    final Widget content = comment.isPlaceholder || blocked
+        ? _Placeholder(comment: comment, avatarSize: size, unavailable: blocked || comment.isUnavailable)
         : _MutedCollapse(
             key: ValueKey('muted-${comment.id}'),
-            muted: muted,
+            muted: muted || reported,
+            reported: reported,
             avatarSize: size,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,37 +404,41 @@ TextStyle? _placeholderStyle(BuildContext context) =>
     context.textTheme.bodySmall?.copyWith(color: context.colors.textSecondary, fontStyle: FontStyle.italic);
 
 class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.comment, required this.avatarSize});
+  const _Placeholder({required this.comment, required this.avatarSize, this.unavailable = false});
 
   final Comment comment;
   final double avatarSize;
 
+  /// Someone the viewer is blocked with (F36): «هذا التعليق غير متاح».
+  final bool unavailable;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final (icon, text) = unavailable
+        ? (Icons.block_rounded, l10n.blockCommentUnavailable)
+        : comment.isDeleted
+            ? (Icons.delete_outline_rounded, l10n.commentsDeletedPlaceholder)
+            : (Icons.visibility_off_outlined, l10n.commentsHiddenPlaceholder);
     return Row(
       children: [
-        _IconAvatar(icon: comment.isDeleted ? Icons.delete_outline_rounded : Icons.visibility_off_outlined, size: avatarSize),
+        _IconAvatar(icon: icon, size: avatarSize),
         const SizedBox(width: CommentTile.avatarGap),
-        Expanded(
-          child: _Bubble(
-            child: Text(
-              comment.isDeleted ? l10n.commentsDeletedPlaceholder : l10n.commentsHiddenPlaceholder,
-              style: _placeholderStyle(context),
-            ),
-          ),
-        ),
+        Expanded(child: _Bubble(child: Text(text, style: _placeholderStyle(context)))),
       ],
     );
   }
 }
 
 /// A comment by a writer the viewer muted (F28): "تعليق من شخص كتمته" with "عرض", which shows it here only (the
-/// body is already loaded). Counts and replies don't change. Shows [child] as usual once it isn't muted.
+/// body is already loaded). Counts and replies don't change. Shows [child] as usual once it isn't muted. A comment
+/// the viewer reported ([reported], F22 store additions) collapses the same way: «أبلغت عن هذا المحتوى، ولن يظهر لك
+/// بعد الآن».
 class _MutedCollapse extends StatefulWidget {
-  const _MutedCollapse({super.key, required this.muted, required this.avatarSize, required this.child});
+  const _MutedCollapse({super.key, required this.muted, required this.avatarSize, required this.child, this.reported = false});
 
   final bool muted;
+  final bool reported;
   final double avatarSize;
   final Widget child;
 
@@ -436,16 +455,21 @@ class _MutedCollapseState extends State<_MutedCollapse> {
     final l10n = context.l10n;
     return Row(
       children: [
-        _IconAvatar(icon: Icons.volume_off_outlined, size: widget.avatarSize),
+        _IconAvatar(icon: widget.reported ? Icons.flag_outlined : Icons.volume_off_outlined, size: widget.avatarSize),
         const SizedBox(width: CommentTile.avatarGap),
         Expanded(
           child: _Bubble(
             child: Row(
               children: [
-                Expanded(child: Text(l10n.muteCommentCollapsed, style: _placeholderStyle(context))),
+                Expanded(
+                  child: Text(
+                    widget.reported ? l10n.reportedHidden : l10n.muteCommentCollapsed,
+                    style: _placeholderStyle(context),
+                  ),
+                ),
                 const SizedBox(width: ReadInSpace.s1),
                 TextButton(
-                  key: const ValueKey('muted-comment-show'),
+                  key: ValueKey(widget.reported ? 'reported-comment-show' : 'muted-comment-show'),
                   onPressed: () => setState(() => _shown = true),
                   style: TextButton.styleFrom(
                     minimumSize: const Size(0, 24),
@@ -711,7 +735,11 @@ class _Menu extends StatelessWidget {
         icon: Icon(Icons.more_horiz_rounded, color: colors.textSecondary, size: 18),
         onSelected: (action) => callbacks.onMenu(comment, action),
         itemBuilder: (context) => [
-          for (final action in menu) PopupMenuItem(value: action, child: _MenuLabel(action: action, authorMuted: authorMuted)),
+          for (final action in menu)
+            PopupMenuItem(
+              value: action,
+              child: _MenuLabel(action: action, authorMuted: authorMuted, username: comment.author?.username ?? ''),
+            ),
         ],
       ),
     );
@@ -798,9 +826,12 @@ TextStyle? _actionStyle(BuildContext context) =>
     context.textTheme.labelMedium?.copyWith(color: context.colors.textSecondary, fontWeight: FontWeight.w600);
 
 class _MenuLabel extends StatelessWidget {
-  const _MenuLabel({required this.action, this.authorMuted = false});
+  const _MenuLabel({required this.action, this.authorMuted = false, this.username = ''});
 
   final CommentMenuAction action;
+
+  /// The commenter, for «حظر @username».
+  final String username;
 
   /// The viewer muted the commenter: "Unmute commenter".
   final bool authorMuted;
@@ -817,6 +848,7 @@ class _MenuLabel extends StatelessWidget {
       CommentMenuAction.mute => authorMuted
           ? (Icons.volume_up_outlined, l10n.muteMenuUnmuteCommenter)
           : (Icons.volume_off_outlined, l10n.muteMenuCommenter),
+      CommentMenuAction.block => (Icons.block_outlined, l10n.blockMenuUser(Bidi.ltrIsolate('@$username'))),
       CommentMenuAction.report => (Icons.flag_outlined, l10n.commentsReport),
       CommentMenuAction.hide => (Icons.visibility_off_outlined, l10n.commentsModHide),
       CommentMenuAction.unhide => (Icons.visibility_outlined, l10n.commentsModUnhide),

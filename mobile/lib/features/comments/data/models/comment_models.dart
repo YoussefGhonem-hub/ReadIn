@@ -58,6 +58,10 @@ abstract class CommentModel with _$CommentModel {
     @Default(false) bool isAuthorMuted,
     // F11: the viewer follows the author (the row's "متابعة"; seeds the follow store).
     @Default(false) bool isFollowingAuthor,
+    // F22 store additions: the viewer reported it (collapsed for them, with "Show").
+    @Default(false) bool reportedByMe,
+    // F36: someone the viewer is blocked with, kept as a placeholder for others' replies (body and author null).
+    @Default(false) bool isUnavailable,
   }) = _CommentModel;
 
   factory CommentModel.fromJson(Map<String, dynamic> json) => _$CommentModelFromJson(json);
@@ -86,6 +90,8 @@ abstract class CommentModel with _$CommentModel {
         replies: [for (final r in replies ?? const <CommentModel>[]) r.toEntity()],
         isAuthorMuted: isAuthorMuted,
         isFollowingAuthor: isFollowingAuthor,
+        reportedByMe: reportedByMe,
+        isUnavailable: isUnavailable,
       );
 }
 

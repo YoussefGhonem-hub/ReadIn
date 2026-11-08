@@ -10,7 +10,9 @@ import '../../../admin/presentation/widgets/admin_entry.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/cubit/linked_accounts_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../blocks/presentation/pages/blocked_page.dart';
 import '../../../highlights/presentation/widgets/show_highlights_switch.dart';
+import '../../../legal/presentation/widgets/legal_links.dart';
 import '../../../moderation/presentation/cubit/moderation_summary_cubit.dart';
 import '../../../moderation/presentation/widgets/moderation_entry_tile.dart';
 import '../../../mutes/presentation/pages/muted_page.dart';
@@ -138,7 +140,12 @@ class _SettingsViewState extends State<SettingsView> {
           if (session.isAuthenticated)
             SettingsBlock(
               title: l10n.profilePrivacy,
-              rows: [const PublicReadingStatsSwitch(), choice(const WhoCanMentionSelector())],
+              rows: [
+                const PublicReadingStatsSwitch(),
+                choice(const WhoCanMentionSelector()),
+                // Settings → Blocked accounts (F18, F36).
+                const _BlockedEntry(),
+              ],
             ),
           if (session.isAuthenticated) SettingsBlock(title: l10n.settingsWriting, rows: const [VerificationEntryTile()]),
           // A moderator without the console (a staff role, later) keeps the queue here (F22).
@@ -160,8 +167,29 @@ class _SettingsViewState extends State<SettingsView> {
                 ),
             ],
           ),
+          // Settings → Legal (F18, F37): the Terms of Use, the Community Guidelines and the Privacy Policy, for everyone.
+          SettingsBlock(title: l10n.legalTitle, rows: const [LegalLinkTiles()]),
         ],
       ),
+    );
+  }
+}
+
+/// Settings → Blocked accounts (F18, F36).
+class _BlockedEntry extends StatelessWidget {
+  const _BlockedEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      key: const ValueKey('settings-blocked'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.block_outlined),
+      title: Text(l10n.blockedTitle),
+      subtitle: Text(l10n.blockedSettingsHint),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => context.push(BlockedPage.path),
     );
   }
 }

@@ -126,12 +126,14 @@ void main() {
       expect(notificationTypeLabel(ar, NotificationType.mention), 'الإشارات');
       expect(notificationTypeHint(en, NotificationType.mention), 'When someone mentions you in a comment or an article');
       expect(notificationTypeHint(ar, NotificationType.mention), 'عندما يشير إليك أحد في تعليق أو مقال');
-      // Reposts (F29) say what they cover too, as the contract asks; so do announcements and new tickets (F23, F35).
+      // Reposts (F29) say what they cover too, as the contract asks; so do announcements, new tickets and new reports
+      // (F23, F35, F22 store additions).
       const withHints = {
         NotificationType.mention,
         NotificationType.articleReposted,
         NotificationType.announcement,
         NotificationType.supportTicket,
+        NotificationType.reportNew,
       };
       for (final type in NotificationType.configurable.where((type) => !withHints.contains(type))) {
         expect(notificationTypeHint(en, type), isNull, reason: '${type.wire}: the name says it all');
@@ -152,8 +154,9 @@ void main() {
 
       expect(NotificationType.fromWire('article_reposted'), NotificationType.articleReposted);
       expect(NotificationType.articleReposted.isConfigurable, isTrue);
-      // Changed on purpose: F23 adds announcements and F35 new tickets (support.manage only), 11 in all.
-      expect(NotificationType.configurable, hasLength(11));
+      // Changed on purpose: F23 adds announcements, F35 new tickets (support.manage only) and the F22 store additions
+      // new reports (moderation.manage only), 12 in all.
+      expect(NotificationType.configurable, hasLength(12));
       expect(notificationTypeLabel(en, NotificationType.articleReposted), 'Reposts');
       expect(notificationTypeLabel(ar, NotificationType.articleReposted), 'إعادة النشر');
       expect(notificationTypeHint(en, NotificationType.articleReposted), 'When someone reposts your article');

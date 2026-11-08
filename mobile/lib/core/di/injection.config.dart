@@ -115,6 +115,15 @@ import '../../features/auth/presentation/cubit/linked_accounts_cubit.dart'
 import '../../features/auth/presentation/cubit/sign_in_cubit.dart' as _i329;
 import '../../features/auth/presentation/cubit/sign_up_cubit.dart' as _i102;
 import '../../features/auth/presentation/session/session_cubit.dart' as _i371;
+import '../../features/blocks/data/datasources/blocks_api.dart' as _i825;
+import '../../features/blocks/data/repositories/blocks_repository_impl.dart'
+    as _i1054;
+import '../../features/blocks/domain/repositories/blocks_repository.dart'
+    as _i466;
+import '../../features/blocks/domain/usecases/block_usecases.dart' as _i102;
+import '../../features/blocks/presentation/cubit/blocked_list_cubit.dart'
+    as _i1031;
+import '../../features/blocks/presentation/cubit/blocks_cubit.dart' as _i925;
 import '../../features/categories/data/datasources/categories_api.dart'
     as _i494;
 import '../../features/categories/data/repositories/categories_repository_impl.dart'
@@ -203,6 +212,13 @@ import '../../features/home/domain/usecases/feed_usecases.dart' as _i251;
 import '../../features/home/presentation/cubit/feed_cubit.dart' as _i646;
 import '../../features/home/presentation/cubit/home_cubit.dart' as _i9;
 import '../../features/home/presentation/cubit/live_feed_cubit.dart' as _i136;
+import '../../features/legal/data/datasources/legal_api.dart' as _i303;
+import '../../features/legal/data/repositories/legal_repository_impl.dart'
+    as _i438;
+import '../../features/legal/domain/repositories/legal_repository.dart' as _i50;
+import '../../features/legal/domain/usecases/legal_usecases.dart' as _i22;
+import '../../features/legal/presentation/cubit/accept_terms_cubit.dart'
+    as _i1043;
 import '../../features/media/data/datasources/device_media_picker.dart'
     as _i434;
 import '../../features/media/data/datasources/document_file_data_source.dart'
@@ -238,6 +254,8 @@ import '../../features/moderation/presentation/cubit/moderation_summary_cubit.da
     as _i789;
 import '../../features/moderation/presentation/cubit/report_cubit.dart'
     as _i956;
+import '../../features/moderation/presentation/cubit/reported_content_cubit.dart'
+    as _i109;
 import '../../features/mutes/data/datasources/mutes_api.dart' as _i240;
 import '../../features/mutes/data/repositories/mutes_repository_impl.dart'
     as _i791;
@@ -583,6 +601,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1031.AdminApi>(() => _i1031.AdminApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i462.ArticleApi>(() => _i462.ArticleApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i506.AccountApi>(() => _i506.AccountApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i825.BlocksApi>(() => _i825.BlocksApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i494.CategoriesApi>(
       () => _i494.CategoriesApi(gh<_i361.Dio>()),
     );
@@ -601,6 +620,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i188.HighlightsApi(gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i931.FeedApi>(() => _i931.FeedApi(gh<_i361.Dio>()));
+    gh.lazySingleton<_i303.LegalApi>(() => _i303.LegalApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i757.MediaApi>(() => _i757.MediaApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i320.ModerationApi>(
       () => _i320.ModerationApi(gh<_i361.Dio>()),
@@ -761,6 +781,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i185.InterestsRepository>(
       () => _i1032.InterestsRepositoryImpl(gh<_i227.InterestsApi>()),
     );
+    gh.lazySingleton<_i50.LegalRepository>(
+      () => _i438.LegalRepositoryImpl(gh<_i303.LegalApi>()),
+    );
     gh.factory<_i724.SetSaved>(
       () => _i724.SetSaved(gh<_i105.SavedRepository>()),
     );
@@ -829,6 +852,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i130.AcknowledgeModerationNotice>(
       () => _i130.AcknowledgeModerationNotice(gh<_i106.ModerationRepository>()),
     );
+    gh.lazySingleton<_i466.BlocksRepository>(
+      () => _i1054.BlocksRepositoryImpl(gh<_i825.BlocksApi>()),
+    );
+    gh.factory<_i22.GetLegal>(() => _i22.GetLegal(gh<_i50.LegalRepository>()));
     gh.factory<_i248.GetExplore>(
       () => _i248.GetExplore(gh<_i471.ExploreRepository>()),
     );
@@ -1146,6 +1173,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i136.LiveFeedCubit>(
       () => _i136.LiveFeedCubit(gh<_i854.RealtimeService>()),
+    );
+    gh.factory<_i102.SetUserBlocked>(
+      () => _i102.SetUserBlocked(gh<_i466.BlocksRepository>()),
+    );
+    gh.factory<_i102.GetBlockedUsers>(
+      () => _i102.GetBlockedUsers(gh<_i466.BlocksRepository>()),
     );
     gh.factory<_i78.QuoteCardCubit>(
       () => _i78.QuoteCardCubit(
@@ -1617,6 +1650,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i46.CompleteProfile>(
       () => _i46.CompleteProfile(gh<_i787.AccountRepository>()),
     );
+    gh.factory<_i46.AcceptTerms>(
+      () => _i46.AcceptTerms(gh<_i787.AccountRepository>()),
+    );
     gh.factory<_i46.SetRecoveryPin>(
       () => _i46.SetRecoveryPin(gh<_i787.AccountRepository>()),
     );
@@ -1715,6 +1751,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i46.SignOutEverywhere>(),
       ),
     );
+    gh.factory<_i1043.AcceptTermsCubit>(
+      () =>
+          _i1043.AcceptTermsCubit(gh<_i22.GetLegal>(), gh<_i46.AcceptTerms>()),
+    );
     gh.factory<_i1021.SetRecoveryPinCubit>(
       () => _i1021.SetRecoveryPinCubit(
         gh<_i46.GetAuthConfig>(),
@@ -1773,6 +1813,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i371.SessionCubit>(),
       ),
     );
+    gh.lazySingleton<_i925.BlocksCubit>(
+      () => _i925.BlocksCubit(
+        gh<_i102.SetUserBlocked>(),
+        gh<_i371.SessionCubit>(),
+        gh<_i509.FollowsCubit>(),
+      ),
+    );
     gh.lazySingleton<_i564.ModerationNoticesCubit>(
       () => _i564.ModerationNoticesCubit(
         gh<_i130.GetModerationNotices>(),
@@ -1796,6 +1843,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i539.CommentDrafts>(
       () => _i539.CommentDrafts(gh<_i371.SessionCubit>()),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i109.ReportedContentCubit>(
+      () => _i109.ReportedContentCubit(gh<_i371.SessionCubit>()),
     );
     gh.factory<_i280.InterestsCubit>(
       () => _i280.InterestsCubit(
@@ -1825,6 +1875,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i864.MarkNotificationRead>(),
         gh<_i864.MarkAllNotificationsRead>(),
         gh<_i1054.UnreadBadgeCubit>(),
+      ),
+    );
+    gh.factory<_i1031.BlockedListCubit>(
+      () => _i1031.BlockedListCubit(
+        gh<_i102.GetBlockedUsers>(),
+        gh<_i925.BlocksCubit>(),
       ),
     );
     return this;

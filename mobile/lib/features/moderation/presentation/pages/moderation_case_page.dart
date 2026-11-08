@@ -134,7 +134,8 @@ class _TargetCard extends StatelessWidget {
     if (target.isDeleted) return null;
     return switch (item.targetType) {
       ModerationTargetType.article => target.slug == null ? null : '/a/${Uri.encodeComponent(target.slug!)}',
-      ModerationTargetType.comment => target.articleSlug == null ? null : '/a/${Uri.encodeComponent(target.articleSlug!)}',
+      ModerationTargetType.comment || ModerationTargetType.repost =>
+        target.articleSlug == null ? null : '/a/${Uri.encodeComponent(target.articleSlug!)}',
       ModerationTargetType.user => target.author == null ? null : ProfileRoutes.of(target.author!.username),
     };
   }
@@ -169,6 +170,7 @@ class _TargetCard extends StatelessWidget {
               ),
               ReportStatusTag(status: item.status),
               TargetStateTag(state: item.target.state),
+              if (item.urgent && item.status == ReportStatus.open) const UrgentTag(),
             ],
           ),
           const SizedBox(height: ReadInSpace.s3),
@@ -178,6 +180,13 @@ class _TargetCard extends StatelessWidget {
             l10n.moderationReportCount(item.reportCount),
             style: context.textTheme.labelLarge?.copyWith(color: colors.error, fontWeight: FontWeight.w700),
           ),
+          if (item.status == ReportStatus.open && item.ageHours != null) ...[
+            const SizedBox(height: ReadInSpace.s1),
+            Text(
+              l10n.moderationCaseAge(item.ageHours!),
+              style: context.textTheme.bodySmall?.copyWith(color: item.urgent ? colors.error : colors.textSecondary),
+            ),
+          ],
           if (item.reasons.isNotEmpty) ...[
             const SizedBox(height: ReadInSpace.s2),
             ReasonCounts(reasons: item.reasons),
@@ -442,11 +451,13 @@ class _CaseActions extends StatelessWidget {
     final type = item.targetType;
     final ref = item.ref;
     final canSuspend = context.select((SessionCubit c) => c.state.me?.canSuspend ?? false);
+    final isRepost = type == ModerationTargetType.repost;
     final busy = context.select((ModerationActionCubit c) => c.state != null);
     final author = target.author;
     final isUser = type == ModerationTargetType.user;
     // Warn or suspend the author of content (closing the content's reports too), or the user itself.
-    final person = target.isDeleted && isUser ? null : author;
+    // A repost case only deletes or dismisses; the reposter is warned or suspended from their own case.
+    final person = isRepost || (target.isDeleted && isUser) ? null : author;
     final resolve = isUser ? null : ref;
 
     Future<void> act(Future<bool> Function() action) async {
@@ -464,7 +475,10 @@ class _CaseActions extends StatelessWidget {
         );
 
     final buttons = [
-      if (!isUser && !target.isDeleted)
+      // A repost (F22 store additions): delete it, as if its owner had undone it.
+      if (isRepost && !target.isDeleted)
+        button(Icons.delete_outline_rounded, l10n.moderationDeleteRepost, () => ModerationFlows.deleteRepost(context, ref.id), destructive: true),
+      if (!isUser && !isRepost && !target.isDeleted)
         target.isHidden
             ? button(
                 Icons.visibility_outlined,

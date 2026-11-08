@@ -7,6 +7,7 @@ import '../../../../core/theme/tokens.g.dart';
 import '../../../../shared/widgets/app_network_image.dart';
 import '../../../../shared/widgets/badges.dart';
 import '../../../../shared/widgets/bidi_text.dart';
+import '../../../moderation/presentation/widgets/reported_collapse.dart';
 import '../../../profile/presentation/widgets/profile_link.dart';
 import '../../domain/entities/article.dart';
 import 'article_attachments_view.dart';
@@ -48,7 +49,9 @@ class ArticleCardTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ReportedCollapse(reported: cardReportedByMe(context, article), child: _row(context));
+
+  Widget _row(BuildContext context) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(ReadInRadius.md),

@@ -48,6 +48,9 @@ abstract class MeModel with _$MeModel {
     @Default(InterestsModel()) InterestsModel interests,
     // F14; older APIs leave it out (reading stats stay private).
     @Default(PrivacyModel()) PrivacyModel privacy,
+    // F37: the accepted Terms version, and whether a newer one must be accepted (older APIs: none asked).
+    String? termsVersion,
+    @Default(false) bool mustAcceptTerms,
   }) = _MeModel;
 
   factory MeModel.fromJson(Map<String, dynamic> json) => _$MeModelFromJson(json);
@@ -82,6 +85,8 @@ abstract class MeModel with _$MeModel {
         interestTopicIds: interests.topicIds,
         publicReadingStats: privacy.publicReadingStats,
         whoCanMention: MentionPolicy.fromWire(privacy.whoCanMention),
+        termsVersion: termsVersion,
+        mustAcceptTerms: mustAcceptTerms,
       );
 }
 
@@ -215,6 +220,8 @@ class RegisterRequest {
         'recoveryPin': recoveryPin,
         'uiLanguage': ?uiLanguage,
         'timeZone': ?timeZone,
+        // F37: sign up only goes on once the Terms checkbox is ticked (`400 auth.terms_required` otherwise).
+        'acceptTerms': true,
       };
 }
 
@@ -359,6 +366,8 @@ class ExternalSignInRequest {
         'timeZone': ?timeZone,
         if (linkPhoneNumber != null) 'link': {'phoneNumber': linkPhoneNumber, 'password': linkPassword},
         if (createAccount) 'createAccount': true,
+        // F37: a new Google / Apple account is created only once its Terms checkbox is ticked.
+        if (createAccount) 'acceptTerms': true,
       };
 }
 

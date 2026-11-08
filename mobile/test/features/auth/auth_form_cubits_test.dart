@@ -105,8 +105,8 @@ void main() {
       'step 1 checks the number, the password rules and the confirmation',
       build: build,
       act: (cubit) => cubit
-        ..submitCredentials(phoneE164: null, phoneEmpty: false, password: 'short', confirmPassword: 'other')
-        ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'x1001234567', confirmPassword: 'x1001234567'),
+        ..submitCredentials(phoneE164: null, phoneEmpty: false, password: 'short', confirmPassword: 'other', acceptedTerms: true)
+        ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'x1001234567', confirmPassword: 'x1001234567', acceptedTerms: true),
       expect: () => const [
         SignUpState(errors: {
           Fields.phone: CredentialCodes.phoneInvalid,
@@ -118,10 +118,25 @@ void main() {
     );
 
     blocTest<SignUpCubit, SignUpState>(
+      'step 1 needs the Terms checkbox ticked (F37); changed on purpose: every other step-1 call ticks it',
+      build: build,
+      act: (cubit) => cubit.submitCredentials(
+        phoneE164: phone,
+        phoneEmpty: false,
+        password: 'reading4life',
+        confirmPassword: 'reading4life',
+        acceptedTerms: false,
+      ),
+      expect: () => const [
+        SignUpState(errors: {Fields.terms: FailureCodes.authTermsRequired}),
+      ],
+    );
+
+    blocTest<SignUpCubit, SignUpState>(
       'step 2 accepts any digits (1234 included), live and on submit, and rejects mismatched PINs',
       build: build,
       act: (cubit) => cubit
-        ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life')
+        ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life', acceptedTerms: true)
         ..pinChanged('12')
         ..pinChanged('12a4')
         ..pinChanged('1234')
@@ -143,7 +158,7 @@ void main() {
       build: build,
       act: (cubit) async {
         cubit
-          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: '7391reading', confirmPassword: '7391reading')
+          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: '7391reading', confirmPassword: '7391reading', acceptedTerms: true)
           ..submitPin(pin: '٧٣٩١', confirmPin: '7391');
         await cubit.register();
       },
@@ -163,7 +178,7 @@ void main() {
       build: build,
       act: (cubit) async {
         cubit
-          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life')
+          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life', acceptedTerms: true)
           ..submitPin(pin: '٤٨٣١', confirmPin: '4831');
         await cubit.register();
       },
@@ -179,7 +194,7 @@ void main() {
       '"تعديل" goes back to the number',
       build: build,
       act: (cubit) => cubit
-        ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life')
+        ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life', acceptedTerms: true)
         ..submitPin(pin: '4831', confirmPin: '4831')
         ..editNumber(),
       skip: 2,
@@ -197,7 +212,7 @@ void main() {
       build: build,
       act: (cubit) async {
         cubit
-          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life')
+          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life', acceptedTerms: true)
           ..submitPin(pin: '4831', confirmPin: '4831');
         await cubit.register();
       },
@@ -217,7 +232,7 @@ void main() {
       build: build,
       act: (cubit) async {
         cubit
-          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life')
+          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life', acceptedTerms: true)
           ..submitPin(pin: '4831', confirmPin: '4831');
         await cubit.register();
       },
@@ -232,7 +247,7 @@ void main() {
       act: (cubit) async {
         await cubit.loadConfig();
         cubit
-          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life')
+          ..submitCredentials(phoneE164: phone, phoneEmpty: false, password: 'reading4life', confirmPassword: 'reading4life', acceptedTerms: true)
           ..submitPin(pin: '4831', confirmPin: '4831');
       },
       skip: 2,

@@ -35,6 +35,8 @@ class Me extends Equatable {
     this.interestTopicIds = const [],
     this.publicReadingStats = false,
     this.whoCanMention = MentionPolicy.everyone,
+    this.termsVersion,
+    this.mustAcceptTerms = false,
   });
 
   final String id;
@@ -90,6 +92,13 @@ class Me extends Equatable {
   /// `privacy.whoCanMention`: who may @mention me in comments and articles (F18).
   final MentionPolicy whoCanMention;
 
+  /// The Terms version the account accepted (F37); null when it never accepted one.
+  final String? termsVersion;
+
+  /// A newer Terms version is in effect (or none was accepted): the blocking terms screen comes after the password
+  /// and PIN guards (SPEC §9.2).
+  final bool mustAcceptTerms;
+
   /// `MeDto.privacy`, whole: what `PUT /me/privacy` takes back.
   PrivacySettings get privacy => PrivacySettings(publicReadingStats: publicReadingStats, whoCanMention: whoCanMention);
 
@@ -132,6 +141,8 @@ class Me extends Equatable {
         interestTopicIds,
         publicReadingStats,
         whoCanMention,
+        termsVersion,
+        mustAcceptTerms,
       ];
 }
 

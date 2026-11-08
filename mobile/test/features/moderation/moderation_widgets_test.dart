@@ -216,7 +216,14 @@ void main() {
 
     // F28 added the reader's items (show less, follow, mute author, mute topics); moderator tools still come last.
     test('items: report unless it is yours; moderators hide or unhide', () {
-      const readerItems = [ArticleMenuItem.showLess, ArticleMenuItem.follow, ArticleMenuItem.muteAuthor, ArticleMenuItem.muteTopics];
+      // Changed on purpose (F36): Block author under Mute author.
+      const readerItems = [
+        ArticleMenuItem.showLess,
+        ArticleMenuItem.follow,
+        ArticleMenuItem.muteAuthor,
+        ArticleMenuItem.blockAuthor,
+        ArticleMenuItem.muteTopics,
+      ];
       expect(articleMenuItems(own: false, moderator: false, hidden: false), [...readerItems, ArticleMenuItem.report]);
       expect(articleMenuItems(own: true, moderator: false, hidden: false), [ArticleMenuItem.muteTopics]);
       expect(

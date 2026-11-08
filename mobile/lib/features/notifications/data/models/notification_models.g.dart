@@ -73,6 +73,11 @@ _NotificationDataModel _$NotificationDataModelFromJson(
   ticketNumber: (json['ticketNumber'] as num?)?.toInt(),
   subject: json['subject'] as String?,
   closed: json['closed'] as bool?,
+  targetType: json['targetType'] as String?,
+  targetLabel: json['targetLabel'] as String?,
+  reportCount: (json['reportCount'] as num?)?.toInt(),
+  system: json['system'] as bool?,
+  outcome: json['outcome'] as String?,
 );
 
 Map<String, dynamic> _$NotificationDataModelToJson(
@@ -88,6 +93,11 @@ Map<String, dynamic> _$NotificationDataModelToJson(
   'ticketNumber': ?instance.ticketNumber,
   'subject': ?instance.subject,
   'closed': ?instance.closed,
+  'targetType': ?instance.targetType,
+  'targetLabel': ?instance.targetLabel,
+  'reportCount': ?instance.reportCount,
+  'system': ?instance.system,
+  'outcome': ?instance.outcome,
 };
 
 _NotificationModel _$NotificationModelFromJson(

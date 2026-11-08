@@ -132,6 +132,9 @@ class AccountRepositoryImpl implements AccountRepository {
       guardApi(() async => _publish(await _api.setRecoveryPin(SetRecoveryPinRequest(pin))));
 
   @override
+  Future<Result<Me>> acceptTerms() => guardApi(() async => _publish(await _api.acceptTerms()));
+
+  @override
   Future<Result<void>> changeRecoveryPin({required String currentPassword, required String newPin}) =>
       guardApi(() => _api.changeRecoveryPin(ChangeRecoveryPinRequest(currentPassword: currentPassword, newPin: newPin)));
 

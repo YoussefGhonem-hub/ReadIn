@@ -65,6 +65,15 @@ String notificationMessage(AppLocalizations l10n, AppNotification notification, 
     // Support stays anonymous (F35); "#12 · subject" follows.
     NotificationType.supportReply => notification.closed ? l10n.supportNotifClosed : l10n.supportNotifReply,
     NotificationType.supportTicket => l10n.supportNotifTicket(actor),
+    // F22 store additions: "New report: comment"; the target's label follows.
+    NotificationType.reportNew => l10n.notifReportNew(notification.reportTargetType ?? 'other'),
+    // Never who acted, nor what was done to a user.
+    NotificationType.reportResolved => switch (notification.reportOutcome) {
+        ReportOutcome.actioned when notification.reportTargetType == 'user' => l10n.notifReportResolvedUser,
+        ReportOutcome.actioned => l10n.notifReportResolvedRemoved,
+        ReportOutcome.noViolation => l10n.notifReportResolvedNoViolation,
+        null => l10n.notifReportResolved,
+      },
     NotificationType.unknown => l10n.notifGeneric,
   };
 }
@@ -82,10 +91,17 @@ String? notificationDetail(AppNotification notification) {
       if (number == null) return subject.isEmpty ? null : subject;
       final tag = Bidi.ltrIsolate('#$number');
       return subject.isEmpty ? tag : '$tag · $subject';
+    case NotificationType.reportNew || NotificationType.reportResolved:
+      final label = notification.targetLabel?.trim() ?? '';
+      return label.isEmpty ? null : label;
     default:
       return null;
   }
 }
+
+/// `report_new` of the content filter (F22, F37): «رصده فلتر المحتوى» under the sentence.
+String? notificationSource(AppLocalizations l10n, AppNotification notification) =>
+    notification.type == NotificationType.reportNew && notification.systemReport ? l10n.notifReportSystem : null;
 
 String securityChangeMessage(AppLocalizations l10n, SecurityChange? change) => switch (change) {
       SecurityChange.passwordChanged => l10n.notifSecurityPasswordChanged,
@@ -112,6 +128,7 @@ String notificationTypeLabel(AppLocalizations l10n, NotificationType type) => sw
       NotificationType.articleReposted => l10n.notificationTypeArticleReposted,
       NotificationType.announcement => l10n.adminNotifTypeAnnouncement,
       NotificationType.supportTicket => l10n.supportNotifTypeTicket,
+      NotificationType.reportNew => l10n.notifTypeReportNew,
       NotificationType.securityAlert => l10n.notificationSecurityAlerts,
       _ => l10n.notifications,
     };
@@ -122,6 +139,7 @@ String? notificationTypeHint(AppLocalizations l10n, NotificationType type) => sw
       NotificationType.articleReposted => l10n.notificationTypeArticleRepostedHint,
       NotificationType.announcement => l10n.adminNotifTypeAnnouncementHint,
       NotificationType.supportTicket => l10n.supportNotifTypeTicketHint,
+      NotificationType.reportNew => l10n.notifTypeReportNewHint,
       _ => null,
     };
 

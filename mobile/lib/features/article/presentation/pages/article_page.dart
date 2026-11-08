@@ -18,6 +18,9 @@ import '../../../../shared/widgets/state_views.dart';
 import '../../../article_pdf/presentation/cubit/article_pdf_cubit.dart';
 import '../../../article_pdf/presentation/widgets/article_pdf_widgets.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../blocks/domain/entities/blocks.dart';
+import '../../../blocks/presentation/cubit/blocks_cubit.dart';
+import '../../../blocks/presentation/widgets/blocked_notice.dart';
 import '../../../comments/presentation/widgets/article_comments_section.dart';
 import '../../../follow/presentation/cubit/follows_cubit.dart';
 import '../../../follow/presentation/widgets/follow_button.dart';
@@ -264,6 +267,33 @@ class _ArticleViewState extends State<ArticleView> {
           child: BlocBuilder<ArticleCubit, ArticleState>(
             builder: (context, state) {
               final article = state.article;
+              // F36: a writer the viewer blocked: «هذا المحتوى غير متاح» with Unblock (a 403 block.blocked, or a block
+              // from this article's "⋯").
+              final author = article?.card.author;
+              final blockedHere = author != null &&
+                  context.select((SessionCubit c) => c.state.me?.id) != author.id &&
+                  context.select((BlocksCubit? c) => c?.state.isBlocked(author.id) ?? false);
+              final blocked = BlockedNotice.personOf(state.failure) ??
+                  (blockedHere ? BlockedPerson(id: author.id, username: author.username, displayName: author.displayName) : null);
+              if (blocked != null) {
+                return Column(
+                  children: [
+                    ColoredBox(
+                      color: context.colors.surface,
+                      child: SafeArea(
+                        bottom: false,
+                        child: Row(children: [BackButton(onPressed: () => context.canPop() ? context.pop() : context.go('/home'))]),
+                      ),
+                    ),
+                    Expanded(
+                      child: BlockedNotice(
+                        person: blocked,
+                        onUnblocked: () => unawaited(context.read<ArticleCubit>().retry(_preferredArticleLanguage(context))),
+                      ),
+                    ),
+                  ],
+                );
+              }
               return Column(
                 children: [
                   // The progress and the bar on `surface`, up under the status bar, like the app's other bars.
@@ -539,6 +569,7 @@ class _ReaderBodyState extends State<ReaderBody> {
       onLinkTap: openExternalLink,
       onTermTap: widget.onTerm,
       onMentionTap: _openMention,
+      unlinkedMentionIds: article.unlinkedMentionIds.toSet(),
       child: Builder(
         builder: (context) => CustomScrollView(
           controller: widget.controller,

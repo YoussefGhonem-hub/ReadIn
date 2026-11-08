@@ -19,12 +19,14 @@ extension ModerationLabels on AppLocalizations {
         ModerationTargetType.article => reportTitleArticle,
         ModerationTargetType.comment => reportTitleComment,
         ModerationTargetType.user => reportTitleUser,
+        ModerationTargetType.repost => reportTitleRepost,
       };
 
   String targetType(ModerationTargetType type) => switch (type) {
         ModerationTargetType.article => moderationTypeArticle,
         ModerationTargetType.comment => moderationTypeComment,
         ModerationTargetType.user => moderationTypeUser,
+        ModerationTargetType.repost => moderationTypeRepost,
       };
 
   /// The type filter's chips: null = all.
@@ -33,12 +35,14 @@ extension ModerationLabels on AppLocalizations {
         ModerationTargetType.article => moderationFilterArticles,
         ModerationTargetType.comment => moderationFilterComments,
         ModerationTargetType.user => moderationFilterUsers,
+        ModerationTargetType.repost => moderationFilterReposts,
       };
 
   String caseTitle(ModerationTargetType type) => switch (type) {
         ModerationTargetType.article => moderationCaseArticle,
         ModerationTargetType.comment => moderationCaseComment,
         ModerationTargetType.user => moderationCaseUser,
+        ModerationTargetType.repost => moderationCaseRepost,
       };
 
   String reportStatus(ReportStatus status) => switch (status) {
@@ -69,6 +73,7 @@ extension ModerationLabels on AppLocalizations {
         ModerationLogAction.userClearHeadline => moderationLogUserClearHeadline,
         ModerationLogAction.userHideContent => adminLogUserHideContent,
         ModerationLogAction.userUnhideContent => adminLogUserUnhideContent,
+        ModerationLogAction.repostDelete => moderationLogRepostDelete,
         ModerationLogAction.reportsDismiss => moderationLogReportsDismiss,
         ModerationLogAction.unknown => moderationLogOther,
       };
@@ -92,12 +97,13 @@ IconData targetTypeIcon(ModerationTargetType type) => switch (type) {
       ModerationTargetType.article => Icons.article_outlined,
       ModerationTargetType.comment => Icons.chat_bubble_outline_rounded,
       ModerationTargetType.user => Icons.person_outline_rounded,
+      ModerationTargetType.repost => Icons.repeat_rounded,
     };
 
 IconData logActionIcon(ModerationLogAction action) => switch (action) {
       ModerationLogAction.commentHide || ModerationLogAction.articleHide => Icons.visibility_off_outlined,
       ModerationLogAction.commentUnhide || ModerationLogAction.articleUnhide => Icons.visibility_outlined,
-      ModerationLogAction.commentDelete => Icons.delete_outline_rounded,
+      ModerationLogAction.commentDelete || ModerationLogAction.repostDelete => Icons.delete_outline_rounded,
       ModerationLogAction.userWarn => Icons.report_gmailerrorred_rounded,
       ModerationLogAction.userSuspend => Icons.block_rounded,
       ModerationLogAction.userUnsuspend => Icons.lock_open_rounded,

@@ -74,6 +74,10 @@ String? pushLinkToPath(String? link) {
   // A new ticket for support (F35): the console's ticket (the router sends anyone without support.manage to the
   // notification center).
   if (parts.length == 3 && parts[0] == 'admin' && parts[1] == 'support' && _isId(parts[2])) return '/admin/tickets/${parts[2]}';
+  // A new report for staff (F22 store additions): the console's case (the case page itself checks moderation.manage).
+  if (parts.length == 4 && parts[0] == 'admin' && parts[1] == 'reports' && _reportTargets.contains(parts[2]) && _isId(parts[3])) {
+    return '/moderation/${parts[2]}/${parts[3]}';
+  }
   // A tag's page (F32). The slug arrives decoded (it may hold Arabic letters) and goes back percent-encoded; slugs are
   // lower case, so a link typed as /tags/CSharp still finds csharp.
   if (parts.length == 2 && parts[0] == 'tags' && _isSlug(parts[1])) {
@@ -146,3 +150,6 @@ bool _isSlug(String value) => _slug.hasMatch(value);
 final _id = RegExp(r'^[A-Za-z0-9-]{1,64}$');
 
 bool _isId(String value) => _id.hasMatch(value);
+
+/// The report targets of `readin://admin/reports/{targetType}/{targetId}` (F22 store additions).
+const _reportTargets = {'article', 'comment', 'user', 'repost'};

@@ -199,7 +199,7 @@ class ModerationTargetPreview extends StatelessWidget {
     final colors = context.colors;
     final text = switch (type) {
       ModerationTargetType.article => target.title,
-      ModerationTargetType.comment => target.body,
+      ModerationTargetType.comment || ModerationTargetType.repost => target.body,
       ModerationTargetType.user => null,
     };
     return Column(
@@ -215,10 +215,12 @@ class ModerationTargetPreview extends StatelessWidget {
               style: (type == ModerationTargetType.article ? context.textTheme.titleMedium : context.textTheme.bodyMedium)
                   ?.copyWith(color: colors.textPrimary, height: 1.5),
             ),
-          if (type == ModerationTargetType.comment && (target.articleTitle?.isNotEmpty ?? false)) ...[
+          if (type != ModerationTargetType.article && (target.articleTitle?.isNotEmpty ?? false)) ...[
             const SizedBox(height: ReadInSpace.s1),
             Text(
-              l10n.moderationCommentOn(embedContent(target.articleTitle!)),
+              type == ModerationTargetType.repost
+                  ? l10n.moderationRepostOf(embedContent(target.articleTitle!))
+                  : l10n.moderationCommentOn(embedContent(target.articleTitle!)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary),
@@ -281,6 +283,10 @@ class ModerationQueueTile extends StatelessWidget {
                     Text(l10n.targetType(item.targetType), style: context.textTheme.labelMedium?.copyWith(color: colors.textSecondary)),
                     const SizedBox(width: ReadInSpace.s2),
                     TargetStateTag(state: item.target.state),
+                    if (item.urgent && item.status == ReportStatus.open) ...[
+                      const SizedBox(width: ReadInSpace.s1),
+                      const UrgentTag(),
+                    ],
                     const Spacer(),
                     Text(
                       l10n.moderationReportCount(item.reportCount),
@@ -296,6 +302,17 @@ class ModerationQueueTile extends StatelessWidget {
                 ],
                 const SizedBox(height: ReadInSpace.s2),
                 Text(when, style: context.textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
+                if (item.status == ReportStatus.open && item.ageHours != null) ...[
+                  const SizedBox(height: ReadInSpace.s1),
+                  Text(
+                    l10n.moderationCaseAge(item.ageHours!),
+                    key: const ValueKey('moderation-case-age'),
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: item.urgent ? colors.error : colors.textSecondary,
+                      fontWeight: item.urgent ? FontWeight.w600 : null,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -305,7 +322,34 @@ class ModerationQueueTile extends StatelessWidget {
   }
 }
 
-/// A report on the case page: reporter, reason, details, time, and who closed it.
+/// «عاجل» / "Urgent": an open case 12 hours old or more (SPEC F22: every report is handled within 24 hours).
+class UrgentTag extends StatelessWidget {
+  const UrgentTag({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      key: const ValueKey('moderation-urgent'),
+      padding: const EdgeInsets.symmetric(horizontal: ReadInSpace.s2, vertical: 2),
+      decoration: BoxDecoration(color: colors.error, borderRadius: BorderRadius.circular(ReadInRadius.chip)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.schedule_rounded, size: 13, color: colors.onError),
+          const SizedBox(width: 3),
+          Text(
+            context.l10n.moderationUrgent,
+            style: context.textTheme.labelSmall?.copyWith(color: colors.onError, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A report on the case page: reporter, reason, details, time, and who closed it. A report of the content filter
+/// (F37) reads «فلتر المحتوى» with the words it matched.
 class ModerationReportTile extends StatelessWidget {
   const ModerationReportTile({super.key, required this.report});
 
@@ -322,10 +366,25 @@ class ModerationReportTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ModerationUserRow(
-            user: summaryAuthor(report.reporter),
-            trailing: Text(moderationTime(context, report.createdAt), style: context.textTheme.labelSmall?.copyWith(color: colors.textSecondary)),
-          ),
+          if (report.isSystem)
+            Row(
+              key: const ValueKey('moderation-report-system'),
+              children: [
+                CircleAvatar(
+                  radius: 14,
+                  backgroundColor: colors.surfaceVariant,
+                  child: Icon(Icons.filter_alt_outlined, size: 16, color: colors.textSecondary),
+                ),
+                const SizedBox(width: ReadInSpace.s2),
+                Expanded(child: Text(l10n.moderationContentFilter, style: context.textTheme.titleSmall)),
+                Text(moderationTime(context, report.createdAt), style: context.textTheme.labelSmall?.copyWith(color: colors.textSecondary)),
+              ],
+            )
+          else
+            ModerationUserRow(
+              user: summaryAuthor(report.reporter),
+              trailing: Text(moderationTime(context, report.createdAt), style: context.textTheme.labelSmall?.copyWith(color: colors.textSecondary)),
+            ),
           const SizedBox(height: ReadInSpace.s2),
           Row(
             children: [
@@ -336,6 +395,14 @@ class ModerationReportTile extends StatelessWidget {
               ],
             ],
           ),
+          if (report.matchedTerms case final terms? when terms.isNotEmpty) ...[
+            const SizedBox(height: ReadInSpace.s1),
+            Text(
+              l10n.moderationMatchedTerms(terms.map(embedContent).join('، ')),
+              key: const ValueKey('moderation-report-terms'),
+              style: context.textTheme.bodyMedium?.copyWith(color: colors.textPrimary),
+            ),
+          ],
           if (details != null && details.trim().isNotEmpty) ...[
             const SizedBox(height: ReadInSpace.s1),
             ProfileBioText(details, style: context.textTheme.bodyMedium?.copyWith(color: colors.textPrimary, height: 1.5)),
