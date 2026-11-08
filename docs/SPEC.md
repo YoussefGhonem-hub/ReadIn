@@ -953,7 +953,7 @@ API: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Search"); engines in [ADR
 - **Notices:** a warning or a hidden article is a notice (dialog with "فهمت") the user acknowledges, with a push.
 - Full **moderation log** (`ModerationActions`) of every action that changed something; actions on a user's content or account are also in `AuditLogs`.
 
-**Required for the App Store and Google Play (Guideline 1.2, added 2026-11-08 after the App Review request):**
+**Required for the App Store and Google Play (Guideline 1.2, added 2026-11-08 after the App Review request; built the same day, API and decisions in [`docs/api/contract-v1.md`](api/contract-v1.md) "Report additions (F22, store requirements)"):**
 - **Report is everywhere a member sees someone else's content:** the article "⋯" (F28), every comment and reply "⋯", the profile "⋯", and a repost card's "⋯". Each opens the same report sheet. Never shown on your own content.
 - **The reporter stops seeing it at once.** After a report is sent, the reported article or comment is hidden **for the reporter only** (collapsed to "بلّغت عن ده، ومش هيظهرلك تاني" / "You reported this. It's hidden for you", with "عرض" / "Show"). A reported user stays visible unless the reporter also blocks them.
 - **"Report and block":** the report sheet has a "حظر @username كمان" / "Also block @username" checkbox (default off), which blocks the author in the same step ([F36](#f36--block-users-الحظر)).
@@ -1394,7 +1394,7 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 **API:** see §17.2 ("Support").
 
 ### F36 — Block Users (الحظر)
-**Added 2026-11-08 (App Review, Guideline 1.2).** Mute (F28) is private and one-way. Block cuts all contact between two people, both ways.
+**Added and built 2026-11-08 (App Review, Guideline 1.2; user request).** API and decisions: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Block (F36)"). Mute (F28) is private and one-way. Block cuts all contact between two people, both ways.
 
 **Where (web + mobile, identical):**
 - The profile "⋯": "حظر @username" / "Block @username" (or "إلغاء الحظر" / "Unblock").
@@ -1424,7 +1424,7 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 **Data and API:** `UserBlocks` (§16.2), `PUT /users/{id}/block`, `DELETE /users/{id}/block`, `GET /me/blocked` (§17.2). Deleting either account deletes the row (§9.6).
 
 ### F37 — Terms Acceptance & Content Filter
-**Added 2026-11-08 (App Review, Guideline 1.2).** Apple requires that users agree to terms with zero tolerance for objectionable content, and that the app filters objectionable material.
+**Added and built 2026-11-08 (App Review, Guideline 1.2; user request).** API and decisions: [`docs/api/contract-v1.md`](api/contract-v1.md) ("Legal & content filter (F37)"); the apps' Arabic text is Modern Standard Arabic. Apple requires that users agree to terms with zero tolerance for objectionable content, and that the app filters objectionable material.
 
 **Terms of Use and Community Guidelines**
 - **Public pages** (web, bilingual, linked from the App Store listing, sign up, Settings → Legal and the web footer): `/terms`, `/community-guidelines`, `/privacy` (exists).
@@ -1798,7 +1798,7 @@ Users are created in SQL Server only (no Firebase Auth). Phone numbers use the r
 
 Demo users get realistic profiles (bios mixing Arabic and English, interests, avatars), follow relationships, reading history with streaks (e.g. `reader1` has a 12-day streak), comments and replies, reactions and saved articles, so every screen looks real in development.
 
-**App Review account (production only, §32):** one Member account for Apple and Google reviewers, seeded from `Seed:ReviewerPhone`, `Seed:ReviewerPassword` and `Seed:ReviewerPin` (secrets; never committed; skipped when unset). Display name "App Review", `@appreview`, `IsReviewAccount = true`: hidden from search, suggestions, follower counts and analytics, never seeded with articles or interactions, interests set to two software fields so Home isn't empty. It is a real, usable account, not a persona: it doesn't write content. Its terms are accepted at seeding. Rotate its password after each review.
+**App Review account (production only, §32; built 2026-11-08):** one Member account for Apple and Google reviewers, from `Seed:ReviewerPhone`, `Seed:ReviewerPassword` and optionally `Seed:ReviewerPin` (secrets; never committed; skipped when unset). An existing account with that phone is adopted (production: "ReadIn Demo", `@readin_demo`, made through the API at the user's request); otherwise it is created as "ReadIn Demo", `@readin_demo`, with software interests so Home isn't empty. `IsReviewAccount = true`: hidden from search, suggestions, follower counts and the dashboard's counts. Its profile, interests and content are never changed by the seed, and its terms are accepted at seeding. It is a real, usable account, not a persona. Rotate its password after each review.
 
 > **No fake personas in production.** All seeded articles are published under the official **ReadIn** account with the "AI-assisted" label. There is no review ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
 

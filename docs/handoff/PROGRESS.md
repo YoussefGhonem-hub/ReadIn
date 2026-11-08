@@ -480,6 +480,21 @@ Later decisions (user, 2026-11-05):
   `/settings/notifications` and any `/moderation` e2e baselines need updating when the full suite runs next), new
   mobile goldens. Also fixed: `SitemapTests` (it used a field the fixture taxonomy doesn't have) and the two
   order-dependent `MediaTests` (they now look for their card on any page of the For you feed).
+- **Store requirements built, 2026-11-08 (user: "make sure F36, F37 and the report additions are implemented").**
+  Backend, web and mobile: F22's report additions (repost reports, "also block", `reportedByMe`, case age and
+  "Urgent", system reports, `report_new` / `report_resolved`), F36 Block, F37 terms acceptance and the content filter,
+  and the App Review account seeder (§18.3). Contract: "Report additions (F22, store requirements)", "Block (F36)",
+  "Legal & content filter (F37)", each with Decisions and an "As built" list. One migration, `BlocksTermsAndFilter`.
+  The filter's whole-word match strips Arabic prefixes and pronoun suffixes (user requirement), and matches
+  Franco-Arabic, leetspeak, separators and repeated letters; starter lists are in `content/moderation/`, seeded and
+  editable in the console. The API needs `Legal:TermsVersion` (deployment.md §16). Existing accounts see the terms
+  screen once. Tested once: backend 2924/2925 (the one failure was a new test's leftover comments; fixed, its two
+  classes pass together, the whole suite not re-run), web and mobile unit and widget tests, and the 22 mobile goldens
+  that changed on purpose (sign up's terms box, report/block menus, settings, the moderation queue).
+  **Not done:** Playwright. `e2e/auth.e2e.ts` and `e2e/external.e2e.ts` must tick the terms box
+  (`[data-accept-terms]`) before signing up, and the baselines for sign up, the profile and card menus, settings,
+  the moderation queue and the footer change. After the deploy, run the production seed (`deploy.sh seed`) so the
+  filter lists land and the review account is flagged.
 - **Blocked, needs the user (2026-11-06):** GitHub Actions stopped starting jobs from 5fd40c08 (F24) on: "The job was
   not started because recent account payments have failed or your spending limit needs to be increased" (GitHub →
   Settings → Billing & plans). The last runs that did start (f6551dee) passed. Until billing is fixed, CI can't check
