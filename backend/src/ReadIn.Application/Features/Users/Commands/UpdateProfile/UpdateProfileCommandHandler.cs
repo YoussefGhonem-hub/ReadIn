@@ -8,7 +8,8 @@ using ReadIn.Domain.Users;
 namespace ReadIn.Application.Features.Users.Commands.UpdateProfile;
 
 internal sealed class UpdateProfileCommandHandler(
-    IAppDbContext db, ICurrentUser currentUser, IFileStorage storage, UploadCleanup uploads, AuthorCaches authorCaches)
+    IAppDbContext db, ICurrentUser currentUser, IFileStorage storage, UploadCleanup uploads, AuthorCaches authorCaches,
+    ContentFilter.ContentScreening screening)
     : ICommandHandler<UpdateProfileCommand, Result>
 {
     // Also named in `errors`, so clients can show them next to the field.
@@ -33,6 +34,11 @@ internal sealed class UpdateProfileCommandHandler(
         if (command.Username != user.Username &&
             await db.Users.AnyAsync(u => u.Username == command.Username, cancellationToken))
             return UserErrors.UsernameTaken;
+
+        // F37: the content filter on what changes (name, @username, bio, title, link labels).
+        var screened = await screening.ScreenAsync(ProfileScreening.Changed(user, command), cancellationToken);
+        if (screened.IsFailure) return screened.Error;
+        await screening.FlagAsync(Domain.Moderation.ReportTargetType.User, user.Id, screened.Value, cancellationToken);
 
         var previousAvatar = user.AvatarUrl;
         // What cards, the reader and comments show of the writer (F14): when it changes, their cached pages go.

@@ -66,11 +66,14 @@ internal sealed class GetModerationSummaryQueryHandler(IAppDbContext db) : IQuer
 
         int Of(ReportTargetType type) => counts.GetValueOrDefault(type);
         return new ModerationSummaryDto(new OpenReportCountsDto(
-            Of(ReportTargetType.Article), Of(ReportTargetType.Comment), Of(ReportTargetType.User), counts.Values.Sum()));
+            Of(ReportTargetType.Article), Of(ReportTargetType.Comment), Of(ReportTargetType.User), counts.Values.Sum())
+        {
+            Repost = Of(ReportTargetType.Repost),
+        });
     }
 }
 
-internal sealed class GetModerationQueueQueryHandler(IAppDbContext db, ModerationReader reader)
+internal sealed class GetModerationQueueQueryHandler(IAppDbContext db, ModerationReader reader, TimeProvider clock)
     : IQueryHandler<GetModerationQueueQuery, Result<CursorPage<ModerationQueueItemDto>>>
 {
     public async ValueTask<Result<CursorPage<ModerationQueueItemDto>>> Handle(GetModerationQueueQuery query, CancellationToken cancellationToken)
@@ -134,6 +137,7 @@ internal sealed class GetModerationQueueQueryHandler(IAppDbContext db, Moderatio
 
         var keys = page.Select(p => new ModerationTargetKey(p.TargetType, p.TargetId)).ToList();
         var previews = await reader.TargetsAsync(keys, cancellationToken);
+        var now = clock.GetUtcNow().UtcDateTime;
         return new CursorPage<ModerationQueueItemDto>(
             [
                 .. page.Select(p => new ModerationQueueItemDto(
@@ -145,13 +149,13 @@ internal sealed class GetModerationQueueQueryHandler(IAppDbContext db, Moderatio
                     p.First,
                     p.Last,
                     status == ReportStatus.Open ? null : p.Closed,
-                    previews[new ModerationTargetKey(p.TargetType, p.TargetId)])),
+                    previews[new ModerationTargetKey(p.TargetType, p.TargetId)]).Aged(p.First, now)),
             ],
             next);
     }
 }
 
-internal sealed class GetModerationCaseQueryHandler(IAppDbContext db, ModerationReader reader, WriterCategoryReader categories)
+internal sealed class GetModerationCaseQueryHandler(IAppDbContext db, ModerationReader reader, WriterCategoryReader categories, TimeProvider clock)
     : IQueryHandler<GetModerationCaseQuery, Result<ModerationCaseDto>>
 {
     /// <summary>The history shows at most this many actions.</summary>
@@ -183,12 +187,17 @@ internal sealed class GetModerationCaseQueryHandler(IAppDbContext db, Moderation
             inStatus.Min(r => r.CreatedAt),
             inStatus.Max(r => r.CreatedAt),
             status == ReportStatus.Open ? null : inStatus.Max(r => r.ResolvedAt),
-            target);
+            target).Aged(inStatus.Min(r => r.CreatedAt), clock.GetUtcNow().UtcDateTime);
 
         var users = await reader.SummariesAsync(reports.SelectMany(r => new Guid?[] { r.ReporterId, r.ResolvedById }), cancellationToken);
         var reportDtos = reports.Select(r => new ModerationReportDto(
             r.Id, ModerationReader.Find(users, r.ReporterId), r.Reason, r.Details, r.Status, r.CreatedAt, r.ResolvedAt,
-            ModerationReader.Find(users, r.ResolvedById))).ToList();
+            ModerationReader.Find(users, r.ResolvedById))
+        {
+            // F37: the content filter's own reports, with what it matched (staff only).
+            IsSystem = r.IsSystem,
+            MatchedTerms = r.IsSystem ? r.MatchedTermList : null,
+        }).ToList();
 
         // Actions on the target, and for content also those on its author's account (warnings, suspensions).
         var authorId = type == ReportTargetType.User ? (Guid?)null : target.Author?.Id;

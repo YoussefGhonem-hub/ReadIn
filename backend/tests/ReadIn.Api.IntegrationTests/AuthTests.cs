@@ -93,7 +93,7 @@ public sealed class AuthTests(ApiFactory api)
             var pin = pinFor(phone);
 
             var session = await ApiFactory.ReadSessionAsync(await api.GuestClient().PostAsJsonAsync("/api/v1/auth/register",
-                new { phoneNumber = phone, password = "1990-Nile-river", recoveryPin = pin }, Ct));
+                new { phoneNumber = phone, password = "1990-Nile-river", recoveryPin = pin, acceptTerms = true }, Ct));
 
             session["user"]!["hasRecoveryPin"]!.GetValue<bool>().Should().BeTrue($"{pin} is a recovery PIN");
             (await api.GuestClient().PostAsJsonAsync("/api/v1/auth/recovery/verify-pin", new { phoneNumber = phone, pin }, Ct))
@@ -107,7 +107,7 @@ public sealed class AuthTests(ApiFactory api)
         var user = await api.SignUpAsync();
 
         var again = await api.GuestClient().PostAsJsonAsync("/api/v1/auth/register",
-            new { phoneNumber = user.PhoneNumber, password = ApiFactory.TestPassword, recoveryPin = ApiFactory.TestPin }, Ct);
+            new { phoneNumber = user.PhoneNumber, password = ApiFactory.TestPassword, recoveryPin = ApiFactory.TestPin, acceptTerms = true }, Ct);
 
         again.StatusCode.Should().Be(HttpStatusCode.Conflict);
         (await CodeOf(again)).Should().Be("auth.phone_taken");

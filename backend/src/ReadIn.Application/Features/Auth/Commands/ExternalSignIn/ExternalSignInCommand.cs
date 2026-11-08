@@ -11,6 +11,7 @@ namespace ReadIn.Application.Features.Auth.Commands.ExternalSignIn;
 /// <see cref="Link"/> (the phone + password of an existing account) or <see cref="CreateAccount"/>.
 /// </summary>
 /// <param name="DisplayName">Apple sends the name to the app only on the first authorization; used for new accounts.</param>
+/// <param name="AcceptTerms">Required true with <see cref="CreateAccount"/>: the Terms of Use box (SPEC F37).</param>
 public sealed record ExternalSignInCommand(
     string Provider,
     string? IdToken,
@@ -20,7 +21,8 @@ public sealed record ExternalSignInCommand(
     string? TimeZone = null,
     PhoneAccountLinkDto? Link = null,
     bool CreateAccount = false,
-    string? AuthorizationCode = null) : ICommand<Result<AuthSessionDto>>;
+    string? AuthorizationCode = null,
+    bool? AcceptTerms = null) : ICommand<Result<AuthSessionDto>>;
 
 /// <summary>Proves the person owns an existing phone account, so the Google/Apple identity is added to it.</summary>
 public sealed record PhoneAccountLinkDto(string PhoneNumber, string Password);

@@ -2,17 +2,20 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
 
 namespace ReadIn.Application.Features.SavedArticles.Commands.SaveArticle;
 
-internal sealed class SaveArticleCommandHandler(IAppDbContext db, ICurrentUser currentUser, TimeProvider clock)
+internal sealed class SaveArticleCommandHandler(IAppDbContext db, ICurrentUser currentUser, BlockRelations blocks, TimeProvider clock)
     : ICommandHandler<SaveArticleCommand, Result<SaveStateDto>>
 {
     public async ValueTask<Result<SaveStateDto>> Handle(SaveArticleCommand command, CancellationToken cancellationToken)
     {
+        // F36: the blocker gets 403 block.blocked, the blocked person the same not-found as a deleted article.
+        if (await blocks.ArticleErrorAsync(currentUser, command.ArticleId, cancellationToken) is { } blocked) return blocked;
         if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var userId = currentUser.RequireUserId();

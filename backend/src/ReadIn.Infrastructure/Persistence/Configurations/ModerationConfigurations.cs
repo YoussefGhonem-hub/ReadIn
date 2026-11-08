@@ -19,12 +19,35 @@ internal sealed class ReportConfiguration : IEntityTypeConfiguration<Report>
         builder.Property(r => r.Reason).HasConversion<string>().HasMaxLength(20);
         builder.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(r => r.Details).HasMaxLength(Report.MaxDetailsLength);
+        // F37 system reports: no reporter, the matched terms kept for staff. The unique index below then holds one per target.
+        builder.Property(r => r.MatchedTerms).HasMaxLength(Report.MaxMatchedTermsLength);
+        builder.Ignore(r => r.IsSystem);
+        builder.Ignore(r => r.MatchedTermList);
 
-        // One report per user and target; reporting again changes nothing.
+        // One report per user and target; reporting again changes nothing (EF filters it on ReporterId IS NOT NULL).
         builder.HasIndex(r => new { r.ReporterId, r.TargetType, r.TargetId }).IsUnique();
+        // One system report per target (F37): a later flag reopens it.
+        builder.HasIndex(r => new { r.TargetType, r.TargetId }, "IX_Reports_System_Target").IsUnique().HasFilter("[ReporterId] IS NULL");
         // The F22 queue: reports of one status, grouped by target.
         builder.HasIndex(r => new { r.Status, r.TargetType, r.TargetId });
         builder.HasOne<User>().WithMany().HasForeignKey(r => r.ReporterId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+/// <summary>The terms of the content filter (SPEC F37): one row per normalized term.</summary>
+internal sealed class ContentFilterTermConfiguration : IEntityTypeConfiguration<ContentFilterTerm>
+{
+    public void Configure(EntityTypeBuilder<ContentFilterTerm> builder)
+    {
+        builder.ToTable("ContentFilterTerms");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Term).HasMaxLength(ContentFilterTerm.MaxLength).IsRequired();
+        builder.Property(t => t.NormalizedTerm).HasMaxLength(ContentFilterTerm.MaxLength).UseCollation(AppDbContext.OrdinalCollation)
+            .IsRequired();
+        builder.HasIndex(t => t.NormalizedTerm).IsUnique();
+        builder.Property(t => t.Language).HasMaxLength(2).IsUnicode(false).IsRequired();
+        builder.Property(t => t.Level).HasConversion<byte>();
+        builder.Property(t => t.Source).HasConversion<byte>();
     }
 }
 

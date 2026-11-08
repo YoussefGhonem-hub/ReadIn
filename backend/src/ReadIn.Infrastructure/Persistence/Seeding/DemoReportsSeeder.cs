@@ -70,7 +70,7 @@ internal sealed class DemoReportsSeeder(AppDbContext db, TimeProvider clock) : I
         var targets = await PickTargetsAsync(users, cancellationToken);
         var targetIds = targets.Values.Select(t => t.Id).ToList();
         var reporterIds = Reports.Select(r => users.GetValueOrDefault(r.Reporter).Id).Where(id => id != Guid.Empty).ToList();
-        await db.Reports.Where(r => targetIds.Contains(r.TargetId) && reporterIds.Contains(r.ReporterId)).ExecuteDeleteAsync(cancellationToken);
+        await db.Reports.Where(r => targetIds.Contains(r.TargetId) && r.ReporterId != null && reporterIds.Contains(r.ReporterId.Value)).ExecuteDeleteAsync(cancellationToken);
         // The demo actions by their notes, whoever made them (an older local database has them by the demo moderator).
         await db.ModerationActions.Where(m => targetIds.Contains(m.TargetId) && (m.Note == WarningNote || m.Note == DismissNote))
             .ExecuteDeleteAsync(cancellationToken);

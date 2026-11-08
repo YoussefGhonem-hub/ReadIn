@@ -109,6 +109,22 @@ public sealed class ErrorMessagesTests
         ErrorMessages.Title(code, "en").Should().Be(english);
     }
 
+    /// <summary>The store requirements' codes (SPEC F22, F36, F37), in Modern Standard Arabic.</summary>
+    [Theory]
+    [InlineData("block.self", "لا يمكنك حظر نفسك.", "You can't block yourself.")]
+    [InlineData("block.limit", "وصلت إلى الحد الأقصى للحسابات المحظورة (1000 حساب).", "You've reached the limit of 1,000 blocked accounts.")]
+    [InlineData("block.blocked", "هذا الحساب محظور لديك. ألغِ الحظر أولًا.", "You blocked this account. Unblock it first.")]
+    [InlineData("auth.terms_required", "يجب الموافقة على شروط الاستخدام وقواعد المجتمع لإنشاء حساب.", "You must agree to the Terms of Use and Community Guidelines to create an account.")]
+    [InlineData("content.objectionable", "هذا النص يخالف قواعد المجتمع. عدّله وحاول مرة أخرى.", "This text breaks our Community Guidelines. Edit it and try again.")]
+    [InlineData("content.too_many", "وصلت إلى الحد المسموح به: 5 مقالات في اليوم و60 تعليقًا في الساعة.", "You've reached the limit: 5 articles a day and 60 comments an hour.")]
+    [InlineData("content_filter.term_invalid", "أدخل كلمة صالحة من حرفين على الأقل.", "Enter a valid term of at least 2 characters.")]
+    [InlineData("repost.not_found", "إعادة النشر هذه غير موجودة.", "This repost no longer exists.")]
+    public void Store_requirement_codes_have_titles_in_arabic_and_english(string code, string arabic, string english)
+    {
+        ErrorMessages.Title(code, "ar").Should().Be(arabic);
+        ErrorMessages.Title(code, "en").Should().Be(english);
+    }
+
     [Fact]
     public void An_unknown_code_has_no_title() => ErrorMessages.Title("nope.unknown", "en").Should().BeNull();
 }

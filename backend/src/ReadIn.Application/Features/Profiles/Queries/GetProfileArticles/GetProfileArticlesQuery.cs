@@ -6,6 +6,7 @@ using ReadIn.Application.Common.Mapping;
 using ReadIn.Application.Common.Models;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
@@ -24,12 +25,14 @@ internal sealed class GetProfileArticlesQueryHandler(
     ICurrentUser currentUser,
     TypeAdapterConfig mapping,
     ArticleCards cards,
+    BlockRelations blocks,
     TimeProvider clock)
     : IQueryHandler<GetProfileArticlesQuery, Result<CursorPage<ArticleCardDto>>>
 {
     public async ValueTask<Result<CursorPage<ArticleCardDto>>> Handle(GetProfileArticlesQuery query, CancellationToken ct)
     {
         if (await db.FindProfileForAsync(query.Username, clock.GetUtcNow().UtcDateTime, currentUser, ct) is not { } owner) return UserErrors.NotFound;
+        if (await blocks.DirectLinkErrorAsync(currentUser, owner.Id, UserErrors.NotFound, ct) is { } blocked) return blocked;
 
         var limit = Math.Clamp(query.Limit, 1, 50);
         var articles = db.Articles.AsNoTracking()

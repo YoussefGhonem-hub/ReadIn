@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Application.Features.Mutes;
 using ReadIn.Application.Features.Uploads;
 using ReadIn.Domain.Articles;
@@ -53,12 +54,26 @@ internal static class ArticleVisibility
         if (viewerId is not { } viewer) return articles;
 
         var users = db.MutedUserIds(viewer);
+        var blocked = db.BlockedWith(viewer);
         var fields = db.MutedIds(viewer, ContentMuteTarget.Field).Where(id => id != openedFieldId);
         var topics = db.MutedIds(viewer, ContentMuteTarget.Topic).Where(id => id != openedTopicId);
         return articles.Where(a =>
-            !(a.AuthorId != null && users.Contains(a.AuthorId.Value)) &&
+            !(a.AuthorId != null && (users.Contains(a.AuthorId.Value) || blocked.Contains(a.AuthorId.Value))) &&
             !fields.Contains(a.FieldId) &&
             !(a.TopicId != null && topics.Contains(a.TopicId.Value)));
+    }
+
+    /// <summary>
+    /// Leaves out the articles of the people <paramref name="viewerId"/> is blocked with, either way (SPEC F36), in the lists
+    /// that keep muted writers: saved, collections, continue reading, paths. Guests keep everything.
+    /// <see cref="WithoutMutedFor"/> already does this for the feeds.
+    /// </summary>
+    public static IQueryable<Article> WithoutBlockedFor(this IQueryable<Article> articles, IAppDbContext db, Guid? viewerId)
+    {
+        if (viewerId is not { } viewer) return articles;
+
+        var blocked = db.BlockedWith(viewer);
+        return articles.Where(a => !(a.AuthorId != null && blocked.Contains(a.AuthorId.Value)));
     }
 
     /// <summary>

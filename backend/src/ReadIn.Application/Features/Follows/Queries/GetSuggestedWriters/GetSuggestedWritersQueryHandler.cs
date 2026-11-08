@@ -40,13 +40,13 @@ internal sealed class GetSuggestedWritersQueryHandler(IAppDbContext db, ICurrent
         if (fieldIds.Count > 0) published = published.Where(a => fieldIds.Contains(a.FieldId));
 
         return db.Users.AsNoTracking()
-            .Where(u => u.Id != userId)
+            .Where(u => u.Id != userId && !u.IsReviewAccount) // the App Review account is never suggested (SPEC §32)
             .Where(u => !(u.IsSuspended && (u.SuspendedUntil == null || u.SuspendedUntil > now)))
             .Where(u => !db.UserFollows.Any(f => f.FollowerId == userId && f.FolloweeId == u.Id))
             .WithoutMutedFor(db, userId)
             .Where(u => published.Any(a => a.AuthorId == u.Id))
             .OrderByDescending(u => u.IsVerified)
-            .ThenByDescending(u => db.UserFollows.Count(f => f.FolloweeId == u.Id))
+            .ThenByDescending(u => db.UserFollows.Count(f => f.FolloweeId == u.Id && !db.Users.Any(r => r.Id == f.FollowerId && r.IsReviewAccount)))
             .ThenBy(u => u.Username)
             .Take(limit)
             .Select(UserSummaries.For(db, userId))

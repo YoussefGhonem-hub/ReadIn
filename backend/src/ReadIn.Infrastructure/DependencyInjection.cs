@@ -50,6 +50,12 @@ public static class DependencyInjection
         // Help & support (SPEC F35): the support email the clients show.
         services.AddOptions<Application.Features.Support.SupportOptions>()
             .Bind(configuration.GetSection(Application.Features.Support.SupportOptions.Section));
+        // The Terms of Use version every account accepts (SPEC F37): a missing or over-long one would ask nobody or everybody.
+        services.AddOptions<Application.Features.Legal.LegalOptions>()
+            .Bind(configuration.GetSection(Application.Features.Legal.LegalOptions.Section))
+            .Validate(o => !string.IsNullOrWhiteSpace(o.TermsVersion) && o.TermsVersion.Length <= Application.Features.Legal.LegalOptions.MaxVersionLength,
+                "Legal:TermsVersion must be set, at most 16 characters (e.g. 2026-11-08).")
+            .ValidateOnStart();
         // The admin console's calendar days (SPEC F23); an unknown time zone falls back to UTC.
         services.AddOptions<Application.Features.Admin.AdminOptions>()
             .Bind(configuration.GetSection(Application.Features.Admin.AdminOptions.Section));
@@ -182,6 +188,10 @@ public static class DependencyInjection
         services.AddScoped<ISeeder, DemoReportsSeeder>();
         services.AddScoped<ISeeder, DemoNotificationsSeeder>();
         services.AddScoped<ISeeder, DemoVerificationSeeder>();
+        // SPEC F37 and §18.3: the content filter's lists, the seeded accounts' terms, and the App Review account.
+        services.AddScoped<ISeeder, ContentFilterSeeder>();
+        services.AddScoped<ISeeder, TermsAcceptanceSeeder>();
+        services.AddScoped<ISeeder, ReviewerAccountSeeder>();
         services.AddScoped<SeedRunner>();
 
         services.AddHealthChecks().AddDbContextCheck<AppDbContext>("sql");

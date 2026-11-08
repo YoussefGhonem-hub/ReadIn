@@ -1,0 +1,24 @@
+# Content filter, English, flag level (SPEC F37): the text is saved and a system report goes to the moderation queue.
+# Insults and profanity a moderator should look at. Same rules as en.block.txt.
+
+shit
+shitty
+bullshit
+bitch
+bitches
+bastard
+asshole
+assholes
+dickhead
+dick
+cock
+pussy
+retard
+idiot
+moron
+stupid bitch
+son of a bitch
+wanker
+twat
+douchebag
+scumbag

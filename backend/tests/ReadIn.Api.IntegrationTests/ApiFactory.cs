@@ -167,6 +167,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             recoveryPin = TestPin,
             uiLanguage,
             timeZone = "Africa/Cairo",
+            acceptTerms = true, // the Terms of Use box (SPEC F37)
         }, TestContext.Current.CancellationToken);
         var session = await ReadSessionAsync(response);
         return new SignedInUser(ClientWithToken(session["accessToken"]!.GetValue<string>(), uiLanguage), session, phone);

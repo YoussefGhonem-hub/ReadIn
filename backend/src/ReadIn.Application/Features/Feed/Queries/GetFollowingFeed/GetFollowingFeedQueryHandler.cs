@@ -95,7 +95,7 @@ internal sealed class GetFollowingFeedQueryHandler(
         var ordered = page.Where(p => byId.ContainsKey(p.Id)).ToList();
         var completed = await cards.CompleteAsync([.. ordered.Select(p => byId[p.Id])], ct);
 
-        var labels = await LabelsAsync([.. ordered.Where(p => p.ByRepost).Select(p => p.Id)], followees, ct);
+        var labels = await LabelsAsync([.. ordered.Where(p => p.ByRepost).Select(p => p.Id)], followees, userId, ct);
         return new CursorPage<ArticleCardDto>(
             [.. completed.Select(card => labels.TryGetValue(card.Id, out var label) ? card with { RepostedBy = label } : card)],
             next);
@@ -105,7 +105,8 @@ internal sealed class GetFollowingFeedQueryHandler(
     /// "أعاد نشره {name}" / "{name} و N غيره": the newest reposter you follow, with their caption, and how many others you
     /// follow reposted it (their captions aren't shown).
     /// </summary>
-    private async Task<Dictionary<Guid, RepostLabelDto>> LabelsAsync(IReadOnlyList<Guid> articleIds, IQueryable<Guid> followees, CancellationToken ct)
+    private async Task<Dictionary<Guid, RepostLabelDto>> LabelsAsync(
+        IReadOnlyList<Guid> articleIds, IQueryable<Guid> followees, Guid viewerId, CancellationToken ct)
     {
         if (articleIds.Count == 0) return [];
 
@@ -113,6 +114,7 @@ internal sealed class GetFollowingFeedQueryHandler(
             .Where(r => articleIds.Contains(r.ArticleId) && followees.Contains(r.UserId))
             .Select(r => new
             {
+                r.Id,
                 r.ArticleId,
                 r.CreatedAt,
                 r.Caption,
@@ -120,13 +122,19 @@ internal sealed class GetFollowingFeedQueryHandler(
             })
             .ToListAsync(ct);
 
+        // F22: the reposts the viewer reported (clients collapse their captions for them).
+        var reported = await RepostLabels.ReportedByAsync(db, viewerId, [.. reposts.Select(r => r.Id)], ct);
         return reposts
             .GroupBy(r => r.ArticleId)
             .ToDictionary(g => g.Key, g =>
             {
                 var newest = g.OrderByDescending(r => r.CreatedAt).ThenByDescending(r => r.User.Id).First();
                 var user = newest.User with { AvatarUrl = storage.ToPublicUrl(newest.User.AvatarUrl) };
-                return new RepostLabelDto(user, g.Count() - 1, newest.CreatedAt, newest.Caption);
+                return new RepostLabelDto(user, g.Count() - 1, newest.CreatedAt, newest.Caption)
+                {
+                    RepostId = newest.Id,
+                    ReportedByMe = reported.Contains(newest.Id),
+                };
             });
     }
 }

@@ -116,6 +116,17 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
     /// </summary>
     public string? SignUpMethod { get; private set; }
 
+    /// <summary>
+    /// The Terms of Use version the account accepted (SPEC F37, <c>Legal:TermsVersion</c>), and when; null = none yet. A newer
+    /// version shows the terms screen once (<c>mustAcceptTerms</c>); the API never refuses other calls for it.
+    /// </summary>
+    public string? TermsVersion { get; private set; }
+
+    public DateTime? TermsAcceptedAt { get; private set; }
+
+    /// <summary>The App Review account (SPEC §18.3, §32): hidden from search, suggestions, follower counts and analytics.</summary>
+    public bool IsReviewAccount { get; private set; }
+
     public IReadOnlyCollection<UserRole> Roles => _roles.AsReadOnly();
     public IReadOnlyCollection<UserInterest> Interests => _interests.AsReadOnly();
     public IReadOnlyCollection<UserDevice> Devices => _devices.AsReadOnly();
@@ -495,6 +506,33 @@ public sealed partial class User : AggregateRoot, IAuditable, ISoftDeletable, IH
 
     /// <summary>Invalidates every access token; used by "sign out of all devices" and every credential change.</summary>
     public void RotateSecurityStamp() => SecurityStamp = NewSecurityStamp();
+
+    /// <summary>Accepts Terms of Use <paramref name="version"/> (SPEC F37); returns false when it was the accepted one already.</summary>
+    public bool AcceptTerms(string version, DateTime now)
+    {
+        if (TermsVersion == version) return false;
+        TermsVersion = version;
+        TermsAcceptedAt = now;
+        return true;
+    }
+
+    /// <summary>The App Review account (SPEC §18.3): set by its seeder only.</summary>
+    public void MarkReviewAccount() => IsReviewAccount = true;
+
+    /// <summary>
+    /// The review account's seeder adopts this account (SPEC §18.3): it is the review account, nothing blocks the next sign
+    /// in, and a new password (<paramref name="passwordHash"/>, when the configured one changed) ends its other sessions.
+    /// Profile, interests and content stay as they are.
+    /// </summary>
+    public void AdoptAsReviewAccount(string? passwordHash)
+    {
+        IsReviewAccount = true;
+        MustChangePassword = false;
+        MustSetRecoveryPin = false;
+        if (passwordHash is null) return;
+        PasswordHash = passwordHash;
+        RotateSecurityStamp();
+    }
 
     // ---- Recovery PIN (SPEC §9.5) ----
 

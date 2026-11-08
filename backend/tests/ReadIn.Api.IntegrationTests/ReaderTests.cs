@@ -28,8 +28,9 @@ public sealed class ReaderTests(ApiFactory api)
         var fieldAndTag = await PublishAsync(writer.Client, "claude-ai-tools", "mcp", [tag]);
         var fieldAndTerm = await PublishAsync(writer.Client, "claude-ai-tools", "mcp", termId: "context-window");
         var fieldOnly = await PublishAsync(writer.Client, "claude-ai-tools", "mcp");
-        var tagOnly = await PublishAsync(writer.Client, "machine-learning", "mlops", [tag]);
-        var unrelated = await PublishAsync(writer.Client, "machine-learning", "mlops");
+        var second = await api.UserAsync("Related Writer 2"); // A second writer: one account publishes at most 5 new articles a day (SPEC F37).
+        var tagOnly = await PublishAsync(second.Client, "machine-learning", "mlops", [tag]);
+        var unrelated = await PublishAsync(second.Client, "machine-learning", "mlops");
 
         var related = await api.GuestClient().GetAsync(Related(open.Id, limit: 10), Ct).OkArrayAsync();
 

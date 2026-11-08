@@ -3,6 +3,7 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Mapping;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
@@ -17,7 +18,8 @@ internal sealed class GetRelatedArticlesQueryHandler(
     IAppDbContext db,
     ICurrentUser currentUser,
     TypeAdapterConfig mapping,
-    ArticleCards cards)
+    ArticleCards cards,
+    BlockRelations blocks)
     : IQueryHandler<GetRelatedArticlesQuery, Result<IReadOnlyList<ArticleCardDto>>>
 {
     private const int TopicWeight = 100;
@@ -29,6 +31,8 @@ internal sealed class GetRelatedArticlesQueryHandler(
 
     public async ValueTask<Result<IReadOnlyList<ArticleCardDto>>> Handle(GetRelatedArticlesQuery query, CancellationToken cancellationToken)
     {
+        // F36: the blocker gets 403 block.blocked, the blocked person the same not-found as a deleted article.
+        if (await blocks.ArticleErrorAsync(currentUser, query.ArticleId, cancellationToken) is { } blocked) return blocked;
         var limit = Math.Clamp(query.Limit, 1, GetRelatedArticlesQuery.MaxLimit);
 
         var source = await db.Articles.AsNoTracking()

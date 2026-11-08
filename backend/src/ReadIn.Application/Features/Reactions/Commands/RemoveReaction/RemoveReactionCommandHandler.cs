@@ -2,16 +2,19 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
 namespace ReadIn.Application.Features.Reactions.Commands.RemoveReaction;
 
-internal sealed class RemoveReactionCommandHandler(IAppDbContext db, ICurrentUser currentUser)
+internal sealed class RemoveReactionCommandHandler(IAppDbContext db, ICurrentUser currentUser, BlockRelations blocks)
     : ICommandHandler<RemoveReactionCommand, Result<ArticleReactionsDto>>
 {
     public async ValueTask<Result<ArticleReactionsDto>> Handle(RemoveReactionCommand command, CancellationToken cancellationToken)
     {
+        // F36: the blocker gets 403 block.blocked, the blocked person the same not-found as a deleted article.
+        if (await blocks.ArticleErrorAsync(currentUser, command.ArticleId, cancellationToken) is { } blocked) return blocked;
         if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var userId = currentUser.RequireUserId();

@@ -75,6 +75,7 @@ public static class DependencyInjection
         services.AddScoped<Features.Search.TagSearch>();
         services.AddScoped<Features.Glossary.ArticleTermsIndex>();
         services.AddScoped<Features.Moderation.ModerationReader>();
+        services.AddScoped<Features.Moderation.SystemReports>();
         services.AddScoped<Features.Verification.VerificationReader>();
         services.AddScoped<Features.Verification.VerificationProofFiles>();
         services.AddScoped<Features.Verification.VerificationDecisions>();
@@ -93,6 +94,9 @@ public static class DependencyInjection
             IQueryPersonalizer<Features.Explore.GetFieldWritersQuery, Domain.Common.Result<IReadOnlyList<Features.Follows.UserSummaryDto>>>,
             Features.Explore.FieldWritersPersonalizer>();
 
+        // Block (SPEC F36): who is blocked with whom, both ways, and making a block.
+        services.AddScoped<Features.Blocks.BlockRelations>();
+
         // Admin console (SPEC F23)
         services.AddScoped<Features.Admin.AdminClock>();
         services.AddScoped<Features.Admin.ProtectedAccounts>();
@@ -110,6 +114,14 @@ public static class DependencyInjection
         services.AddScoped<Features.Search.SearchMissWriter>();
         // Help & support (SPEC F35): the members' screenshots in the private store.
         services.AddScoped<Features.Support.SupportScreenshots>();
+
+        // Terms of Use and the content filter (SPEC F37): the terms version, the term catalog kept in memory, the screening
+        // of every public text and the spam limits.
+        services.AddSingleton<Features.Legal.TermsOfUse>();
+        services.AddSingleton<Features.ContentFilter.ContentFilterCatalog>();
+        services.AddScoped<Features.ContentFilter.ContentScreening>();
+        services.AddScoped<Features.ContentFilter.ContentLimits>();
+        services.AddScoped<Features.Comments.CommentGuard>();
 
         AddDomainEventHandlers(services);
         return services;

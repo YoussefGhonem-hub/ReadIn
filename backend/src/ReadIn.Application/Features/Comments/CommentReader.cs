@@ -4,7 +4,9 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Engagement;
+using ReadIn.Domain.Moderation;
 
 namespace ReadIn.Application.Features.Comments;
 
@@ -17,6 +19,8 @@ namespace ReadIn.Application.Features.Comments;
 /// out. Replies are never placeholders.</item>
 /// <item>A comment whose author deleted their account has a null <see cref="CommentDto.Author"/>.</item>
 /// <item>A comment by a writer the viewer muted is flagged (<see cref="CommentDto.IsAuthorMuted"/>, F28): clients collapse it.</item>
+/// <item>A comment of someone the viewer is blocked with, either way (F36), is left out; a top-level one with replies stays as a
+/// placeholder (<see cref="CommentDto.IsUnavailable"/>), and mentions of them lose their link.</item>
 /// </list>
 /// </summary>
 public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IFileStorage storage)
@@ -35,7 +39,13 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
     {
         var viewer = ViewerId;
         var moderator = IsModerator;
-        return c => !c.IsDeleted && (c.HiddenAt == null || moderator || (viewer != null && c.AuthorId == viewer));
+        if (viewer is not { } signedIn)
+            return c => !c.IsDeleted && (c.HiddenAt == null || moderator);
+
+        // F36: nothing of the people the viewer is blocked with, either way.
+        var blocked = db.BlockedWith(signedIn);
+        return c => !c.IsDeleted && (c.HiddenAt == null || moderator || c.AuthorId == signedIn)
+            && !(c.AuthorId != null && blocked.Contains(c.AuthorId.Value));
     }
 
     /// <summary>Top-level comments the viewer gets in a list: readable ones, plus placeholders that keep their replies.</summary>
@@ -43,8 +53,14 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
     {
         var viewer = ViewerId;
         var moderator = IsModerator;
+        if (viewer is not { } signedIn)
+            return c => c.ParentId == null && ((!c.IsDeleted && (c.HiddenAt == null || moderator)) || c.ReplyCount > 0);
+
+        // F36: a blocked person's top-level comment shows only as a placeholder that keeps its replies.
+        var blocked = db.BlockedWith(signedIn);
         return c => c.ParentId == null &&
-            ((!c.IsDeleted && (c.HiddenAt == null || moderator || (viewer != null && c.AuthorId == viewer))) || c.ReplyCount > 0);
+            ((!c.IsDeleted && (c.HiddenAt == null || moderator || c.AuthorId == signedIn) && !(c.AuthorId != null && blocked.Contains(c.AuthorId.Value)))
+             || c.ReplyCount > 0);
     }
 
     /// <summary>
@@ -87,9 +103,18 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
         var liked = new HashSet<Guid>();
         var muted = new HashSet<Guid>();
         var followed = new HashSet<Guid>();
+        var reported = new HashSet<Guid>();
+        var blocked = new HashSet<Guid>();
         if (ViewerId is { } viewer)
         {
+            // F36: the people the viewer is blocked with, either way (at most 2,000).
+            blocked = [.. await db.BlockedWith(viewer).Distinct().ToListAsync(ct)];
             var all = ordered.Select(r => r.Id).Concat(replies.Select(r => r.Id)).ToList();
+            // The comments the viewer reported (F22): clients collapse them for the reporter, with "Show".
+            reported = [.. await db.Reports.AsNoTracking()
+                .Where(r => r.ReporterId == viewer && r.TargetType == ReportTargetType.Comment && all.Contains(r.TargetId))
+                .Select(r => r.TargetId)
+                .ToListAsync(ct)];
             liked = [.. await db.CommentLikes.AsNoTracking()
                 .Where(l => l.UserId == viewer && all.Contains(l.CommentId))
                 .Select(l => l.CommentId)
@@ -115,20 +140,36 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
         return [.. ordered.Select(row =>
         {
             var articleAuthor = articleAuthors.GetValueOrDefault(row.ArticleId);
-            var dto = ToDto(row, articleAuthor, liked, muted, followed);
+            var dto = ToDto(row, articleAuthor, liked, muted, followed, reported, blocked);
             if (!withReplies || row.ParentId is not null) return dto;
-            return dto with { Replies = [.. repliesByParent[row.Id].Select(r => ToDto(r, articleAuthor, liked, muted, followed))] };
+            return dto with { Replies = [.. repliesByParent[row.Id].Select(r => ToDto(r, articleAuthor, liked, muted, followed, reported, blocked))] };
         })];
     }
 
     public async Task<CommentDto?> LoadOneAsync(Guid id, CancellationToken ct) =>
         (await LoadAsync([id], withReplies: false, ct)).FirstOrDefault();
 
-    private CommentDto ToDto(CommentRow row, Guid? articleAuthorId, HashSet<Guid> liked, HashSet<Guid> muted, HashSet<Guid> followed)
+    private CommentDto ToDto(
+        CommentRow row, Guid? articleAuthorId, HashSet<Guid> liked, HashSet<Guid> muted, HashSet<Guid> followed, HashSet<Guid> reported,
+        HashSet<Guid> blocked)
     {
         var viewer = ViewerId;
         var own = viewer is not null && row.AuthorId == viewer;
         var seesHidden = own || IsModerator;
+
+        // F36: a comment of someone the viewer is blocked with, kept only for its replies: no body, no author.
+        if (!row.IsDeleted && row.AuthorId is { } blockedAuthor && blocked.Contains(blockedAuthor))
+        {
+            return new CommentDto
+            {
+                Id = row.Id,
+                ArticleId = row.ArticleId,
+                ParentId = row.ParentId,
+                ReplyCount = row.ReplyCount,
+                CreatedAt = row.CreatedAt,
+                IsUnavailable = true,
+            };
+        }
 
         if (row.IsDeleted || (row.HiddenAt is not null && !seesHidden))
         {
@@ -154,9 +195,11 @@ public sealed class CommentReader(IAppDbContext db, ICurrentUser currentUser, IF
             Body = row.Body,
             Author = author,
             IsAuthorMuted = !own && row.AuthorId is { } authorId && muted.Contains(authorId),
+            ReportedByMe = reported.Contains(row.Id),
             IsFollowingAuthor = !own && row.AuthorId is { } followedId && followed.Contains(followedId),
             IsArticleAuthor = row.AuthorId is not null && row.AuthorId == articleAuthorId,
-            Mentions = row.Mentions,
+            // F36: a mention of someone the viewer is blocked with stays as plain text.
+            Mentions = blocked.Count == 0 ? row.Mentions : [.. row.Mentions.Where(m => !blocked.Contains(m.UserId))],
             LikeCount = row.LikeCount,
             LikedByMe = liked.Contains(row.Id),
             ReplyCount = row.ReplyCount,

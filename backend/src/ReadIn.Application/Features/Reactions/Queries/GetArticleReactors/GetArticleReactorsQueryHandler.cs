@@ -4,21 +4,30 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Models;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
 
 namespace ReadIn.Application.Features.Reactions.Queries.GetArticleReactors;
 
-internal sealed class GetArticleReactorsQueryHandler(IAppDbContext db, ICurrentUser viewer, IFileStorage storage)
+internal sealed class GetArticleReactorsQueryHandler(IAppDbContext db, ICurrentUser viewer, IFileStorage storage, BlockRelations blocks)
     : IQueryHandler<GetArticleReactorsQuery, Result<CursorPage<ReactorDto>>>
 {
     public async ValueTask<Result<CursorPage<ReactorDto>>> Handle(GetArticleReactorsQuery query, CancellationToken cancellationToken)
     {
+        // F36: the blocker gets 403 block.blocked, the blocked person the same not-found as a deleted article.
+        if (await blocks.ArticleErrorAsync(viewer, query.ArticleId, cancellationToken) is { } blocked) return blocked;
         if (!await db.Articles.VisibleTo(viewer).AnyAsync(a => a.Id == query.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var limit = Math.Clamp(query.Limit, 1, 50);
         var reactions = db.Reactions.AsNoTracking().Where(r => r.ArticleId == query.ArticleId);
+        // F36: the people the viewer is blocked with leave the list (the counts stay the same for everyone).
+        if (viewer.UserId is { } viewerId)
+        {
+            var blockedWith = db.BlockedWith(viewerId);
+            reactions = reactions.Where(r => !blockedWith.Contains(r.UserId));
+        }
         if (ReactionTypes.TryParse(query.Type, out var type)) reactions = reactions.Where(r => r.Type == type);
 
         if (TimeCursor.Decode(query.Cursor) is { } cursor)

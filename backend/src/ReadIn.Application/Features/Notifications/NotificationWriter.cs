@@ -57,6 +57,12 @@ public sealed record NotificationRequest(Guid UserId, string Type)
     /// redelivered event changes nothing.
     /// </summary>
     public bool GroupsWithoutActor { get; init; }
+
+    /// <summary>
+    /// At most one push per group in this time (<c>report_new</c>, F22: one per target per hour): new activity that joins an
+    /// entry pushed less than this ago arms the push for this long after that push.
+    /// </summary>
+    public TimeSpan? MinPushInterval { get; init; }
 }
 
 /// <summary>
@@ -130,6 +136,19 @@ public sealed class NotificationWriter(
                     .ToListAsync(ct))
                 .Select(m => (m.MuterId, m.MutedUserId))
                 .ToHashSet();
+        // F36: nothing either of two people blocked with each other does reaches the other, whoever blocked.
+        if (actorIds.Count > 0)
+        {
+            foreach (var block in await db.UserBlocks.AsNoTracking()
+                         .Where(b => (userIds.Contains(b.BlockerId) && actorIds.Contains(b.BlockedId))
+                                  || (userIds.Contains(b.BlockedId) && actorIds.Contains(b.BlockerId)))
+                         .Select(b => new { b.BlockerId, b.BlockedId })
+                         .ToListAsync(ct))
+            {
+                muted.Add((block.BlockerId, block.BlockedId));
+                muted.Add((block.BlockedId, block.BlockerId));
+            }
+        }
 
         var keys = requests.Where(r => r.DedupeKey is not null).Select(r => r.DedupeKey!).Distinct().ToList();
         var existing = keys.Count == 0
@@ -326,6 +345,9 @@ public sealed class NotificationWriter(
         if (open is null) return null;
         if (told is not null) return (told, false);
 
+        // One push per group per interval (F22 report_new): a push sent a moment ago waits until the interval is over.
+        if (pushAfter is { } due && request.MinPushInterval is { } interval && open.PushedAt is { } pushed && pushed + interval > due)
+            pushAfter = pushed + interval;
         open.Refresh(request.Data.Serialize(), now, pushAfter);
         return (open, true);
     }

@@ -254,13 +254,16 @@ internal sealed class GetSupportConfigQueryHandler(IOptions<SupportOptions> opti
 }
 
 internal sealed class CreateSupportTicketCommandHandler(
-    IAppDbContext db, ICurrentUser currentUser, SupportScreenshots screenshots, TimeProvider clock)
+    IAppDbContext db, ICurrentUser currentUser, SupportScreenshots screenshots, ContentFilter.ContentScreening screening, TimeProvider clock)
     : ICommandHandler<CreateSupportTicketCommand, Result<SupportTicketDto>>
 {
     public async ValueTask<Result<SupportTicketDto>> Handle(CreateSupportTicketCommand command, CancellationToken cancellationToken)
     {
         var userId = currentUser.RequireUserId();
         if (await LimitAsync(userId, clock.GetUtcNow().UtcDateTime, cancellationToken) is { } limit) return limit;
+        // F37: the subject is the ticket's title; a block-level term refuses it. Only support reads tickets, so a flag reports nothing.
+        var screened = await screening.ScreenAsync([new ContentFilter.ScreenedField("subject", command.Subject)], cancellationToken);
+        if (screened.IsFailure) return screened.Error;
 
         var checkedFiles = await SupportScreenshots.CheckAsync(command.Screenshots, cancellationToken);
         if (checkedFiles.IsFailure) return checkedFiles.Error;

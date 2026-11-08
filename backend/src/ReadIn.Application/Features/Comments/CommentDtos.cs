@@ -27,6 +27,15 @@ public sealed record CommentDto
     /// </summary>
     public bool IsAuthorMuted { get; init; }
 
+    /// <summary>The viewer reported it (SPEC F22): clients collapse it for them, with "Show". False for guests.</summary>
+    public bool ReportedByMe { get; init; }
+
+    /// <summary>
+    /// A comment of someone the viewer is blocked with (SPEC F36), kept as a placeholder for its replies by others: no body,
+    /// no author. False everywhere else.
+    /// </summary>
+    public bool IsUnavailable { get; init; }
+
     /// <summary>
     /// The viewer follows the comment's author: the row shows "متابعة" when false (SPEC F11). False for guests, on your own
     /// comments, for a deleted author and on placeholders.

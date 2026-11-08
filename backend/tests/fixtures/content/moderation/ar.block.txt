@@ -1,0 +1,4 @@
+# Test-only placeholder terms (neutral words): never real slurs. The integration tests check the filter with them.
+سلحفاة
+قط
+sel7efa

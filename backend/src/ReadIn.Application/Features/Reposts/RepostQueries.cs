@@ -7,6 +7,7 @@ using ReadIn.Application.Common.Models;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Application.Features.Profiles;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
@@ -30,12 +31,14 @@ internal sealed class GetProfileRepostsQueryHandler(
     TypeAdapterConfig mapping,
     ArticleCards cards,
     IFileStorage storage,
+    BlockRelations blocks,
     TimeProvider clock)
     : IQueryHandler<GetProfileRepostsQuery, Result<CursorPage<ArticleCardDto>>>
 {
     public async ValueTask<Result<CursorPage<ArticleCardDto>>> Handle(GetProfileRepostsQuery query, CancellationToken ct)
     {
         if (await db.FindProfileForAsync(query.Username, clock.GetUtcNow().UtcDateTime, currentUser, ct) is not { } owner) return UserErrors.NotFound;
+        if (await blocks.DirectLinkErrorAsync(currentUser, owner.Id, UserErrors.NotFound, ct) is { } blocked) return blocked;
 
         var limit = Math.Clamp(query.Limit, 1, 50);
         var visible = db.Articles.Visible().Where(a => a.PublishedAt != null);
@@ -81,8 +84,16 @@ internal sealed class GetProfileRepostsQueryHandler(
 
         var ordered = page.Where(p => byId.ContainsKey(p.ArticleId)).ToList();
         var completed = await cards.CompleteAsync([.. ordered.Select(p => byId[p.ArticleId])], ct);
+        var reported = await RepostLabels.ReportedByAsync(db, currentUser.UserId, [.. ordered.Select(p => p.Id)], ct);
         return new CursorPage<ArticleCardDto>(
-            [.. completed.Select((card, i) => card with { RepostedBy = new RepostLabelDto(reposter, 0, ordered[i].CreatedAt, ordered[i].Caption) })],
+            [.. completed.Select((card, i) => card with
+            {
+                RepostedBy = new RepostLabelDto(reposter, 0, ordered[i].CreatedAt, ordered[i].Caption)
+                {
+                    RepostId = ordered[i].Id,
+                    ReportedByMe = reported.Contains(ordered[i].Id),
+                },
+            })],
             next);
     }
 }

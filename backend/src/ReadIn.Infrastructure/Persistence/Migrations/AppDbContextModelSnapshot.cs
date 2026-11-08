@@ -1007,6 +1007,31 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("SavedArticles", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Engagement.UserBlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BlockedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BlockerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockedId", "BlockerId");
+
+                    b.HasIndex("BlockerId", "BlockedId")
+                        .IsUnique();
+
+                    b.ToTable("UserBlocks", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Engagement.UserFollow", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1573,6 +1598,55 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.ToTable("MediaUploads", (string)null);
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Moderation.ContentFilterTerm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CustomizedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(2)");
+
+                    b.Property<byte>("Level")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("NormalizedTerm")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<byte>("Source")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Term")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedTerm")
+                        .IsUnique();
+
+                    b.ToTable("ContentFilterTerms", (string)null);
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Moderation.ModerationAction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1652,12 +1726,16 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("MatchedTerms")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<Guid>("ReporterId")
+                    b.Property<Guid?>("ReporterId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("ResolvedAt")
@@ -1682,9 +1760,14 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ReporterId", "TargetType", "TargetId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[ReporterId] IS NOT NULL");
 
                     b.HasIndex("Status", "TargetType", "TargetId");
+
+                    b.HasIndex(new[] { "TargetType", "TargetId" }, "IX_Reports_System_Target")
+                        .IsUnique()
+                        .HasFilter("[ReporterId] IS NULL");
 
                     b.ToTable("Reports", (string)null);
                 });
@@ -2453,6 +2536,9 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsProfileComplete")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsReviewAccount")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSuspended")
                         .HasColumnType("bit");
 
@@ -2554,6 +2640,14 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("SuspendedUntil")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("TermsAcceptedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TermsVersion")
+                        .HasMaxLength(16)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(16)");
 
                     b.Property<string>("ThemePref")
                         .IsRequired()
@@ -3143,6 +3237,21 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.Navigation("Article");
                 });
 
+            modelBuilder.Entity("ReadIn.Domain.Engagement.UserBlock", b =>
+                {
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("BlockedId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("ReadIn.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("BlockerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ReadIn.Domain.Engagement.UserFollow", b =>
                 {
                     b.HasOne("ReadIn.Domain.Users.User", "Followee")
@@ -3290,8 +3399,7 @@ namespace ReadIn.Infrastructure.Persistence.Migrations
                     b.HasOne("ReadIn.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("ReporterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("ReadIn.Domain.Notifications.Notification", b =>

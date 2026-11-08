@@ -1,0 +1,51 @@
+# Content filter, Arabic, block level (SPEC F37): the text is refused with 422 content.objectionable.
+# One term per line; '#' starts a comment. MSA, Egyptian and Franco-Arabic spellings. Whole words only: the matcher also
+# finds them after و ف ب ك ل ال… and before a pronoun suffix, collapses repeated letters and joins spelled-out letters,
+# so list the base form once. Terms of 2 letters only match on their own. Keep ordinary words out of this list.
+# Edit in the admin console (System → Content filter) without a release; the console's changes win over this file.
+
+# Sexual slurs and explicit terms
+كس
+زب
+متناك
+متناكه
+منيوك
+منيوكه
+شرموط
+شرموطه
+شراميط
+قحبه
+قحاب
+عرص
+معرص
+لوطي
+ابن المتناكه
+ابن الشرموطه
+كسمك
+كس امك
+كس اختك
+يلعن دينك
+يلعن ابوك
+ابن الوسخه
+# Franco-Arabic
+kos omak
+kosomak
+ksomk
+sharmoota
+sharmota
+metnak
+metnaka
+manyak
+5awal
+khawal
+3ars
+m3ars
+ibn el sharmoota
+yel3an deenak
+# Threats
+هقتلك
+حقتلك
+سأقتلك
+راح اقتلك
+هدبحك
+هذبحك

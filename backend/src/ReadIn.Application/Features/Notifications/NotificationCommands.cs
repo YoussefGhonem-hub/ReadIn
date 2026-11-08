@@ -93,7 +93,8 @@ internal sealed class UpdateNotificationSettingsCommandHandler(IAppDbContext db,
 
         var modes = new Dictionary<string, NotificationMode>(StringComparer.Ordinal);
         // support_ticket (F35) is only for those who get it: holders of support.manage.
-        var configurable = NotificationTypes.ConfigurableFor(currentUser.Permissions.Contains(Permissions.Support.Manage));
+        var configurable = NotificationTypes.ConfigurableFor(
+            currentUser.Permissions.Contains(Permissions.Support.Manage), currentUser.Permissions.Contains(Permissions.Moderation.Manage));
         foreach (var (type, value) in command.Types ?? new Dictionary<string, string?>())
         {
             if (!configurable.Contains(type)) return NotificationErrors.TypeInvalid;

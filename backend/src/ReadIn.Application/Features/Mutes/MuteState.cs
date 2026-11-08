@@ -35,7 +35,7 @@ internal static class MuteState
         this IAppDbContext db, Guid viewerId, Guid userId, bool followRemoved, CancellationToken ct) => new(
         await db.UserMutes.AnyAsync(m => m.MuterId == viewerId && m.MutedUserId == userId, ct),
         await db.UserFollows.AnyAsync(f => f.FollowerId == viewerId && f.FolloweeId == userId, ct),
-        await db.UserFollows.CountAsync(f => f.FolloweeId == userId, ct),
+        await db.UserFollows.CountAsync(f => f.FolloweeId == userId && !db.Users.Any(r => r.Id == f.FollowerId && r.IsReviewAccount), ct),
         followRemoved);
 
     /// <summary>

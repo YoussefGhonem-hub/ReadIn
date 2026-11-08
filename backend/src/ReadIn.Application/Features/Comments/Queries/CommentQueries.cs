@@ -7,6 +7,7 @@ using ReadIn.Application.Common.Models;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Application.Features.Users;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
@@ -33,11 +34,13 @@ public sealed record GetCommentQuery(Guid CommentId) : IQuery<Result<CommentDto>
 [Authenticated]
 public sealed record GetMentionSuggestionsQuery(string? Q, int Limit = 8) : IQuery<Result<IReadOnlyList<MentionCandidateDto>>>;
 
-internal sealed class GetArticleCommentsQueryHandler(IAppDbContext db, ICurrentUser viewer, CommentReader reader)
+internal sealed class GetArticleCommentsQueryHandler(IAppDbContext db, ICurrentUser viewer, CommentReader reader, BlockRelations blocks)
     : IQueryHandler<GetArticleCommentsQuery, Result<CommentPageDto>>
 {
     public async ValueTask<Result<CommentPageDto>> Handle(GetArticleCommentsQuery query, CancellationToken cancellationToken)
     {
+        // F36: the comments of an article whose author the viewer is blocked with answer like the article.
+        if (await blocks.ArticleErrorAsync(viewer, query.ArticleId, cancellationToken) is { } blocked) return blocked;
         var article = await db.Articles.VisibleTo(viewer).AsNoTracking()
             .Where(a => a.Id == query.ArticleId)
             .Select(a => new { a.CommentCount })
@@ -97,7 +100,7 @@ internal sealed class GetArticleCommentsQueryHandler(IAppDbContext db, ICurrentU
     }
 }
 
-internal sealed class GetCommentRepliesQueryHandler(IAppDbContext db, ICurrentUser viewer, CommentReader reader)
+internal sealed class GetCommentRepliesQueryHandler(IAppDbContext db, ICurrentUser viewer, CommentReader reader, BlockRelations blocks)
     : IQueryHandler<GetCommentRepliesQuery, Result<CursorPage<CommentDto>>>
 {
     public async ValueTask<Result<CursorPage<CommentDto>>> Handle(GetCommentRepliesQuery query, CancellationToken cancellationToken)
@@ -105,6 +108,8 @@ internal sealed class GetCommentRepliesQueryHandler(IAppDbContext db, ICurrentUs
         var parent = await reader.All().Where(c => c.Id == query.CommentId)
             .Select(c => new { c.ArticleId, c.ParentId }).FirstOrDefaultAsync(cancellationToken);
         if (parent is null || parent.ParentId is not null) return CommentErrors.NotFound;
+        // F36: the thread of a comment (or an article) by someone the viewer is blocked with answers like that comment.
+        if (await blocks.CommentErrorAsync(viewer, query.CommentId, cancellationToken) is { } blocked) return blocked;
         if (!await db.Articles.VisibleTo(viewer).AnyAsync(a => a.Id == parent.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var limit = Math.Clamp(query.Limit, 1, 50);
@@ -125,10 +130,13 @@ internal sealed class GetCommentRepliesQueryHandler(IAppDbContext db, ICurrentUs
     }
 }
 
-internal sealed class GetCommentQueryHandler(IAppDbContext db, ICurrentUser viewer, CommentReader reader) : IQueryHandler<GetCommentQuery, Result<CommentDto>>
+internal sealed class GetCommentQueryHandler(IAppDbContext db, ICurrentUser viewer, CommentReader reader, BlockRelations blocks)
+    : IQueryHandler<GetCommentQuery, Result<CommentDto>>
 {
     public async ValueTask<Result<CommentDto>> Handle(GetCommentQuery query, CancellationToken cancellationToken)
     {
+        // F36: the blocker gets 403 block.blocked, the blocked person the same not-found as a deleted comment.
+        if (await blocks.CommentErrorAsync(viewer, query.CommentId, cancellationToken) is { } blocked) return blocked;
         var comment = await reader.LoadOneAsync(query.CommentId, cancellationToken);
         if (comment is null) return CommentErrors.NotFound;
         if (!await db.Articles.VisibleTo(viewer).AnyAsync(a => a.Id == comment.ArticleId, cancellationToken)) return ArticleErrors.NotFound;

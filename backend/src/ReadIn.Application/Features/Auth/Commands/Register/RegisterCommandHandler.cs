@@ -14,11 +14,15 @@ internal sealed class RegisterCommandHandler(
     IRecoveryPinHasher pins,
     SessionIssuer sessions,
     AuditTrail audit,
+    Legal.TermsOfUse terms,
     TimeProvider clock)
     : ICommandHandler<RegisterCommand, Result<AuthSessionDto>>
 {
     public async ValueTask<Result<AuthSessionDto>> Handle(RegisterCommand command, CancellationToken cancellationToken)
     {
+        // The terms box (SPEC F37) before anything else: nothing is created without it.
+        var accepted = Legal.TermsOfUse.Require(command.AcceptTerms);
+        if (accepted.IsFailure) return accepted.Error;
         if (!PhoneNumberRules.TryNormalize(command.PhoneNumber, out var phone)) return CredentialErrors.InvalidCredentials;
         // Soft-deleted accounts keep their number until they are anonymized (SPEC F01).
         if (await IsTakenAsync(phone, cancellationToken)) return CredentialErrors.PhoneTaken;
@@ -33,6 +37,8 @@ internal sealed class RegisterCommandHandler(
         db.Users.Add(user); // assigns the id that the PIN hash is bound to
         user.SetRecoveryPin(pins.Hash(user.Id, RecoveryPinRules.Normalize(command.RecoveryPin)), clock.GetUtcNow().UtcDateTime);
         audit.Record(AuditActions.SignUp, user.Id);
+        user.AcceptTerms(terms.CurrentVersion, clock.GetUtcNow().UtcDateTime);
+        audit.Record(AuditActions.TermsAccepted, user.Id, AuditTargets.User, user.Id, terms.CurrentVersion);
 
         try
         {

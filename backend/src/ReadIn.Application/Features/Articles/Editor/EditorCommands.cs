@@ -111,6 +111,8 @@ internal sealed class PublishArticleDraftCommandHandler(
     UserMentions mentions,
     ArticleTagging tagging,
     HybridCache cache,
+    ContentFilter.ContentScreening screening,
+    ContentFilter.ContentLimits limits,
     TimeProvider clock)
     : ICommandHandler<PublishArticleDraftCommand, Result<PublishedArticleDto>>
 {
@@ -142,6 +144,16 @@ internal sealed class PublishArticleDraftCommandHandler(
         if (evaluation.Problems.Count > 0) return EditorErrors.NotReady(evaluation.Problems);
         var field = evaluation.Field!;
         var now = clock.GetUtcNow().UtcDateTime;
+
+        // F37: at most 5 new articles a day (an Update doesn't count), then the content filter on every version's title,
+        // subtitle and blocks, and on the tags. A refusal leaves the working copy and the live version as they are.
+        if (article.PublishedAt is null)
+        {
+            var limit = await limits.CheckArticleAsync(userId, cancellationToken);
+            if (limit.IsFailure) return limit.Error;
+        }
+        var screened = await screening.ScreenAsync(ScreenedFields(document), cancellationToken);
+        if (screened.IsFailure) return screened.Error;
 
         // "Who can mention me" (SPEC F18), checked for what goes live in every language: a mention the author may make of an
         // active account keeps its link with the user's current @username; any other, and any after the first
@@ -185,6 +197,8 @@ internal sealed class PublishArticleDraftCommandHandler(
 
         // Every user the live version mentions hears about it once per article (F17): an update tells only new ones.
         article.RecordMentions(allowed.Keys);
+        // F37: flag-level terms or spam signs put the article in the moderation queue; it is published all the same.
+        await screening.FlagAsync(Domain.Moderation.ReportTargetType.Article, article.Id, screened.Value, cancellationToken);
 
         if (!await EditorSaves.TrySaveAsync(db, cancellationToken)) return ArticleErrors.DraftConflict;
 
@@ -197,6 +211,25 @@ internal sealed class PublishArticleDraftCommandHandler(
                 await cache.RemoveByTagAsync(CacheTags.Glossary, cancellationToken);
         }
         return new PublishedArticleDto(article.Id, article.Slug, article.PublishedAt!.Value, number, firstPublish);
+    }
+
+    /// <summary>
+    /// What the content filter reads on a publish (SPEC F37): each version's title, subtitle and text blocks (with the block
+    /// id, so the editor can point at it) with spam signs, then the tag names.
+    /// </summary>
+    private static IEnumerable<ContentFilter.ScreenedField> ScreenedFields(ArticleDraftDocument document)
+    {
+        foreach (var translation in document.Translations)
+        {
+            yield return new ContentFilter.ScreenedField("title", translation.Title, Language: translation.Language);
+            yield return new ContentFilter.ScreenedField("subtitle", translation.Subtitle, Language: translation.Language);
+            foreach (var block in RDocBlockText.Blocks(translation.Content.GetRawText()))
+            {
+                if (block.Text is not null)
+                    yield return new ContentFilter.ScreenedField("content", block.Text, SpamSignals: true, translation.Language, block.Id);
+            }
+        }
+        foreach (var tag in document.Tags) yield return new ContentFilter.ScreenedField("tags", tag);
     }
 
     /// <summary>The working copy's attachments go live (ADR 0011); a PDF's title and download switch live on its asset.</summary>

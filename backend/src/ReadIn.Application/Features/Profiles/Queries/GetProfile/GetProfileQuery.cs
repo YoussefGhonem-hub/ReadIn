@@ -5,6 +5,7 @@ using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Admin;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Application.Features.Users;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
@@ -20,7 +21,8 @@ namespace ReadIn.Application.Features.Profiles.Queries.GetProfile;
 public sealed record GetProfileQuery(string Username) : IQuery<Result<ProfileDto>>;
 
 internal sealed class GetProfileQueryHandler(
-    IAppDbContext db, ICurrentUser currentUser, IFileStorage storage, ProtectedAccounts protectedAccounts, TimeProvider clock)
+    IAppDbContext db, ICurrentUser currentUser, IFileStorage storage, ProtectedAccounts protectedAccounts, BlockRelations blocks,
+    TimeProvider clock)
     : IQueryHandler<GetProfileQuery, Result<ProfileDto>>
 {
     public async ValueTask<Result<ProfileDto>> Handle(GetProfileQuery query, CancellationToken cancellationToken)
@@ -33,6 +35,8 @@ internal sealed class GetProfileQueryHandler(
             .Shown(handle, now, seesSuspended)
             .FirstOrDefaultAsync(cancellationToken);
         if (user is null) return UserErrors.NotFound;
+        // F36: the blocker gets 403 block.blocked (with an Unblock), the blocked person a plain not-found.
+        if (await blocks.DirectLinkErrorAsync(currentUser, user.Id, UserErrors.NotFound, cancellationToken) is { } blocked) return blocked;
 
         // F23: the account's state for the admin's "⋯" (Suspend… / Unsuspend / Warn…).
         ProfileAdminDto? admin = null;
@@ -54,7 +58,8 @@ internal sealed class GetProfileQueryHandler(
                 IsVerified = u.IsVerified,
                 Articles = published.Count(),
                 TotalReads = published.Sum(a => a.ReadCount),
-                Followers = db.UserFollows.Count(f => f.FolloweeId == u.Id),
+                // The App Review account's follows never count (SPEC §32).
+                Followers = db.UserFollows.Count(f => f.FolloweeId == u.Id && !db.Users.Any(r => r.Id == f.FollowerId && r.IsReviewAccount)),
                 Following = db.UserFollows.Count(f => f.FollowerId == u.Id),
                 IsFollowing = db.UserFollows.Any(f => f.FollowerId == viewer && f.FolloweeId == u.Id),
                 FollowsYou = db.UserFollows.Any(f => f.FollowerId == u.Id && f.FolloweeId == viewer),

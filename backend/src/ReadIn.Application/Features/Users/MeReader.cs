@@ -9,7 +9,7 @@ using ReadIn.Domain.Users;
 namespace ReadIn.Application.Features.Users;
 
 /// <summary>Builds <see cref="MeDto"/>; shared by GET /me and every call that starts or refreshes a session.</summary>
-internal sealed class MeReader(IAppDbContext db, IUserAccessService access, IMapper mapper, IFileStorage storage)
+internal sealed class MeReader(IAppDbContext db, IUserAccessService access, IMapper mapper, IFileStorage storage, Legal.TermsOfUse terms)
 {
     public async Task<Result<MeDto>> ReadAsync(Guid userId, CancellationToken ct)
     {
@@ -27,6 +27,8 @@ internal sealed class MeReader(IAppDbContext db, IUserAccessService access, IMap
             AvatarUrl = storage.ToPublicUrl(user.AvatarUrl),
             Roles = userAccess?.Roles ?? [],
             Permissions = userAccess?.Permissions ?? [],
+            TermsVersion = user.TermsVersion,
+            MustAcceptTerms = terms.MustAccept(user.TermsVersion),
         };
     }
 }

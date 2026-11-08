@@ -56,4 +56,13 @@ public sealed record MeDto
     public IReadOnlyList<string> Permissions { get; init; } = [];
     public InterestsDto Interests { get; init; } = new([], []);
     public PrivacyDto Privacy { get; init; } = new(false);
+
+    /// <summary>The Terms of Use version the account accepted (SPEC F37); null = none yet.</summary>
+    public string? TermsVersion { get; init; }
+
+    /// <summary>
+    /// The account hasn't accepted the current version (<c>GET /legal</c>): show the terms screen, after the password and PIN
+    /// guards (SPEC §9.2). The API doesn't refuse other calls for it.
+    /// </summary>
+    public bool MustAcceptTerms { get; init; }
 }

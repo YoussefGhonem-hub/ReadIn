@@ -25,6 +25,17 @@ public sealed class SeedOptions
 
     /// <summary>Run seeders on startup (Development/Staging). Production uses <c>dotnet run -- seed</c>.</summary>
     public bool RunOnStartup { get; set; }
+
+    /// <summary>
+    /// The App Review account (SPEC §18.3, §32): its number (E.164) and password. Both set: an account with that number is
+    /// adopted, or one is created ready to use. Either missing: nothing is seeded.
+    /// </summary>
+    public string? ReviewerPhone { get; set; }
+
+    public string? ReviewerPassword { get; set; }
+
+    /// <summary>The review account's recovery PIN when it is created (digits of <c>Recovery:PinLength</c>); random when unset.</summary>
+    public string? ReviewerPin { get; set; }
 }
 
 public static class SystemUsers

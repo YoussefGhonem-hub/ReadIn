@@ -54,10 +54,11 @@ public sealed class ExploreTests(ApiFactory api) : IAsyncLifetime
     {
         var field = await NewFieldAsync();
         var writer = await api.UserAsync("Trending Writer");
+        var second = await api.UserAsync("Trending Writer 2"); // A second writer: one account publishes at most 5 new articles a day (SPEC F37).
         var (a, b, c, d, e, f) = (
             await PublishAsync(writer, field, "Trending A"), await PublishAsync(writer, field, "Trending B"),
             await PublishAsync(writer, field, "Trending C"), await PublishAsync(writer, field, "Trending D"),
-            await PublishAsync(writer, field, "Trending E"), await PublishAsync(writer, field, "Trending F"));
+            await PublishAsync(writer, field, "Trending E"), await PublishAsync(second, field, "Trending F"));
         var readers = await ReadersAsync(3);
         var now = DateTime.UtcNow;
 
@@ -87,10 +88,11 @@ public sealed class ExploreTests(ApiFactory api) : IAsyncLifetime
     {
         var field = await NewFieldAsync();
         var writer = await api.UserAsync("Most Saved Writer");
+        var second = await api.UserAsync("Most Saved Writer 2"); // A second writer: one account publishes at most 5 new articles a day (SPEC F37).
         var (a, b, c, d, e, never) = (
             await PublishAsync(writer, field, "Saved A"), await PublishAsync(writer, field, "Saved B"),
             await PublishAsync(writer, field, "Saved C"), await PublishAsync(writer, field, "Saved D"),
-            await PublishAsync(writer, field, "Saved E"), await PublishAsync(writer, field, "Never saved"));
+            await PublishAsync(writer, field, "Saved E"), await PublishAsync(second, field, "Never saved"));
         var readers = await ReadersAsync(5);
         var now = DateTime.UtcNow;
 
@@ -318,8 +320,9 @@ public sealed class ExploreTests(ApiFactory api) : IAsyncLifetime
         var b1 = await PublishAsync(writer, field, "B one", field.TopicB);
         var n1 = await PublishAsync(writer, field, "No topic one");
         var a3 = await PublishAsync(writer, field, "A three", field.TopicA);
-        var deleted = await PublishAsync(writer, field, "Deleted one", field.TopicA);
-        (await writer.Client.DeleteAsync($"/api/v1/articles/{deleted}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var second = await api.UserAsync("Field Articles Writer 2"); // A second writer: one account publishes at most 5 new articles a day (SPEC F37).
+        var deleted = await PublishAsync(second, field, "Deleted one", field.TopicA);
+        (await second.Client.DeleteAsync($"/api/v1/articles/{deleted}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var guest = api.GuestClient();
         var url = $"/api/v1/fields/{field.Slug}/articles";
 

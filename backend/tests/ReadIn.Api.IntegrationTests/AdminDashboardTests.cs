@@ -29,7 +29,7 @@ public sealed class AdminDashboardTests(ApiFactory api)
 
         var admin = await api.SuperAdminAsync();
         var summary = await admin.Client.GetAsync("/api/v1/admin/summary", Ct).OkJsonAsync();
-        summary.Select(p => p.Key).Should().BeEquivalentTo("openReports", "openTickets", "pendingVerifications", "total");
+        summary.Select(p => p.Key).Should().BeEquivalentTo("openReports", "openTickets", "pendingVerifications", "total", "openReportsOver24h"); // F22
         // F35: the tickets waiting for support (Open).
         summary["openTickets"]!.GetValue<int>().Should().Be(
             await api.InDbAsync(db => db.SupportTickets.CountAsync(t => t.Status == Domain.Support.SupportTicketStatus.Open, Ct)));
@@ -44,7 +44,7 @@ public sealed class AdminDashboardTests(ApiFactory api)
             dashboard["timeZone"]!.GetValue<string>().Should().Be("Africa/Cairo");
             dashboard["cards"]!.AsObject().Select(p => p.Key).Should().BeEquivalentTo(
                 "articlesPublished", "newUsers", "activeReaders", "reads", "comments", "reactions", "reposts", "openReports", "openTickets",
-                "pendingVerifications", "suspendedNow");
+                "pendingVerifications", "suspendedNow", "openReportsOver24h"); // openReportsOver24h: F22 store requirements
             dashboard["cards"]!["newUsers"]!.AsObject().Select(p => p.Key).Should().BeEquivalentTo("value", "previous", "phone", "google", "apple");
             dashboard["cards"]!["reads"]!.AsObject().Select(p => p.Key).Should().BeEquivalentTo("value", "previous");
             dashboard["charts"]!.AsArray().Should().HaveCount(30);

@@ -146,7 +146,10 @@ public sealed class ProfileEditTests
         currentUser.UserId.Returns(Guid.NewGuid());
         var handler = new UpdateProfileCommandHandler(
             _db, currentUser, _storage, new UploadCleanup(new UploadReferences(_db), _db, _storage, NullLogger<UploadCleanup>.Instance),
-            new AuthorCaches(_db, Substitute.For<HybridCache>()));
+            new AuthorCaches(_db, Substitute.For<HybridCache>()),
+            new ReadIn.Application.Features.ContentFilter.ContentScreening(
+                _db, new ReadIn.Application.Features.ContentFilter.ContentFilterCatalog(),
+                new ReadIn.Application.Features.Moderation.SystemReports(_db), TimeProvider.System));
 
         var result = await handler.Handle(Command(expertise: [.. Enumerable.Range(0, 6).Select(_ => Guid.NewGuid())]), Ct);
 

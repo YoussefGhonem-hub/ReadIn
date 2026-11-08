@@ -6,6 +6,7 @@ using ReadIn.Application.Common.Models;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
@@ -26,13 +27,14 @@ public sealed record GetArticleHighlightsQuery(Guid ArticleId, string? Language)
 [Authenticated]
 public sealed record GetMyHighlightsQuery(string? Cursor, int Limit) : IQuery<Result<CursorPage<HighlightGroupDto>>>;
 
-internal sealed class GetArticleHighlightsQueryHandler(IAppDbContext db, ICurrentUser viewer, HighlightTexts texts)
+internal sealed class GetArticleHighlightsQueryHandler(IAppDbContext db, ICurrentUser viewer, HighlightTexts texts, BlockRelations blocks)
     : IQueryHandler<GetArticleHighlightsQuery, Result<ArticleHighlightsDto>>
 {
     public async ValueTask<Result<ArticleHighlightsDto>> Handle(GetArticleHighlightsQuery query, CancellationToken ct)
     {
         var version = await texts.GetVersionAsync(query.ArticleId, query.Language, ct);
         if (version is null || (version.IsHidden && !ArticleVisibility.CanSeeHidden(version.AuthorId, viewer))) return ArticleErrors.NotFound;
+        if (await blocks.DirectLinkErrorAsync(viewer, version.AuthorId, ArticleErrors.NotFound, ct) is { } blocked) return blocked;
 
         var popular = await texts.GetPopularAsync(version, ct);
         List<HighlightDto> mine = [];

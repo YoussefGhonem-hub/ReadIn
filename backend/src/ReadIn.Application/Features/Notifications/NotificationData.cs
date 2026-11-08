@@ -62,6 +62,26 @@ public sealed record NotificationData
     public bool? Closed { get; init; }
 
     /// <summary>
+    /// <c>report_new</c> and <c>report_resolved</c> (F22 store requirements): the reported target (<c>article</c> |
+    /// <c>comment</c> | <c>user</c> | <c>repost</c>) and its label as the reporter (or the queue) knew it.
+    /// </summary>
+    public string? TargetType { get; init; }
+
+    /// <summary><c>report_new</c>: the target (the link opens its case).</summary>
+    public Guid? TargetId { get; init; }
+
+    public string? TargetLabel { get; init; }
+
+    /// <summary><c>report_new</c>: open reports on the target when the entry last moved.</summary>
+    public int? ReportCount { get; init; }
+
+    /// <summary><c>report_new</c>: filed by the content filter (F37).</summary>
+    public bool? System { get; init; }
+
+    /// <summary><c>report_resolved</c>: <c>actioned</c> (resolved) or <c>no_violation</c> (dismissed).</summary>
+    public string? Outcome { get; init; }
+
+    /// <summary>
     /// What the entry last told about (<c>m:{messageId}</c> or <c>c:{ticks}</c>; server only), so a redelivered event changes
     /// nothing in an entry grouped without actors.
     /// </summary>
@@ -91,7 +111,7 @@ public sealed record NotificationData
         return new(Threshold, StreakDays, SecurityChange, Approved, ArticleIds?.Count, AnnouncementId,
             english ? TitleEn : TitleAr,
             english ? BodyEn : BodyAr,
-            TicketId, TicketNumber, Subject, Closed);
+            TicketId, TicketNumber, Subject, Closed, TargetType, TargetId, TargetLabel, ReportCount, System, Outcome);
     }
 
     /// <summary>The camelCase name clients get (<c>passwordChanged</c>), also used in dedupe keys.</summary>

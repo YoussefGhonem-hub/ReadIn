@@ -46,8 +46,14 @@ public sealed class UserMentions(IAppDbContext db, TimeProvider clock)
                 .Select(f => f.FollowerId)
                 .ToListAsync(ct))
             .ToHashSet();
+        // F36: nobody mentions someone they are blocked with, either way (the mention stays as plain text).
+        var blocked = (await db.UserBlocks.AsNoTracking()
+                .Where(b => (b.BlockerId == authorId && ids.Contains(b.BlockedId)) || (b.BlockedId == authorId && ids.Contains(b.BlockerId)))
+                .Select(b => b.BlockerId == authorId ? b.BlockedId : b.BlockerId)
+                .ToListAsync(ct))
+            .ToHashSet();
         var now = clock.GetUtcNow().UtcDateTime;
-        return [.. users.Where(u => u.CanBeMentionedBy(authorId, followers.Contains(u.Id), now))];
+        return [.. users.Where(u => !blocked.Contains(u.Id) && u.CanBeMentionedBy(authorId, followers.Contains(u.Id), now))];
     }
 }
 
@@ -60,6 +66,8 @@ public static class MentionQueries
     public static IQueryable<User> MentionableBy(this IQueryable<User> users, IAppDbContext db, Guid authorId, DateTime now) =>
         users.Where(u => !u.IsSystemAccount
             && !(u.IsSuspended && (u.SuspendedUntil == null || u.SuspendedUntil > now))
+            // F36: nobody mentions someone they are blocked with, either way.
+            && !db.UserBlocks.Any(b => (b.BlockerId == u.Id && b.BlockedId == authorId) || (b.BlockerId == authorId && b.BlockedId == u.Id))
             && (u.Id == authorId
                 || u.WhoCanMention == MentionPolicy.Everyone
                 || (u.WhoCanMention == MentionPolicy.Following && db.UserFollows.Any(f => f.FollowerId == u.Id && f.FolloweeId == authorId))));

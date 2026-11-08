@@ -34,21 +34,29 @@ public sealed record SetCommentLikeCommand(Guid CommentId, bool Liked) : IComman
 public sealed record SetCommentPinCommand(Guid CommentId, bool Pinned) : ICommand<Result<CommentDto>>;
 
 internal sealed class PostCommentCommandHandler(
-    IAppDbContext db, ICurrentUser currentUser, CommentPosting posting, CommentReader reader, TimeProvider clock)
+    IAppDbContext db, ICurrentUser currentUser, CommentPosting posting, CommentReader reader, CommentGuard guard, TimeProvider clock)
     : ICommandHandler<PostCommentCommand, Result<CommentDto>>
 {
     public async ValueTask<Result<CommentDto>> Handle(PostCommentCommand command, CancellationToken cancellationToken)
     {
         var userId = currentUser.RequireUserId();
-        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        var article = await db.Articles.VisibleTo(currentUser).Where(a => a.Id == command.ArticleId)
+            .Select(a => new { a.AuthorId }).FirstOrDefaultAsync(cancellationToken);
+        if (article is null) return ArticleErrors.NotFound;
+        // F36: never on the article of someone you are blocked with.
+        if (await guard.BlockedAsync(userId, article.AuthorId, ArticleErrors.NotFound, cancellationToken) is { } blocked) return blocked;
 
         var prepared = await posting.PrepareAsync(command.Body, userId, cancellationToken);
         if (prepared.IsFailure) return prepared.Error;
+        // F37: the content filter and the spam limit, then the per-article limits.
+        var screened = await guard.ScreenNewAsync(userId, prepared.Value.Body, cancellationToken);
+        if (screened.IsFailure) return screened.Error;
         var limits = await posting.CheckLimitsAsync(userId, command.ArticleId, prepared.Value.Body, cancellationToken);
         if (limits.IsFailure) return limits.Error;
 
         var comment = Comment.Post(command.ArticleId, userId, prepared.Value.Body, prepared.Value.MentionedUserIds, clock.GetUtcNow().UtcDateTime);
         db.Comments.Add(comment);
+        await guard.FlagAsync(comment.Id, screened.Value, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         return (await reader.LoadOneAsync(comment.Id, cancellationToken))!;
@@ -56,7 +64,7 @@ internal sealed class PostCommentCommandHandler(
 }
 
 internal sealed class PostReplyCommandHandler(
-    IAppDbContext db, ICurrentUser currentUser, CommentPosting posting, CommentReader reader, TimeProvider clock)
+    IAppDbContext db, ICurrentUser currentUser, CommentPosting posting, CommentReader reader, CommentGuard guard, TimeProvider clock)
     : ICommandHandler<PostReplyCommand, Result<CommentDto>>
 {
     public async ValueTask<Result<CommentDto>> Handle(PostReplyCommand command, CancellationToken cancellationToken)
@@ -64,10 +72,18 @@ internal sealed class PostReplyCommandHandler(
         var userId = currentUser.RequireUserId();
         var target = await db.Comments.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == command.CommentId, cancellationToken);
         if (target is null) return CommentErrors.NotFound;
-        if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == target.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
+        var article = await db.Articles.VisibleTo(currentUser).Where(a => a.Id == target.ArticleId)
+            .Select(a => new { a.AuthorId }).FirstOrDefaultAsync(cancellationToken);
+        if (article is null) return ArticleErrors.NotFound;
+        // F36: never under the comment, or on the article, of someone you are blocked with.
+        if (await guard.BlockedAsync(userId, target.AuthorId, CommentErrors.NotFound, cancellationToken) is { } blockedAuthor) return blockedAuthor;
+        if (await guard.BlockedAsync(userId, article.AuthorId, ArticleErrors.NotFound, cancellationToken) is { } blockedWriter) return blockedWriter;
 
         var prepared = await posting.PrepareAsync(command.Body, userId, cancellationToken);
         if (prepared.IsFailure) return prepared.Error;
+        // F37: the content filter and the spam limit, then the per-article limits.
+        var screened = await guard.ScreenNewAsync(userId, prepared.Value.Body, cancellationToken);
+        if (screened.IsFailure) return screened.Error;
         var limits = await posting.CheckLimitsAsync(userId, target.ArticleId, prepared.Value.Body, cancellationToken);
         if (limits.IsFailure) return limits.Error;
 
@@ -75,6 +91,7 @@ internal sealed class PostReplyCommandHandler(
         if (reply.IsFailure) return reply.Error;
 
         db.Comments.Add(reply.Value);
+        await guard.FlagAsync(reply.Value.Id, screened.Value, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await posting.RecountRepliesAsync(reply.Value.ParentId!.Value, cancellationToken);
 
@@ -83,7 +100,7 @@ internal sealed class PostReplyCommandHandler(
 }
 
 internal sealed class EditCommentCommandHandler(
-    IAppDbContext db, ICurrentUser currentUser, CommentPosting posting, CommentReader reader, TimeProvider clock)
+    IAppDbContext db, ICurrentUser currentUser, CommentPosting posting, CommentReader reader, CommentGuard guard, TimeProvider clock)
     : ICommandHandler<EditCommentCommand, Result<CommentDto>>
 {
     public async ValueTask<Result<CommentDto>> Handle(EditCommentCommand command, CancellationToken cancellationToken)
@@ -94,9 +111,13 @@ internal sealed class EditCommentCommandHandler(
 
         var prepared = await posting.PrepareAsync(command.Body, userId, cancellationToken);
         if (prepared.IsFailure) return prepared.Error;
+        // F37: an edit is filtered like a new comment (no spam limit: it adds nothing).
+        var screened = await guard.ScreenAsync(prepared.Value.Body, cancellationToken);
+        if (screened.IsFailure) return screened.Error;
 
         var edited = comment.Edit(userId, prepared.Value.Body, prepared.Value.MentionedUserIds, clock.GetUtcNow().UtcDateTime);
         if (edited.IsFailure) return edited.Error;
+        await guard.FlagAsync(comment.Id, screened.Value, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         return (await reader.LoadOneAsync(comment.Id, cancellationToken))!;
@@ -121,7 +142,8 @@ internal sealed class DeleteCommentCommandHandler(IAppDbContext db, ICurrentUser
     }
 }
 
-internal sealed class SetCommentLikeCommandHandler(IAppDbContext db, ICurrentUser currentUser, CommentPosting posting, TimeProvider clock)
+internal sealed class SetCommentLikeCommandHandler(
+    IAppDbContext db, ICurrentUser currentUser, CommentPosting posting, Blocks.BlockRelations blocks, TimeProvider clock)
     : ICommandHandler<SetCommentLikeCommand, Result<CommentLikeDto>>
 {
     public async ValueTask<Result<CommentLikeDto>> Handle(SetCommentLikeCommand command, CancellationToken cancellationToken)
@@ -129,6 +151,9 @@ internal sealed class SetCommentLikeCommandHandler(IAppDbContext db, ICurrentUse
         var userId = currentUser.RequireUserId();
         var comment = await db.Comments.AsNoTracking().FirstOrDefaultAsync(c => c.Id == command.CommentId, cancellationToken);
         if (comment is null) return CommentErrors.NotFound;
+        // F36: no like on the comment (or under the article) of someone you are blocked with.
+        if (await blocks.ErrorForAsync(userId, comment.AuthorId, CommentErrors.NotFound, cancellationToken) is { } blockedAuthor) return blockedAuthor;
+        if (await blocks.ArticleErrorAsync(currentUser, comment.ArticleId, cancellationToken) is { } blockedArticle) return blockedArticle;
         if (!comment.IsVisible) return CommentErrors.NotAvailable;
         if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == comment.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 

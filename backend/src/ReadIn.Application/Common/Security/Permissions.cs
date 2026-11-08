@@ -43,6 +43,12 @@ public static class Permissions
         public const string Manage = "follows.manage";
     }
 
+    /// <summary>Block and unblock people (SPEC F36).</summary>
+    public static class Blocks
+    {
+        public const string Manage = "users.block";
+    }
+
     public static class Saved
     {
         public const string Manage = "saved.manage";
@@ -139,5 +145,6 @@ public static class Permissions
         [Support.Manage] = "Answer support tickets",
         [Notifications.Broadcast] = "Send announcements",
         [Audit.Read] = "Browse the audit log",
+        [Blocks.Manage] = "Block and unblock people",
     };
 }

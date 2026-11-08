@@ -27,6 +27,8 @@ public sealed class ModerationReader(IAppDbContext db, IFileStorage storage, Tim
 
     private sealed record CommentRow(Guid Id, string Body, Guid ArticleId, Guid? AuthorId, bool IsDeleted, DateTime? HiddenAt);
 
+    private sealed record RepostRow(Guid Id, Guid UserId, Guid ArticleId, string? Caption);
+
     private sealed record UserRow(
         Guid Id, string DisplayName, string Username, string? AvatarUrl, bool IsVerified, bool IsDeleted, bool IsSuspended, DateTime? SuspendedUntil,
         string? Headline, IReadOnlyList<ProfileLink> Links);
@@ -42,7 +44,17 @@ public sealed class ModerationReader(IAppDbContext db, IFileStorage storage, Tim
                 .Select(c => new CommentRow(c.Id, c.Body, c.ArticleId, c.AuthorId, c.IsDeleted, c.HiddenAt))
                 .ToListAsync(ct);
 
-        var articleIds = IdsOf(keys, ReportTargetType.Article).Concat(comments.Select(c => c.ArticleId)).Distinct().ToList();
+        // Reposts (F22 store requirements) are deleted outright when undone or removed: a missing one is gone.
+        var repostIds = IdsOf(keys, ReportTargetType.Repost);
+        var reposts = repostIds.Count == 0
+            ? []
+            : await db.Reposts.AsNoTracking()
+                .Where(r => repostIds.Contains(r.Id))
+                .Select(r => new RepostRow(r.Id, r.UserId, r.ArticleId, r.Caption))
+                .ToListAsync(ct);
+
+        var articleIds = IdsOf(keys, ReportTargetType.Article).Concat(comments.Select(c => c.ArticleId)).Concat(reposts.Select(r => r.ArticleId))
+            .Distinct().ToList();
         var articles = articleIds.Count == 0
             ? new Dictionary<Guid, ArticleRow>()
             : await db.Articles.IgnoreQueryFilters().AsNoTracking()
@@ -53,7 +65,7 @@ public sealed class ModerationReader(IAppDbContext db, IFileStorage storage, Tim
 
         var userTargets = IdsOf(keys, ReportTargetType.User);
         var people = articles.Values.Select(a => (Guid?)a.AuthorId).Concat(comments.Select(c => c.AuthorId))
-            .OfType<Guid>().Concat(userTargets).Distinct().ToList();
+            .OfType<Guid>().Concat(userTargets).Concat(reposts.Select(r => r.UserId)).Distinct().ToList();
         var users = people.Count == 0
             ? new Dictionary<Guid, UserRow>()
             : await db.Users.IgnoreQueryFilters().AsNoTracking()
@@ -70,6 +82,7 @@ public sealed class ModerationReader(IAppDbContext db, IFileStorage storage, Tim
                 .ToDictionaryAsync(g => g.UserId, g => g.Count, ct);
 
         var commentsById = comments.ToDictionary(c => c.Id);
+        var repostsById = reposts.ToDictionary(r => r.Id);
         var now = clock.GetUtcNow().UtcDateTime;
         return keys.Distinct().ToDictionary(key => key, key => key.Type switch
         {
@@ -92,6 +105,17 @@ public sealed class ModerationReader(IAppDbContext db, IFileStorage storage, Tim
                     ArticleId = comment.ArticleId,
                     ArticleSlug = articles.GetValueOrDefault(comment.ArticleId)?.Slug,
                     ArticleTitle = articles.GetValueOrDefault(comment.ArticleId)?.Title,
+                }
+                : Gone,
+            ReportTargetType.Repost => repostsById.TryGetValue(key.Id, out var repost)
+                ? new ModerationTargetDto
+                {
+                    State = ModerationTargetStates.Visible,
+                    Author = Author(repost.UserId),
+                    Body = repost.Caption,
+                    ArticleId = repost.ArticleId,
+                    ArticleSlug = articles.GetValueOrDefault(repost.ArticleId)?.Slug,
+                    ArticleTitle = articles.GetValueOrDefault(repost.ArticleId)?.Title,
                 }
                 : Gone,
             _ => users.TryGetValue(key.Id, out var user) && !user.IsDeleted

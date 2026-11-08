@@ -166,7 +166,7 @@ public sealed class RepostTests(ApiFactory api)
         top["user"]!["username"]!.GetValue<string>().Should().Be(Username(secondReposter));
         top["othersCount"]!.GetValue<int>().Should().Be(1, "the other writer you follow who reposted it; unfollowed ones don't count");
         top["repostedAt"]!.GetValue<DateTime>().Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
-        top.AsObject().Select(p => p.Key).Should().Equal("user", "othersCount", "repostedAt", "caption");
+        top.AsObject().Select(p => p.Key).Should().Equal("user", "othersCount", "repostedAt", "caption", "repostId", "reportedByMe");
         top["caption"].Should().BeNull("reposted without thoughts");
 
         feed[1]["repostedBy"].Should().BeNull("the followed author's own post, placed by its publish");
@@ -543,7 +543,7 @@ public sealed class RepostTests(ApiFactory api)
         tab.Select(c => Id(c!)).Should().Equal(plain, articleId);
         Caption(tab[0]!["repostedBy"]).Should().BeNull();
         Caption(tab[1]!["repostedBy"]).Should().Be("رأي الأول\nfirst's thoughts");
-        tab[1]!["repostedBy"]!.AsObject().Select(p => p.Key).Should().Equal("user", "othersCount", "repostedAt", "caption");
+        tab[1]!["repostedBy"]!.AsObject().Select(p => p.Key).Should().Equal("user", "othersCount", "repostedAt", "caption", "repostId", "reportedByMe");
     }
 
     [Fact]

@@ -15,6 +15,7 @@ internal sealed class ExternalSignInCommandHandler(
     SessionIssuer sessions,
     AuditTrail audit,
     AppleTokens appleTokens,
+    Legal.TermsOfUse terms,
     TimeProvider clock)
     : ICommandHandler<ExternalSignInCommand, Result<AuthSessionDto>>
 {
@@ -48,6 +49,9 @@ internal sealed class ExternalSignInCommandHandler(
         }
 
         if (!command.CreateAccount) return CredentialErrors.ExternalNotLinked;
+        // A new account needs the terms box (SPEC F37); signing in or linking an existing one doesn't.
+        var accepted = Legal.TermsOfUse.Require(command.AcceptTerms);
+        if (accepted.IsFailure) return accepted.Error;
         return await RegisterAsync(command, identity, now, cancellationToken);
     }
 
@@ -102,6 +106,8 @@ internal sealed class ExternalSignInCommandHandler(
             NewAccounts.ValidTimeZoneOrNull(command.TimeZone));
         db.Users.Add(user);
         audit.Record(AuditActions.ExternalSignUp, user.Id);
+        user.AcceptTerms(terms.CurrentVersion, now);
+        audit.Record(AuditActions.TermsAccepted, user.Id, AuditTargets.User, user.Id, terms.CurrentVersion);
         await appleTokens.CaptureAsync(user, identity, command.AuthorizationCode, ct);
 
         try

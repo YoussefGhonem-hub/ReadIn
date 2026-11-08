@@ -228,7 +228,7 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
 
         var link = NotificationLinks.For(
             entry.Type, actor.Count, actor.Username, user.Username, article?.Slug, entry.CommentId, OfficialArticles.CountOf(data),
-            data.PathSlug, data.TicketId);
+            data.PathSlug, data.TicketId, data.TargetType, data.TargetId);
         var payload = new Dictionary<string, string>
         {
             ["type"] = entry.Type,
@@ -240,6 +240,12 @@ public sealed partial class NotificationPusher(IAppDbContext db, IPushSender pus
             payload["lang"] = translation.Language == ArticleLanguages.English ? UiLanguages.English : UiLanguages.Arabic;
         if (data.AnnouncementId is { } announcementId) payload["announcementId"] = announcementId.ToString();
         if (data.TicketId is { } pushTicketId) payload["ticketId"] = pushTicketId.ToString();
+        // report_new (F22): the case it opens.
+        if (entry.Type == NotificationTypes.ReportNew && data.TargetType is { } reportType && data.TargetId is { } reportTarget)
+        {
+            payload["targetType"] = reportType;
+            payload["targetId"] = reportTarget.ToString();
+        }
         if (notice is not null)
         {
             // As F22's push had them, so clients that refresh their notices on this push keep working.

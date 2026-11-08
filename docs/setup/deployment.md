@@ -594,3 +594,16 @@ Nothing else needs setting: the permissions reach the SuperAdmin on the next sta
 Screenshots of tickets live in the private store (`Storage:PrivatePath`, §8) under `support/`, so its backups cover them.
 Two jobs keep tickets tidy: `support-auto-close` (hourly) closes Answered tickets after 14 days without a reply, and
 `support-retention` (daily, 04:15 UTC) deletes tickets closed more than a year ago with their files.
+
+## 16. Terms of Use, the content filter and the App Review account (SPEC F37, §18.3)
+
+| Key | Default | Notes |
+|---|---|---|
+| `Legal:TermsVersion` | `2026-11-08` | The Terms of Use version every account accepts (≤ 16 characters; the API refuses to start without one). Raising it shows signed-in people the terms screen once; nothing else is refused. On a server: `Legal__TermsVersion`. |
+| `Legal:EffectiveAt`, `Legal:Summary:Ar`, `Legal:Summary:En` | empty | Optional: when the version took effect and a short note of what changed, shown on the terms screen. |
+| `Seed:ReviewerPhone`, `Seed:ReviewerPassword` | empty | The App Review account (secrets). Both set: every seed run adopts the account with that number (review account, terms accepted, no forced password change or PIN screen, the password reset only when it differs; profile, interests and content untouched) or creates "ReadIn Demo" (`@readin_demo`) ready to use. Either empty: nothing. |
+| `Seed:ReviewerPin` | empty | The recovery PIN of a newly created review account; random when empty. |
+
+The word lists of the content filter ship in `content/moderation/{ar,en}.{block,flag}.txt` and are seeded at start
+(seeder `content-filter`). The SuperAdmin edits them in the console (System → Content filter) without a release; those
+changes are kept when the files change.

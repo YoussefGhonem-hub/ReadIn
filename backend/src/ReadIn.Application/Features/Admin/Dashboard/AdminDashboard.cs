@@ -14,7 +14,11 @@ namespace ReadIn.Application.Features.Admin.Dashboard;
 // ---- DTOs (contract-v1 "Admin console (F23)") ----
 
 /// <summary>GET /admin/summary: the badge on the console entry. Each count is null without its permission.</summary>
-public sealed record AdminSummaryDto(int? OpenReports, int? OpenTickets, int? PendingVerifications, int Total);
+public sealed record AdminSummaryDto(int? OpenReports, int? OpenTickets, int? PendingVerifications, int Total)
+{
+    /// <summary>Open report targets whose oldest open report is past the F22 24-hour target; null without moderation.manage.</summary>
+    public int? OpenReportsOver24h { get; init; }
+}
 
 public sealed record DashboardValueDto(int Value, int Previous);
 
@@ -32,7 +36,11 @@ public sealed record DashboardCardsDto(
     int? OpenReports,
     int? OpenTickets,
     int? PendingVerifications,
-    int SuspendedNow);
+    int SuspendedNow)
+{
+    /// <summary>Open report targets past the F22 24-hour target (target: 0); null without moderation.manage.</summary>
+    public int? OpenReportsOver24h { get; init; }
+}
 
 public sealed record DashboardDayDto(string Date, int NewUsers, int ActiveReaders, int ArticlesPublished);
 
@@ -111,6 +119,18 @@ internal sealed class AdminQueueCounts(IAppDbContext db, ICurrentUser currentUse
                 .CountAsync(ct)
             : null;
 
+    /// <summary>Open targets whose oldest open report is older than 24 hours (SPEC F22 store requirements).</summary>
+    public async Task<int?> OpenReportsOver24hAsync(CancellationToken ct)
+    {
+        if (!currentUser.Permissions.Contains(Permissions.Moderation.Manage)) return null;
+        var cutoff = clock.UtcNow - Report.ResponseTarget;
+        return await db.Reports.AsNoTracking()
+            .Where(r => r.Status == ReportStatus.Open)
+            .GroupBy(r => new { r.TargetType, r.TargetId })
+            .Where(g => g.Min(r => r.CreatedAt) < cutoff)
+            .CountAsync(ct);
+    }
+
     public async Task<int?> OpenTicketsAsync(CancellationToken ct) =>
         currentUser.Permissions.Contains(Permissions.Support.Manage) ? await tickets.CountOpenAsync(ct) : null;
 
@@ -134,7 +154,10 @@ internal sealed class GetAdminSummaryQueryHandler(AdminQueueCounts counts) : IQu
         var reports = await counts.OpenReportsAsync(cancellationToken);
         var tickets = await counts.OpenTicketsAsync(cancellationToken);
         var verifications = await counts.PendingVerificationsAsync(cancellationToken);
-        return new AdminSummaryDto(reports, tickets, verifications, (reports ?? 0) + (tickets ?? 0) + (verifications ?? 0));
+        return new AdminSummaryDto(reports, tickets, verifications, (reports ?? 0) + (tickets ?? 0) + (verifications ?? 0))
+        {
+            OpenReportsOver24h = await counts.OpenReportsOver24hAsync(cancellationToken),
+        };
     }
 }
 
@@ -170,6 +193,7 @@ internal sealed class GetAdminDashboardQueryHandler(AdminDashboardReader reader,
             OpenTickets = await counts.OpenTicketsAsync(cancellationToken),
             PendingVerifications = await counts.PendingVerificationsAsync(cancellationToken),
             SuspendedNow = await counts.SuspendedNowAsync(cancellationToken),
+            OpenReportsOver24h = await counts.OpenReportsOver24hAsync(cancellationToken),
         };
         return dashboard with { Cards = cards };
     }
@@ -229,6 +253,8 @@ internal sealed class AdminDashboardReader(IAppDbContext db, AdminClock clock, I
     private Task<int> ActiveReadersAsync(DateTime from, DateTime to, CancellationToken ct) =>
         db.ReadingProgress.AsNoTracking()
             .Where(r => r.CompletedAt >= from && r.CompletedAt < to)
+            // The App Review account (SPEC §18.3) is left out of the analytics.
+            .Where(r => !db.Users.Any(u => u.Id == r.UserId && u.IsReviewAccount))
             .Select(r => r.UserId)
             .Distinct()
             .CountAsync(ct);
@@ -248,12 +274,12 @@ internal sealed class AdminDashboardReader(IAppDbContext db, AdminClock clock, I
     private async Task<DashboardNewUsersDto> NewUsersAsync(AdminWindow window, CancellationToken ct)
     {
         var methods = await db.Users.AsNoTracking()
-            .Where(u => !u.IsSystemAccount && u.CreatedAt >= window.FromUtc && u.CreatedAt < window.ToUtc)
+            .Where(u => !u.IsSystemAccount && !u.IsReviewAccount && u.CreatedAt >= window.FromUtc && u.CreatedAt < window.ToUtc)
             .GroupBy(u => u.SignUpMethod)
             .Select(g => new { Method = g.Key, Count = g.Count() })
             .ToListAsync(ct);
         var previous = await db.Users.AsNoTracking()
-            .CountAsync(u => !u.IsSystemAccount && u.CreatedAt >= window.PreviousFromUtc && u.CreatedAt < window.PreviousToUtc, ct);
+            .CountAsync(u => !u.IsSystemAccount && !u.IsReviewAccount && u.CreatedAt >= window.PreviousFromUtc && u.CreatedAt < window.PreviousToUtc, ct);
 
         int Of(string method) => methods.Where(m => m.Method == method).Sum(m => m.Count);
         var google = Of(SignUpMethods.Google);
@@ -271,7 +297,7 @@ internal sealed class AdminDashboardReader(IAppDbContext db, AdminClock clock, I
         var to = clock.UtcNow;
 
         var joined = await db.Users.AsNoTracking()
-            .Where(u => !u.IsSystemAccount && u.CreatedAt >= from && u.CreatedAt < to)
+            .Where(u => !u.IsSystemAccount && !u.IsReviewAccount && u.CreatedAt >= from && u.CreatedAt < to)
             .Select(u => u.CreatedAt)
             .ToListAsync(ct);
         var reads = await db.ReadingProgress.AsNoTracking()

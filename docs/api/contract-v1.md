@@ -877,7 +877,7 @@ dedupe by `commentId`, and skip events for your own just-made change. Events are
 | Method | Path | Body → Response |
 |---|---|---|
 | POST | `/reports` | `{ targetType: "article"\|"comment"\|"user", targetId, reason: spam\|misinformation\|harassment\|copyright\|other, details? (≤ 500) }` → `204`. Permission `reports.create`, rate limit `writes`. Reporting the same target again is a no-op. `400 report.own_content` (your article or comment, or yourself), `404 report.target_not_found` (unknown or deleted; a hidden article and its comments for anyone but its author and moderators), validation `report.target_invalid`, `report.reason_invalid`. A suspended user can be reported |
-| GET | `/moderation/summary` | → `{ open: { article, comment, user, total } }`: targets with open reports (the nav badge) |
+| GET | `/moderation/summary` | → `{ open: { article, comment, user, repost, total } }`: targets with open reports (the nav badge) |
 | GET | `/moderation/reports?status=&type=&cursor=&limit=` | → `CursorPage<ModerationQueueItemDto>`, one item per target. `status` = `open` (default) \| `resolved` \| `dismissed`; `type` = `article` \| `comment` \| `user` (optional). Open: most reports first, then the most recent report. Resolved and dismissed: most recently closed first. `limit` 1–50 (default 20). Validation `report.status_invalid`, `report.target_invalid` |
 | GET | `/moderation/reports/{targetType}/{targetId}` | → `ModerationCaseDto`; a user's case also lists the user's writer categories (`categories`, F31). `404 report.target_not_found` when nobody reported it |
 | POST | `/moderation/actions` | `ModerationActionRequest` → `204`. Rate limit `writes`. Rules below |
@@ -933,6 +933,61 @@ Member).
   also in the audit log. `warn` and an article `hide` are notices to the user (`GET /me/moderation-notices`) with a push.
 - A suspension blocks the account at once (`403 user.suspended` with `suspendedUntil`, see Errors), and a temporary one
   ends by itself at `suspendedUntil`.
+
+### Report additions (F22, store requirements) — SPEC F22 "Required for the App Store and Google Play"
+
+Added 2026-11-08 for App Review (Guideline 1.2). Everything in "Reports and moderation (F22)" stays; this adds to it.
+
+**Decisions** (what the SPEC leaves open)
+
+1. **Reposts are a report target.** A repost card's "⋯" reports the **repost** (its caption is the reposter's text):
+   `targetType: "repost"`, `targetId` = the repost's id (new on `RepostLabelDto.repostId`). The article itself is
+   reported from the article's own "⋯". A repost case shows the reposter, the caption and the reposted article; its
+   actions are `delete` (removes the repost, as if its owner had undone it) and `dismiss`. Warn or suspend the reposter
+   from the user's case.
+2. **Hidden for the reporter** is a per-caller flag, not a filter: `reportedByMe` on `ArticleCardDto`,
+   `ArticleDetailsDto`, `CommentDto` and `RepostLabelDto` (true when the caller has a report, open or closed, on that
+   article, comment or repost). Cards and comments stay in their lists; clients collapse them to «أبلغت عن هذا المحتوى،
+   ولن يظهر لك بعد الآن» / "You reported this. It's hidden for you" with «عرض» / "Show". A reported **user** stays
+   visible (no flag) unless the reporter also blocks them.
+3. **Report and block:** `POST /reports` takes `alsoBlock?: boolean` (default `false`). With `true` the report and the
+   block (F36) of the target's author (the article's or comment's author, the reposter, or the user) are saved together;
+   `400 block.limit` saves neither. Ignored when the author is deleted.
+4. **The 24-hour target:** a case's age runs from its **oldest open report**. `ModerationQueueItemDto` gains `ageHours`
+   (whole hours, open cases only, else `null`) and `urgent` (open and `ageHours ≥ 12`). The open tab still lists the most
+   reports first; clients show the age and the «عاجل» / "Urgent" mark. The dashboard gains
+   `cards.openReportsOver24h` (open targets whose oldest open report is older than 24 hours; `null` without
+   `moderation.manage`), and `AdminSummaryDto` gains the same number for the console's attention line.
+5. **`report_new`** (to holders of `moderation.manage`, never to the reporter): one entry per target, grouped
+   (`report_new:{targetType}:{targetId}`); new reports join the unread entry and move it up. Push: at most **one per
+   target per hour**: a report that joins an entry pushed less than an hour ago arms the push for an hour after that
+   push. Configurable (holders only, like `support_ticket`); quiet hours apply. System reports (the content filter) send
+   it too.
+6. **`report_resolved`** (to every human reporter whose report a moderator closed, by resolving or dismissing): in-app
+   only, never pushed, not configurable (a receipt). `data.outcome` = `actioned` (resolved) or `no_violation`
+   (dismissed); `data.targetType` and `data.targetLabel` (the reported title, the comment's first 80 characters or
+   `@username`, as the reporter knew it). No actor and no `article`: it never says who acted or what was done to a user,
+   and it stays in the list when the content is gone. Reports closed because the target itself was deleted send nothing.
+7. **System reports** (the content filter, F37): `reporterId` is `null` (the reporter is «فلتر المحتوى» / "Content
+   filter"), reason `other`, with the matched terms kept for staff (`ModerationReportDto.matchedTerms`). One system
+   report per target: a later flag of the same target reopens it with the new terms. They count in the queue, the badge,
+   the dashboard and the 24-hour target like any report.
+
+| Change | Details |
+|---|---|
+| `POST /reports` | `{ targetType: "article" \| "comment" \| "user" \| "repost", targetId, reason, details?, alsoBlock? }` → `204`. `404 report.target_not_found` also for a repost that is gone; `400 report.own_content` for your own repost; with `alsoBlock`: `400 block.limit` (nothing saved) |
+| `POST /moderation/actions` | target `repost`: `delete`, `dismiss` (others `400 moderation.action_invalid`). `delete` removes the repost and resolves its open reports; logged `repost.delete`, audited `moderation.repost_deleted` (the reposter as the user). `404 repost.not_found` |
+| `GET /moderation/reports?type=repost`, `GET /moderation/reports/repost/{id}` | the repost cases; `ModerationTargetDto` for a repost: `author` = the reposter, `body` = the caption, `articleId` / `articleSlug` / `articleTitle` = the reposted article, `state` `visible` \| `deleted` |
+| `ModerationQueueItemDto` | `+ ageHours: number \| null`, `+ urgent: boolean` (decision 4) |
+| `ModerationReportDto` | `+ isSystem: boolean` (`reporter` is `null` and the row reads "Content filter"), `+ matchedTerms: string[] \| null` (system reports only) |
+| Dashboard / summary | `AdminDashboardDto.cards.openReportsOver24h`, `AdminSummaryDto.openReportsOver24h` (decision 4) |
+| Article, comment and repost DTOs | `+ reportedByMe: boolean` (decision 2; per caller, never cached; `false` for guests) |
+
+Error codes: `repost.not_found` (404) is new.
+
+| Code | Arabic | English |
+|---|---|---|
+| `404 repost.not_found` | «إعادة النشر هذه غير موجودة.» | "This repost no longer exists." |
 
 ### Writer verification (F19; Bearer) — SPEC F19
 
@@ -2289,6 +2344,198 @@ Account deletion follows §9.6: the account's tickets, messages and attachments 
 after the commit; on other members' tickets its replies and notes stay with `AuthorId` and `ClosedById` nulled. New
 configuration: `Support:Email` (empty = none).
 
+### Block (F36) — SPEC F36
+
+Block cuts all contact between two people, both ways (Mute, F28, stays the private one-way option). Bearer on every
+route; writes need `users.block` (new; every Member and the SuperAdmin) and use the `writes` rate limit.
+
+**Decisions** (what SPEC F36 leaves open)
+
+1. **The blocked person is never told.** Whoever is blocked (B) sees the blocker's (A's) content exactly as if it were
+   deleted: `404` on direct links (`article.not_found`, `user.not_found`, `comment.not_found`) and on writes to A's
+   content or account (follow, comment, reply, react, highlight, repost, mention). The SPEC's `403 block.blocked` is only
+   for **the blocker**: A opening B's article, profile or comment gets `403 block.blocked` with `blockedUser: { id,
+   username, displayName }` in the problem, so clients show «هذا المحتوى غير متاح» / "This content isn't available"
+   (or «هذا الحساب غير متاح» / "This account isn't available" on a profile) with «إلغاء الحظر» / "Unblock"; A's writes on
+   B's content or account get the same `403 block.blocked`.
+2. **Lists leave blocked people out, both ways**, for signed-in callers (guests see everything), with the F28 mute
+   seam (`WithoutMutedFor` grows a block check):
+   - **Articles** by either person: For you, Following (reposts too), Today's article (the pick skips them, as muted
+     writers), Related, Explore (sections and rankings), field pages, tag pages, Search, saved lists, collections,
+     continue reading, learning path pages (the article is skipped like an unreadable one), a profile's tabs (the profile
+     itself is unavailable).
+   - **People:** Search, suggested writers, Explore `newWriters`, a field's top writers, followers / following lists,
+     who reacted (`GET /articles/{id}/reactions`), mention suggestions, and `repostedBy` labels (the next reposter you
+     follow is shown, or the card leaves the Following feed when only blocked people placed it).
+   - **Comments and replies** of either person on anyone's article: left out of every comment list and feed-card
+     comments. A top-level comment of theirs that has visible replies by others stays as a placeholder
+     (`isUnavailable: true`, `body` and `author` `null`), and those replies stay.
+   - **Notifications:** nothing either does is written for the other (follows, comments, replies, mentions, reactions
+     milestones keep counting but name no actor, reposts, `followed_writer_article`); blocking deletes the entries one
+     wrote for the other and removes that actor from aggregated entries (an entry left without actors is deleted), and
+     their pending pushes are skipped.
+   - **Mentions:** neither can mention the other from then on (comments and articles skip the link, as "who can mention
+     me" does). Existing mentions stay as plain text for the pair: `CommentDto.mentions` leaves them out, and
+     `ArticleDetailsDto.unlinkedMentionIds` lists the user ids the reader must render as plain text (per caller).
+   - **Counts** (followers, reactions, comments, reposts) stay the same for everyone.
+3. **Follows** between them are deleted both ways when the block is made, and neither can follow the other while it lasts.
+   `DELETE /users/{id}/block?restoreFollow=true` (the toast's Undo) follows them again as before (only **your** follow;
+   theirs never comes back, so they can't tell). Unblocking from Settings never restores follows.
+4. **Staff:** blocks never hide anything in `/moderation/*`, `/admin/*` or the console, and holders of
+   `moderation.manage` open direct links (article, comment, profile) of people they're blocked with as usual, so a case
+   always opens. Moderation notices, verification results, support replies and announcements aren't "from" a person and
+   still arrive. Staff and the official `@readin` can be blocked like anyone.
+5. **Limits:** at most 1,000 blocks per account (`400 block.limit`); blocking or unblocking twice is a no-op (`200`).
+
+| Method | Path | Body → Response |
+|---|---|---|
+| PUT | `/users/{id}/block` | → `200 UserBlockStateDto` (idempotent). Blocks the user and deletes the follows both ways (`followRemoved: true` when you followed them). `400 block.self`, `400 block.limit`, `404 user.not_found` (unknown or deleted) |
+| DELETE | `/users/{id}/block?restoreFollow=` | → `200 UserBlockStateDto` (idempotent; `isBlocked: false`). `restoreFollow=true`: also follows them again (`403`/`404` from follow are ignored). `404 user.not_found` |
+| GET | `/me/blocked` | → `200 { items: BlockedUserDto[] }`: Settings → Blocked accounts, newest block first, not paged (≤ 1,000) |
+
+- Blocking someone who already blocked you works (both blocks then hold) and still tells them nothing.
+- Account deletion (§9.6): `UserBlocks` rows in both directions are deleted.
+- New error codes:
+
+| Code | Arabic | English |
+|---|---|---|
+| `400 block.self` | «لا يمكنك حظر نفسك.» | "You can't block yourself." |
+| `400 block.limit` | «وصلت إلى الحد الأقصى للحسابات المحظورة (1000 حساب).» | "You've reached the limit of 1,000 blocked accounts." |
+| `403 block.blocked` (+ `blockedUser`) | «هذا الحساب محظور لديك. ألغِ الحظر أولًا.» | "You blocked this account. Unblock it first." |
+
+### Legal & content filter (F37) — SPEC F37
+
+**Decisions** (what SPEC F37 leaves open)
+
+1. **Terms version:** `Legal:TermsVersion` in configuration (a date-like string, e.g. `2026-11-08`, ≤ 16). An account
+   accepted version `Users.TermsVersion` at `TermsAcceptedAt`. `MeDto` gains `termsVersion` (accepted, or `null`) and
+   `mustAcceptTerms` (`termsVersion` isn't the current one). The guards after sign in become: `mustChangePassword` →
+   `mustSetRecoveryPin` → **`mustAcceptTerms`** → complete profile → onboarding → home.
+2. **On deploy nobody is locked out.** The migration leaves existing accounts at `null`, so the new apps show the terms
+   screen once ("I agree", or sign out / delete account). The API does **not** refuse other calls of an account that
+   hasn't accepted (older app builds keep working; the forced-update policy, §8.3, moves people to the new app). The
+   seeders accept the current version for the accounts they create or update: the SuperAdmin, the demo users, the
+   official `@readin` and the App Review account (§18.3).
+3. **Sign up requires the checkbox:** `POST /auth/register` and `POST /auth/external` with `createAccount: true` need
+   `acceptTerms: true`, else `400 auth.terms_required` (checked before anything is created; linking or signing in an
+   existing account doesn't need it). Accepting is audited `auth.terms_accepted` (details: the version).
+4. **`GET /legal`** (🌐) gives the version, when it took effect and a short summary of the changes in both languages
+   (`Legal:Summary:Ar` / `:En`, optional) and the page paths (`/terms`, `/community-guidelines`, `/privacy`); clients
+   prepend their web origin (the web serves the pages, bilingual, server-rendered).
+5. **Where the filter runs** (server side, every public text a person writes; §32.1 says "all user text"): article
+   titles, subtitles and content (every language version, on publish and Update, not on draft saves), tag names a
+   publish creates, comments and replies (create and edit), repost captions, display names, `@usernames`, headlines,
+   bios, social link labels, writer category names, collection names, and support ticket subjects. Repost captions,
+   tag names, link labels and category names go beyond the SPEC's list because they are public text too.
+6. **Two levels.** **Block** refuses the request with `422 content.objectionable` and the field in the problem
+   (`field`, e.g. `displayName`, `body`, `caption`, `subject`, or for a publish `title` / `subtitle` / `content` with
+   `language` and, for content, `blockId`); the matched words are never sent back. **Flag** saves the text and files a
+   system report (F22 decision 7) on the article, comment, repost or user (profile fields, category names); collection
+   names and ticket subjects are private, so a flag there does nothing.
+7. **Flag heuristics** (likely spam), on articles, comments, replies, captions and bios: 3 or more links, the same link
+   twice, or a phone number (9+ digits in a row after separators are removed, Arabic-Indic digits included).
+8. **Matching** (user requirement, 2026-11-08). No substring matching: a term matches **whole words** (one or more in
+   a row), after these steps on both the text and the term:
+   - **Normalize:** §22 (diacritics, tatweel, `أ إ آ ٱ → ا`, `ى → ي`, `ة → ه`), lower case, Arabic-Indic digits → `0–9`.
+   - **Separators inside a word** are removed: `. - _ * | ~ ـ`, zero-width and other invisible format characters, and
+     diacritics. A **run of single letters** split by spaces or punctuation is also joined into one candidate
+     (`ك ل م ة`, `k.a.l.m.a`, `k-a-l-m-a`).
+   - **Repeated letters** collapse (`كلمممة`, `shiiit`); each listed term is also compared in its collapsed form, so a
+     term that really holds a double letter still matches.
+   - **Arabic affixes:** for each Arabic token the candidates are the token, the token without its **prefixes** (stacked,
+     longest first: `و ف ب ل ك ال وال بال فال كال لل وبال ولل فلل` and the like), without its **pronoun suffix** (`ك كم كما
+     كن ه ها هم هما هن ي ني نا`), and without both. When a suffix follows a ta marbuta written `ت` (`كلمتك` → `كلمت`), the
+     stem is also tried with `ة`/`ه` (`كلمه` after normalization). A token matches when any candidate equals a listed
+     term.
+   - **Against false positives:** a stripped candidate must keep at least 3 letters, and a listed term of 2 letters or
+     fewer matches only the bare token (no stripping). A word that merely looks like prefix + term is not caught when
+     the stripped form would be too short; an ordinary word that contains a term is never caught.
+   - **Franco-Arabic and leetspeak:** the lists carry Franco spellings of the Arabic terms (digits `2 3 5 6 7 8 9` as
+     letters, e.g. `3` = ع, `7` = ح); Latin text is lowercased and compared with its digits kept. English terms are also
+     compared against a leetspeak candidate of each Latin token (`0→o`, `1→i`/`l`, `3→e`, `4→a`, `@→a`, `$→s`, `5→s`,
+     `7→t`), which never replaces the token's own form, so Franco spellings still match as written.
+9. **The lists:** `content/moderation/{ar,en}.{block,flag}.txt` (one term per line, `#` comments; `ar` holds MSA,
+   Egyptian and Franco-Arabic spellings), seeded into `ContentFilterTerms` (seeder `content-filter`, all environments).
+   The console edits them without a release: a term added there is the console's; removing a file term **disables** it,
+   so the seeder never brings it back, and a changed level sticks. The matcher keeps the enabled terms in memory and
+   reloads them on every change (and every 5 minutes, for other API instances).
+10. **Spam limits** (on top of the rate limits): 5 **new** articles published per account in 24 hours (an Update doesn't
+    count) and 60 comments and replies per hour (rolling), else `429 content.too_many` with `limit:
+    "articles_per_day" | "comments_per_hour"`. Seeding doesn't count.
+
+| Method | Path | Permission | Body → Response |
+|---|---|---|---|
+| GET | `/legal` | 🌐 | → `200 LegalDto` (`Cache-Control: public, max-age=300`) |
+| POST | `/me/terms/accept` | Bearer | → `200 MeDto` (the current version accepted now; idempotent). Rate limit `writes` |
+| POST | `/auth/register` | 🌐 | `RegisterRequest` gains `acceptTerms: boolean` (required `true`) → `400 auth.terms_required` |
+| POST | `/auth/external` | 🌐 | `ExternalSignInRequest` gains `acceptTerms?: boolean` (required `true` with `createAccount: true`) → `400 auth.terms_required` |
+| GET | `/admin/content-filter` | `system.settings` | → `200 ContentFilterDto`: every term, enabled or not, by language and level |
+| PUT | `/admin/content-filter` | `system.settings` | `UpdateContentFilterRequest` → `200 ContentFilterDto`. Rate limit `writes`. Audited `admin.content_filter_updated` (details: `+added -disabled ~changed`). Validation (`400 validation.failed`): each term 2–100 characters after normalization and at least one letter (`content_filter.term_invalid`), `language` `ar` \| `en`, `level` `block` \| `flag` (`validation.invalid`), at most 5,000 terms |
+| POST | `/admin/content-filter/test` | `system.settings` | `{ text }` (≤ 5,000) → `200 { level: "none" \| "flag" \| "block", matches: string[] }`: try a text in the console (staff see the matched terms) |
+
+Every route of the filter's fields answers the two new errors: `422 content.objectionable` and, for publish and
+comments, `429 content.too_many`.
+
+| Code | Arabic | English |
+|---|---|---|
+| `400 auth.terms_required` | «يجب الموافقة على شروط الاستخدام وقواعد المجتمع لإنشاء حساب.» | "You must agree to the Terms of Use and Community Guidelines to create an account." |
+| `422 content.objectionable` (+ `field`, `language?`, `blockId?`) | «هذا النص يخالف قواعد المجتمع. عدّله وحاول مرة أخرى.» | "This text breaks our Community Guidelines. Edit it and try again." |
+| `429 content.too_many` (+ `limit`) | «وصلت إلى الحد المسموح به: 5 مقالات في اليوم و60 تعليقًا في الساعة.» | "You've reached the limit: 5 articles a day and 60 comments an hour." |
+| `content_filter.term_invalid` (validation) | «أدخل كلمة صالحة من حرفين على الأقل.» | "Enter a valid term of at least 2 characters." |
+
+#### Notifications (F17 changes for F22, F36, F37)
+- New types: `report_new` (holders of `moderation.manage`; push + in-app; configurable, listed only for holders) and
+  `report_resolved` (in-app only; always comes). `GET /me/notification-settings` returns 10 types for a member, 12 for
+  a holder of both `support.manage` and `moderation.manage` (with `support_ticket` and `report_new`).
+- Links: `report_new` → `readin://admin/reports/{targetType}/{targetId}` (web `/admin/reports/{targetType}/{targetId}`,
+  mobile the console's case); `report_resolved` → `readin://notifications`.
+- Row texts (clients): `report_new` «بلاغ جديد عن {مقال \| تعليق \| حساب \| إعادة نشر}» / "New report: {article \|
+  comment \| account \| repost}" (`data.system`: «رصده فلتر المحتوى» / "Caught by the content filter"), then
+  `data.targetLabel`; `report_resolved` with `outcome: actioned`: «راجعنا بلاغك وأزلنا المحتوى» / "We reviewed your
+  report and removed the content" (a user target: «راجعنا بلاغك واتخذنا الإجراء المناسب» / "We reviewed your report and
+  took action"); `no_violation`: «راجعنا بلاغك، والمحتوى لا يخالف قواعد المجتمع» / "We reviewed your report; the content
+  doesn't break our guidelines"; then `data.targetLabel`.
+- Blocks (F36 decision 2): nothing from a blocked person, either way.
+
+#### Data (one migration, `BlocksTermsAndFilter`)
+
+| Change | Details |
+|---|---|
+| `UserBlocks` | `Id`, `BlockerId` → `Users` cascade, `BlockedId` → `Users` no action (account deletion deletes those rows explicitly), `CreatedAt`; unique `(BlockerId, BlockedId)`, index `(BlockedId, BlockerId)` |
+| `Users.TermsVersion`, `Users.TermsAcceptedAt` | `varchar(16) NULL`, `datetime2 NULL`; existing rows stay `NULL` (decision 2) |
+| `ContentFilterTerms` | `Id`, `Term nvarchar(100)`, `NormalizedTerm nvarchar(100)` (`Latin1_General_100_BIN2`), `Language varchar(2)`, `Level tinyint` (Block / Flag), `Source tinyint` (File / Console), `IsEnabled bit`, `CustomizedAt NULL`, `CreatedAt`, `UpdatedAt`; unique `(NormalizedTerm)` |
+| `Reports.ReporterId` | becomes `NULL`-able (system reports); the unique `(ReporterId, TargetType, TargetId)` keeps one system report per target |
+| `Reports.MatchedTerms` | `nvarchar(400) NULL` (system reports) |
+| `Reports` index `IX_Reports_System_Target` | unique `(TargetType, TargetId)` where `ReporterId IS NULL`: one system report per target (the per-reporter unique index is filtered on `ReporterId IS NOT NULL`) |
+| `Reports.TargetType` / `ModerationActions.TargetType` | the value `Repost` (text columns, no change) |
+| `Users.IsReviewAccount` | `bit NOT NULL DEFAULT 0` (§16.2, §18.3, §32: the App Review account) |
+
+#### App Review account (SPEC §18.3, §32; built with this step)
+- Seeder `reviewer-account`, every environment, does nothing while `Seed:ReviewerPhone` is empty; production runs it with
+  `Seed__ReviewerPhone` / `Seed__ReviewerPassword` (and optionally `Seed__ReviewerPin`).
+- **An existing account with that phone is adopted:** `IsReviewAccount`, the current terms accepted, `MustChangePassword`
+  and `MustSetRecoveryPin` cleared, the password reset only when it differs from the configured one. Its profile,
+  interests and content are never touched, and a second account is never created.
+- **Otherwise it is created ready to use:** display name "ReadIn Demo", `@readin_demo` (or a free variant), profile
+  complete, onboarding done with software interests, terms accepted, a recovery PIN (`Seed:ReviewerPin`, else random).
+- Running it again changes nothing. The account is left out of search, Explore's people lists, suggested writers,
+  follower counts and lists, and the dashboard's counts.
+
+#### As built (implementation notes, 2026-11-08: F22 additions, F36, F37)
+- **Reports:** `/moderation/summary` gains `open.repost`. A system report the filter flags again is a new event for staff,
+  so it can push again within the hourly limit. `GET /me/notification-settings` lists 12 types for a holder of
+  `moderation.manage` and `support.manage` (10 for a member).
+- **Blocks:** the "who may be mentioned" rule skips blocked pairs, so suggestions, comments and article publishes all
+  respect blocks. Old notifications between the two are deleted when the block is made (before the request's save).
+  Moderators have blocks applied in member lists like anyone; they are exempt on direct links only.
+  `CollectionDto.articleCount` still counts blocked authors' articles (the list leaves them out). Reading progress, quote
+  cards and "show less" aren't guarded (those articles can't be opened).
+- **Terms:** `acceptTerms` is checked after request validation and before the phone-number check. Accepting at sign up
+  is audited `auth.terms_accepted` with the user as its target. The API refuses to start without `Legal:TermsVersion`.
+- **Filter:** every tag name of a publish is screened (not only new ones); profile fields are screened only when they
+  change; collection names and ticket subjects are block-only (a flag there does nothing). The starter lists are in
+  `content/moderation/` (146 lines); the tests use neutral placeholder words from a test list.
+
 ## DTOs (TypeScript notation)
 
 ```ts
@@ -2861,7 +3108,7 @@ interface ArticleDetailsDto extends ArticleCardDto {
 
 // Reports and moderation (F22)
 type ReportReason = 'spam' | 'misinformation' | 'harassment' | 'copyright' | 'other';
-type ModerationTargetType = 'article' | 'comment' | 'user';
+type ModerationTargetType = 'article' | 'comment' | 'user' | 'repost'; // repost: F22 store requirements
 type ReportStatus = 'open' | 'resolved' | 'dismissed';
 
 interface ModerationQueueItemDto {
@@ -3581,6 +3828,86 @@ interface AdminTicketDto extends AdminTicketRowDto { // GET /admin/support/ticke
 }
 ```
 
+```ts
+// ── Report additions (F22, store requirements) ──────────────────────
+// ModerationTargetType adds 'repost' (see Reports and moderation).
+
+interface ReportRequest {
+  targetType: ModerationTargetType;
+  targetId: string;              // a repost: RepostLabelDto.repostId
+  reason: ReportReason;
+  details?: string | null;       // ≤ 500
+  alsoBlock?: boolean;           // F36: block the target's author in the same step (default false)
+}
+// ModerationQueueItemDto gains:
+//   ageHours: number | null;    // open cases: whole hours since the oldest open report; null for resolved/dismissed
+//   urgent: boolean;            // open and ageHours >= 12 («عاجل» / "Urgent")
+// ModerationReportDto gains:
+//   isSystem: boolean;          // filed by the content filter (F37): reporter is null, show «فلتر المحتوى» / "Content filter"
+//   matchedTerms: string[] | null; // system reports only (staff see them; members never)
+// ModerationActionDto.action adds 'repost.delete'.
+// AdminDashboardDto.cards and AdminSummaryDto gain: openReportsOver24h: number | null; // null without moderation.manage
+// ArticleCardDto, ArticleDetailsDto, CommentDto gain: reportedByMe: boolean; // collapse with «عرض» / "Show"; false for guests
+// RepostLabelDto gains: repostId: string; reportedByMe: boolean;
+// NotificationType adds: 'report_new' | 'report_resolved'
+// NotificationDto.data adds (only the keys that apply):
+//   report_new:      targetType: ModerationTargetType; targetId: string; targetLabel: string | null; reportCount: number; system: boolean
+//   report_resolved: targetType: ModerationTargetType; targetLabel: string | null; outcome: 'actioned' | 'no_violation'
+
+// ── Block (F36) ─────────────────────────────────────────────────────
+interface UserBlockStateDto {
+  userId: string;
+  isBlocked: boolean;
+  followRemoved: boolean;        // PUT: you followed them and that follow ended (offer Undo with restoreFollow=true)
+}
+
+interface BlockedUserDto {       // GET /me/blocked → { items: BlockedUserDto[] }
+  user: { id: string; displayName: string; username: string; avatarUrl: string | null; isVerified: boolean };
+  blockedAt: string;
+}
+
+// 403 block.blocked (to the blocker only) carries: blockedUser: { id: string; username: string; displayName: string }
+// CommentDto gains: isUnavailable: boolean;   // a blocked person's comment kept as a placeholder for its replies (body and author null)
+// ArticleDetailsDto gains: unlinkedMentionIds: string[]; // users the caller is blocked with: render their mentions as plain text
+
+// ── Legal & content filter (F37) ────────────────────────────────────
+interface LegalDto {             // GET /legal 🌐
+  termsVersion: string;          // Legal:TermsVersion, e.g. "2026-11-08"
+  effectiveAt: string | null;    // when it took effect (Legal:EffectiveAt), or null
+  summary: { ar: string | null; en: string | null }; // what changed (Legal:Summary:Ar / :En); null → a generic text
+  pages: { terms: string; communityGuidelines: string; privacy: string }; // paths on the web: "/terms", "/community-guidelines", "/privacy"
+}
+// MeDto gains:
+//   termsVersion: string | null;  // the version the account accepted; null = none yet
+//   mustAcceptTerms: boolean;     // termsVersion isn't LegalDto.termsVersion: show the blocking terms screen (after password / PIN)
+// RegisterRequest gains: acceptTerms: boolean;          // must be true (400 auth.terms_required)
+// ExternalSignInRequest gains: acceptTerms?: boolean;   // must be true with createAccount: true
+
+type ContentFilterLevel = 'block' | 'flag';
+
+interface ContentFilterTermDto {
+  id: string;
+  term: string;                  // as written in the list (render dir="auto")
+  language: 'ar' | 'en';         // the list it belongs to; every term is matched against all text
+  level: ContentFilterLevel;
+  source: 'file' | 'console';    // file: content/moderation/; console: added by an admin
+  isEnabled: boolean;            // false: a file term an admin removed (the seeder never brings it back)
+  updatedAt: string;
+}
+
+interface ContentFilterDto {     // GET /admin/content-filter
+  terms: ContentFilterTermDto[]; // by language, level, then term
+  counts: { block: number; flag: number }; // enabled terms
+}
+
+interface UpdateContentFilterRequest { // PUT /admin/content-filter: the whole enabled list
+  terms: { term: string; language: 'ar' | 'en'; level: ContentFilterLevel }[]; // ≤ 5,000; terms left out are disabled
+}
+
+// 422 content.objectionable carries: field: string; language?: ArticleLanguage; blockId?: string (publish content only)
+// 429 content.too_many carries: limit: 'articles_per_day' | 'comments_per_hour'
+```
+
 ## Push payloads (FCM)
 
 Pushes come only from background jobs and outbox handlers (SPEC §21.1), to every token registered with `POST /me/devices`.
@@ -3739,6 +4066,31 @@ New deep links: `readin://paths/{slug}` (a learning path: web `/paths/{slug}`, m
 `/settings/support/tickets/{id}`) and `readin://admin/support/{ticketId}` (the console's ticket: web
 `/admin/tickets/{id}`, mobile the console's ticket page; a client without `support.manage` opens the notification
 center instead).
+
+### New report (`report_new`, SPEC F22 store requirements)
+
+Pushed by the notification push job to holders of `moderation.manage` who keep the type on `all`, at most once per
+target per hour (Report additions, decision 5); quiet hours apply; dropped after 24 hours. `report_resolved` is never
+pushed.
+
+```jsonc
+{
+  "notification": { "title": "بلاغ جديد عن تعليق", "body": "<the target's label>" },
+  // en: "New report: comment"; a content-filter report: title «بلاغ جديد من فلتر المحتوى» / "New report from the content filter"
+  "data": {
+    "type": "report_new",
+    "notificationId": "0a1b2c3d-…",
+    "targetType": "comment",            // article | comment | user | repost
+    "targetId": "0a1b2c3d-…",
+    "link": "readin://admin/reports/comment/0a1b2c3d-…"
+  }
+}
+```
+
+The body is the target's label as staff see it in the queue (title, the comment's first 80 characters, `@username`, or
+the caption). Collapse key `report_new:{targetType}:{targetId}`. A client without `moderation.manage` opens the
+notification center instead. New deep link: `readin://admin/reports/{targetType}/{targetId}` (web
+`/admin/reports/{targetType}/{targetId}`, mobile the console's case).
 
 ## Local development
 

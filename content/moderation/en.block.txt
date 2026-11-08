@@ -1,0 +1,43 @@
+# Content filter, English, block level (SPEC F37): the text is refused with 422 content.objectionable.
+# One term per line; '#' starts a comment. Whole words only (never inside another word); the matcher also tries a leetspeak
+# form (0→o, 1→i/l, 3→e, 4→a, @→a, $→s, 5→s, 7→t), collapses repeated letters and joins spelled-out letters.
+# Edit in the admin console (System → Content filter) without a release; the console's changes win over this file.
+
+# Slurs
+nigger
+niggers
+nigga
+niggas
+faggot
+faggots
+fag
+fags
+tranny
+retards
+kike
+spic
+chink
+# Explicit sexual terms
+fuck
+fucks
+fucked
+fucker
+fuckers
+fucking
+motherfucker
+motherfuckers
+cunt
+cunts
+whore
+whores
+slut
+sluts
+blowjob
+cumshot
+porn
+porno
+# Threats and self-harm baiting
+kill yourself
+kys
+i will kill you
+go die

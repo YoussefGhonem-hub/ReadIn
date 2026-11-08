@@ -647,7 +647,7 @@ public sealed class ModerationTests(ApiFactory api)
             var moderatorId = SystemUsers.SuperAdminId; // the demo SuperAdmin moderates (there is no demo moderator)
             var reporters = await InDbAsync(db => db.Users.Where(x => x.Email != null && x.Email.EndsWith("@readin.test")).Select(x => x.Id).ToListAsync(Ct));
             return (
-                await InDbAsync(db => db.Reports.Where(r => reporters.Contains(r.ReporterId)).OrderBy(r => r.Status).Select(r => r.Status).ToListAsync(Ct)),
+                await InDbAsync(db => db.Reports.Where(r => r.ReporterId != null && reporters.Contains(r.ReporterId.Value)).OrderBy(r => r.Status).Select(r => r.Status).ToListAsync(Ct)),
                 await InDbAsync(db => db.ModerationActions.Where(m => m.ModeratorId == moderatorId && m.Note != null &&
                         (m.Note.StartsWith("روابط") || m.Note.StartsWith("خلاف"))).OrderBy(m => m.Action).Select(m => m.Action).ToListAsync(Ct)));
         }

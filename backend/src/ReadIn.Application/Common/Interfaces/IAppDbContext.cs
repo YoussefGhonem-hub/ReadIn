@@ -60,6 +60,7 @@ public interface IAppDbContext
     DbSet<CollectionItem> CollectionItems { get; }
     DbSet<UserFollow> UserFollows { get; }
     DbSet<UserMute> UserMutes { get; }
+    DbSet<UserBlock> UserBlocks { get; }
     DbSet<ContentMute> ContentMutes { get; }
     DbSet<ArticleFeedback> ArticleFeedback { get; }
     DbSet<ArticleHighlight> ArticleHighlights { get; }
@@ -67,6 +68,7 @@ public interface IAppDbContext
     DbSet<CommentLike> CommentLikes { get; }
     DbSet<Report> Reports { get; }
     DbSet<ModerationAction> ModerationActions { get; }
+    DbSet<ContentFilterTerm> ContentFilterTerms { get; }
     DbSet<VerificationRequest> VerificationRequests { get; }
 
     DbSet<Notification> Notifications { get; }

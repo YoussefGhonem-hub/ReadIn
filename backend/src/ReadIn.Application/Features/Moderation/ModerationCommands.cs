@@ -22,11 +22,14 @@ using ReadIn.Domain.Users;
 namespace ReadIn.Application.Features.Moderation;
 
 /// <summary>
-/// POST /reports (SPEC F22): a reader reports an article, a comment or a user. Not their own content or themselves;
-/// reporting the same target again is a no-op. Targets the reporter can't see (deleted, or a hidden article) are not found.
+/// POST /reports (SPEC F22): a reader reports an article, a comment, a user or a repost. Not their own content or
+/// themselves; reporting the same target again is a no-op. Targets the reporter can't see (deleted, or a hidden article)
+/// are not found. <paramref name="AlsoBlock"/> (F22 store requirements, F36) blocks the target's author in the same save;
+/// <c>400 block.limit</c> saves neither.
 /// </summary>
 [RequirePermission(Permissions.Reports.Create)]
-public sealed record ReportContentCommand(string TargetType, Guid TargetId, string Reason, string? Details) : ICommand<Result>;
+public sealed record ReportContentCommand(string TargetType, Guid TargetId, string Reason, string? Details, bool AlsoBlock = false)
+    : ICommand<Result>;
 
 /// <summary>
 /// POST /moderation/actions (SPEC F22). Comments: hide, unhide, delete. Articles: hide, unhide. Users: warn, suspend,
@@ -85,6 +88,8 @@ public static class ModerationVerbs
         (Hide or Unhide or Dismiss, ReportTargetType.Article) => true,
         (Warn or Suspend or Unsuspend or ClearCategory or ClearLinks or ClearHeadline or HideContent or UnhideContent or Dismiss,
             ReportTargetType.User) => true,
+        // A reported repost (F22 store requirements): removed, or its reports dismissed.
+        (Delete or Dismiss, ReportTargetType.Repost) => true,
         _ => false,
     };
 
@@ -124,10 +129,10 @@ internal sealed class ModerateContentCommandValidator : AbstractValidator<Modera
     }
 }
 
-internal sealed class ReportContentCommandHandler(IAppDbContext db, ICurrentUser currentUser, TimeProvider clock)
+internal sealed class ReportContentCommandHandler(IAppDbContext db, ICurrentUser currentUser, Blocks.BlockRelations blocks, TimeProvider clock)
     : ICommandHandler<ReportContentCommand, Result>
 {
-    /// <param name="OwnerId">The article's or comment's author, or the user itself; null for a deleted author.</param>
+    /// <param name="OwnerId">The article's or comment's author, the reposter, or the user itself; null for a deleted author.</param>
     private sealed record ReportedTarget(Guid? OwnerId);
 
     public async ValueTask<Result> Handle(ReportContentCommand command, CancellationToken cancellationToken)
@@ -140,10 +145,22 @@ internal sealed class ReportContentCommandHandler(IAppDbContext db, ICurrentUser
         if (target is null) return ReportErrors.TargetNotFound;
         if (target.OwnerId == userId) return ReportErrors.OwnContent;
 
-        if (await db.Reports.AnyAsync(r => r.ReporterId == userId && r.TargetType == targetType && r.TargetId == command.TargetId, cancellationToken))
-            return Result.Success();
+        var now = clock.GetUtcNow().UtcDateTime;
+        // "Report and block" (F22 store requirements, F36): the author is blocked in the same save; a full block list saves
+        // neither. A deleted author has nobody to block.
+        if (command.AlsoBlock && target.OwnerId is { } ownerId)
+        {
+            var blocked = await blocks.BlockAsync(userId, ownerId, now, cancellationToken);
+            if (blocked.IsFailure) return blocked.Error!;
+        }
 
-        db.Reports.Add(Report.File(targetType, command.TargetId, userId, reason, command.Details, clock.GetUtcNow().UtcDateTime));
+        if (await db.Reports.AnyAsync(r => r.ReporterId == userId && r.TargetType == targetType && r.TargetId == command.TargetId, cancellationToken))
+        {
+            if (command.AlsoBlock) await db.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+        }
+
+        db.Reports.Add(Report.File(targetType, command.TargetId, userId, reason, command.Details, now));
         try
         {
             await db.SaveChangesAsync(cancellationToken);
@@ -168,6 +185,11 @@ internal sealed class ReportContentCommandHandler(IAppDbContext db, ICurrentUser
             ReportTargetType.Comment => await db.Comments
                 .Where(c => c.Id == id && articles.Any(a => a.Id == c.ArticleId))
                 .Select(c => new ReportedTarget(c.AuthorId))
+                .FirstOrDefaultAsync(ct),
+            // A repost of an article the reporter can open (its caption is the reposter's text).
+            ReportTargetType.Repost => await db.Reposts
+                .Where(r => r.Id == id && articles.Any(a => a.Id == r.ArticleId))
+                .Select(r => new ReportedTarget(r.UserId))
                 .FirstOrDefaultAsync(ct),
             _ => await db.Users.Where(u => u.Id == id).Select(u => new ReportedTarget(u.Id)).FirstOrDefaultAsync(ct),
         };
@@ -213,6 +235,7 @@ internal sealed class ModerateContentCommandHandler(
         return targetType switch
         {
             ReportTargetType.Comment => await ModerateCommentAsync(command, acting, cancellationToken),
+            ReportTargetType.Repost => await ModerateRepostAsync(command, acting, cancellationToken),
             ReportTargetType.Article => await ModerateArticleAsync(command, acting, cancellationToken),
             _ => await ModerateUserAsync(command, acting, cancellationToken),
         };
@@ -261,6 +284,49 @@ internal sealed class ModerateContentCommandHandler(
 
         await db.SaveChangesAsync(ct);
         if (changed && comment.ParentId is { } parentId) await posting.RecountRepliesAsync(parentId, ct);
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// A reported repost (F22 store requirements): <c>delete</c> removes it, as if its owner had undone it (the counter
+    /// follows), and resolves its reports; <c>dismiss</c> closes them. A repost that is gone can still be dismissed.
+    /// </summary>
+    private async Task<Result> ModerateRepostAsync(ModerateContentCommand command, Acting acting, CancellationToken ct)
+    {
+        var repost = await db.Reposts.FirstOrDefaultAsync(r => r.Id == command.TargetId, ct);
+        if (repost is null && command.Action != ModerationVerbs.Dismiss) return ReportErrors.RepostNotFound;
+
+        string? label = null;
+        if (repost is not null)
+        {
+            label = repost.Caption ?? await db.ArticleTranslations.AsNoTracking()
+                .Where(t => t.ArticleId == repost.ArticleId && t.IsSource)
+                .Select(t => t.Title)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        var changed = false;
+        if (command.Action == ModerationVerbs.Delete && repost is not null)
+        {
+            repost.Remove();
+            db.Reposts.Remove(repost);
+            audit.Record(AuditActions.RepostDeleted, repost.UserId);
+            changed = true;
+        }
+        var closed = await CloseReportsAsync(command, ReportTargetType.Repost, acting, ct);
+
+        if (command.Action == ModerationVerbs.Dismiss)
+        {
+            if (closed > 0)
+                Log(ModerationAction.Dismissal(ReportTargetType.Repost, command.TargetId, repost?.UserId, label, acting.ModeratorId, acting.Note,
+                    closed, acting.Now));
+        }
+        else if (changed)
+        {
+            Log(ModerationAction.OnRepost(command.TargetId, repost!.UserId, label, acting.ModeratorId, acting.Note, closed, acting.Now));
+        }
+
+        await db.SaveChangesAsync(ct);
         return Result.Success();
     }
 

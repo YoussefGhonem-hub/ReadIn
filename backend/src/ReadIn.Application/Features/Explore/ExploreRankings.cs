@@ -164,7 +164,7 @@ public sealed class ExploreRankings(IAppDbContext db, TimeProvider clock, Hybrid
                         where r.ReactedAt >= since && r.UserId != u.Id
                         select r.Id).Count(),
                 Articles = inField.Count(a => a.AuthorId == u.Id),
-                Followers = db.UserFollows.Count(f => f.FolloweeId == u.Id),
+                Followers = db.UserFollows.Count(f => f.FolloweeId == u.Id && !db.Users.Any(r => r.Id == f.FollowerId && r.IsReviewAccount)),
             })
             .OrderByDescending(x => x.Score)
             .ThenByDescending(x => x.Articles)

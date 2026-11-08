@@ -13,7 +13,8 @@ internal sealed class CompleteProfileCommandHandler(
     IFileStorage storage,
     UploadCleanup uploads,
     MeReader meReader,
-    AuthorCaches authorCaches)
+    AuthorCaches authorCaches,
+    ContentFilter.ContentScreening screening)
     : ICommandHandler<CompleteProfileCommand, Result<MeDto>>
 {
     public async ValueTask<Result<MeDto>> Handle(CompleteProfileCommand command, CancellationToken cancellationToken)
@@ -24,6 +25,12 @@ internal sealed class CompleteProfileCommandHandler(
         if (command.Username != user.Username &&
             await db.Users.IgnoreQueryFilters().AnyAsync(u => u.Username == command.Username, cancellationToken))
             return UserErrors.UsernameTaken;
+
+        // F37: the content filter on the name, @username and title.
+        var screened = await screening.ScreenAsync(
+            ProfileScreening.Changed(user, command.DisplayName, command.Username, bio: null, command.Headline, links: null), cancellationToken);
+        if (screened.IsFailure) return screened.Error;
+        await screening.FlagAsync(Domain.Moderation.ReportTargetType.User, user.Id, screened.Value, cancellationToken);
 
         var previousAvatar = user.AvatarUrl;
         var shown = (user.DisplayName, user.Username, user.AvatarUrl, user.Headline);

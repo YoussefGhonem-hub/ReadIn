@@ -564,7 +564,7 @@ internal sealed class GetAdminUserQueryHandler(
 
         AdminUserReportDto Map(Report r, bool withReporter) => new(
             r.Id, r.TargetType, r.TargetId, labels.GetValueOrDefault((r.TargetType, r.TargetId)), r.Reason, r.Details, r.Status, r.CreatedAt,
-            withReporter ? reporters.GetValueOrDefault(r.ReporterId) : null);
+            withReporter && r.ReporterId is { } reporterId ? reporters.GetValueOrDefault(reporterId) : null);
 
         return new AdminUserReportsDto(
             [.. againstRows.Select(r => Map(r, withReporter: true))], await against.CountAsync(ct),

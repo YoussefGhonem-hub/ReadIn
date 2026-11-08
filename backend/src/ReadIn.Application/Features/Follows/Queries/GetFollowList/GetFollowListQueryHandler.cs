@@ -2,6 +2,7 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Models;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Users;
 
@@ -16,9 +17,16 @@ internal sealed class GetFollowListQueryHandler(IAppDbContext db, ICurrentUser c
 
         var limit = Math.Clamp(query.Limit, 1, 50);
         var follows = db.UserFollows.AsNoTracking();
-        // The navigation joins Users with its query filter, so deleted accounts drop out of both lists.
+        // F36: the people the viewer is blocked with leave both lists (the counts stay the same for everyone).
+        if (currentUser.UserId is { } viewerId)
+        {
+            var blockedWith = db.BlockedWith(viewerId);
+            follows = follows.Where(f => !blockedWith.Contains(query.List == FollowList.Followers ? f.FollowerId : f.FolloweeId));
+        }
+        // The navigation joins Users with its query filter, so deleted accounts drop out of both lists; the App Review
+        // account is in nobody's followers (SPEC §32).
         var rows = query.List == FollowList.Followers
-            ? follows.Where(f => f.FolloweeId == query.UserId).Select(f => new { f.Id, f.CreatedAt, Person = f.Follower })
+            ? follows.Where(f => f.FolloweeId == query.UserId && !f.Follower.IsReviewAccount).Select(f => new { f.Id, f.CreatedAt, Person = f.Follower })
             : follows.Where(f => f.FollowerId == query.UserId).Select(f => new { f.Id, f.CreatedAt, Person = f.Followee });
 
         if (query.Search?.Trim().TrimStart('@') is { Length: > 0 } search)

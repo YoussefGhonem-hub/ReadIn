@@ -50,6 +50,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         // F23: how the account signed up (phone / google / apple), and the console's users table and dashboard by join date.
         builder.Property(u => u.SignUpMethod).HasMaxLength(8).IsUnicode(false);
         builder.HasIndex(u => u.CreatedAt);
+        // F37: the accepted Terms of Use version (Legal:TermsVersion).
+        builder.Property(u => u.TermsVersion).HasMaxLength(16).IsUnicode(false);
 
         // Quiet hours (F17): existing accounts get the defaults too. The sentinel is the default, so EF sends the value
         // only when it differs and a new row never stores the CLR default (false, 00:00) by mistake.

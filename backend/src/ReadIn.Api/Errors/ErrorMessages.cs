@@ -223,6 +223,15 @@ public static class ErrorMessages
         ["tag.name_taken"] = ("يوجد وسم آخر بهذا الاسم. إن كانا الوسم نفسه فادمجهما.", "Another tag already has this name. If they're the same, merge them."),
         ["tag.merge_self"] = ("لا يمكن دمج الوسم في نفسه.", "A tag can't be merged into itself."),
         ["path.featured_invalid"] = ("اختر 20 مسارًا على الأكثر، موجودة ومن دون تكرار.", "Choose up to 20 different existing paths."),
+        // Store requirements (SPEC F22, F36, F37), Modern Standard Arabic
+        ["block.self"] = ("لا يمكنك حظر نفسك.", "You can't block yourself."),
+        ["block.limit"] = ("وصلت إلى الحد الأقصى للحسابات المحظورة (1000 حساب).", "You've reached the limit of 1,000 blocked accounts."),
+        ["block.blocked"] = ("هذا الحساب محظور لديك. ألغِ الحظر أولًا.", "You blocked this account. Unblock it first."),
+        ["auth.terms_required"] = ("يجب الموافقة على شروط الاستخدام وقواعد المجتمع لإنشاء حساب.", "You must agree to the Terms of Use and Community Guidelines to create an account."),
+        ["content.objectionable"] = ("هذا النص يخالف قواعد المجتمع. عدّله وحاول مرة أخرى.", "This text breaks our Community Guidelines. Edit it and try again."),
+        ["content.too_many"] = ("وصلت إلى الحد المسموح به: 5 مقالات في اليوم و60 تعليقًا في الساعة.", "You've reached the limit: 5 articles a day and 60 comments an hour."),
+        ["content_filter.term_invalid"] = ("أدخل كلمة صالحة من حرفين على الأقل.", "Enter a valid term of at least 2 characters."),
+        ["repost.not_found"] = ("إعادة النشر هذه غير موجودة.", "This repost no longer exists."),
         // Help & support (SPEC F35), Modern Standard Arabic
         ["support.limit"] = ("وصلت إلى حد التذاكر: 5 تذاكر جديدة في اليوم و10 تذاكر مفتوحة على الأكثر.", "You've reached the ticket limit: 5 new tickets a day and 10 open at once."),
         ["support.ticket_not_found"] = ("التذكرة غير موجودة.", "Ticket not found."),

@@ -7,6 +7,7 @@ using ReadIn.Application.Common.Behaviors;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
@@ -52,12 +53,15 @@ internal sealed partial class CreateHighlightCommandValidator : AbstractValidato
     private static partial Regex BlockIdRegex();
 }
 
-internal sealed class CreateHighlightCommandHandler(IAppDbContext db, ICurrentUser currentUser, HybridCache cache, TimeProvider clock)
+internal sealed class CreateHighlightCommandHandler(
+    IAppDbContext db, ICurrentUser currentUser, HybridCache cache, BlockRelations blocks, TimeProvider clock)
     : ICommandHandler<CreateHighlightCommand, Result<HighlightCreation>>
 {
     public async ValueTask<Result<HighlightCreation>> Handle(CreateHighlightCommand command, CancellationToken cancellationToken)
     {
         // The reader's rules: a hidden article is only there for its author and moderators (F22).
+        // F36: the blocker gets 403 block.blocked, the blocked person the same not-found as a deleted article.
+        if (await blocks.ArticleErrorAsync(currentUser, command.ArticleId, cancellationToken) is { } blocked) return blocked;
         if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var language = command.Language!;

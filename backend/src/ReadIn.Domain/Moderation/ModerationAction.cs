@@ -79,6 +79,15 @@ public sealed class ModerationAction : AggregateRoot
         return logged;
     }
 
+    /// <summary>
+    /// <c>repost.delete</c> (SPEC F22 store requirements): a moderator removed a reported repost; the label is its caption (or
+    /// the reposted article's title when it has none). No notice: the repost is simply gone.
+    /// </summary>
+    public static ModerationAction OnRepost(
+        Guid repostId, Guid reposterId, string? label, Guid moderatorId, string? note, int reportsClosed, DateTime now) =>
+        Create(ModerationActionTypes.RepostDelete, ReportTargetType.Repost, repostId, reposterId, Label(label, CommentLabelLength), moderatorId,
+            note, reportsClosed, now);
+
     /// <summary>A warning is always a notice to the user. The note (what they did wrong) is required.</summary>
     public static ModerationAction Warning(Guid userId, string username, Guid moderatorId, string note, int reportsClosed, DateTime now)
     {
@@ -219,6 +228,9 @@ public static class ModerationActionTypes
     public const string UserHideContent = "user.hide_content";
     public const string UserUnhideContent = "user.unhide_content";
     public const string ReportsDismiss = "reports.dismiss";
+
+    /// <summary>A moderator removed a reported repost (SPEC F22 store requirements).</summary>
+    public const string RepostDelete = "repost.delete";
 }
 
 /// <summary><see cref="ModerationAction.NoticeKind"/>: what the affected user is shown until they acknowledge it.</summary>

@@ -24,6 +24,7 @@ public static class ProblemResults
             ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
             ErrorType.TooManyRequests => StatusCodes.Status429TooManyRequests,
             ErrorType.Unavailable => StatusCodes.Status503ServiceUnavailable,
+            ErrorType.Unprocessable => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status500InternalServerError,
         };
 

@@ -207,7 +207,7 @@ public sealed class ReactionTests(ApiFactory api)
         card.Select(p => p.Key).Should().Equal(
             "id", "slug", "language", "title", "subtitle", "excerpt", "hasMore", "coverUrl", "field", "topic", "author", "readingTimeMinutes",
             "isAiAssisted", "versionBadge", "publishedAt", "tags", "tagCount", "reactionCount", "reactions", "commentCount", "saveCount",
-            "repostCount", "myReaction", "isSaved", "isReposted", "repostedBy", "isFollowingAuthor", "isAuthorMuted", "isFieldMuted",
+            "repostCount", "myReaction", "isSaved", "isReposted", "repostedBy", "isFollowingAuthor", "isAuthorMuted", "reportedByMe", "isFieldMuted",
             "isTopicMuted", "attachments");
         card["author"]!.AsObject().Select(p => p.Key).Should().Equal("id", "displayName", "username", "avatarUrl", "isVerified", "headline");
         card["reactions"]!.AsObject().Select(p => p.Key).Should().Equal("insightful", "love", "fire", "mindBlown");

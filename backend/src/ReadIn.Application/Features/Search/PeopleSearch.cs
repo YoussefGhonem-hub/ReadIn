@@ -60,7 +60,7 @@ public sealed class PeopleSearch(IAppDbContext db, ICurrentUser currentUser, IFi
                       || EF.Functions.Like(ArabicNormalizer.InSql(u.DisplayName), phrasePrefix, SearchTerms.LikeEscape) ? 1
                     : 2,
                 Verified = u.IsVerified,
-                Followers = db.UserFollows.Count(f => f.FolloweeId == u.Id),
+                Followers = db.UserFollows.Count(f => f.FolloweeId == u.Id && !db.Users.Any(r => r.Id == f.FollowerId && r.IsReviewAccount)),
             })
             .OrderBy(u => u.Tier)
             .ThenByDescending(u => u.Verified)

@@ -14,6 +14,9 @@ public enum ErrorType
 
     /// <summary>A dependency (e.g. Apple's token service) didn't answer; nothing changed, so the client can retry.</summary>
     Unavailable,
+
+    /// <summary>The request is well formed but its content is refused, e.g. by the content filter (SPEC F37): 422.</summary>
+    Unprocessable,
 }
 
 /// <summary>

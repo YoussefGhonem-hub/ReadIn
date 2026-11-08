@@ -1,13 +1,14 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
 using ReadIn.Domain.Users;
 
 namespace ReadIn.Application.Features.Follows.Commands.FollowUser;
 
-internal sealed class FollowUserCommandHandler(IAppDbContext db, ICurrentUser currentUser, TimeProvider clock)
+internal sealed class FollowUserCommandHandler(IAppDbContext db, ICurrentUser currentUser, BlockRelations blocks, TimeProvider clock)
     : ICommandHandler<FollowUserCommand, Result<FollowStateDto>>
 {
     public async ValueTask<Result<FollowStateDto>> Handle(FollowUserCommand command, CancellationToken cancellationToken)
@@ -15,6 +16,9 @@ internal sealed class FollowUserCommandHandler(IAppDbContext db, ICurrentUser cu
         var followerId = currentUser.RequireUserId();
         var followeeId = command.UserId;
         if (!await db.Users.AnyAsync(u => u.Id == followeeId, cancellationToken)) return UserErrors.NotFound;
+        // F36: neither of two people blocked with each other follows the other: the blocker gets 403 block.blocked, the
+        // blocked person the same not-found as a deleted account.
+        if (await blocks.ErrorForAsync(followerId, followeeId, UserErrors.NotFound, cancellationToken) is { } blocked) return blocked;
 
         var followed = await FollowAsync(db, followerId, followeeId, clock.GetUtcNow().UtcDateTime, cancellationToken);
         if (followed.IsFailure) return followed.Error;

@@ -49,5 +49,6 @@ internal static class UserSummaries
 
     public static async Task<FollowStateDto> FollowStateAsync(this IAppDbContext db, Guid followerId, Guid followeeId, CancellationToken ct) => new(
         await db.UserFollows.AnyAsync(f => f.FollowerId == followerId && f.FolloweeId == followeeId, ct),
-        await db.UserFollows.CountAsync(f => f.FolloweeId == followeeId, ct));
+        // The App Review account's follows never count (SPEC §32).
+        await db.UserFollows.CountAsync(f => f.FolloweeId == followeeId && !db.Users.Any(r => r.Id == f.FollowerId && r.IsReviewAccount), ct));
 }

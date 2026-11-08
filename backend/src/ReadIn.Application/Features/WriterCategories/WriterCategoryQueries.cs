@@ -8,6 +8,7 @@ using ReadIn.Application.Common.Models;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Common.Uploads;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Taxonomy;
 using ReadIn.Domain.Users;
@@ -57,12 +58,14 @@ internal static class CategorySlugs
             : list.Items.FirstOrDefault(c => c.Slug == slug) is { } category ? (category, true) : (null, false);
 }
 
-internal sealed class GetWriterCategoriesQueryHandler(WriterCategoryReader reader, TimeProvider clock)
+internal sealed class GetWriterCategoriesQueryHandler(
+    WriterCategoryReader reader, ICurrentUser currentUser, BlockRelations blocks, TimeProvider clock)
     : IQueryHandler<GetWriterCategoriesQuery, Result<WriterCategoryListDto>>
 {
     public async ValueTask<Result<WriterCategoryListDto>> Handle(GetWriterCategoriesQuery query, CancellationToken ct)
     {
         if (await reader.FindOwnerAsync(query.Username, clock.GetUtcNow().UtcDateTime, ct) is not { } owner) return UserErrors.NotFound;
+        if (await blocks.DirectLinkErrorAsync(currentUser, owner.Id, UserErrors.NotFound, ct) is { } blocked) return blocked;
 
         var list = await reader.CachedAsync(owner.Id, ct);
         return list with { Items = [.. list.Items.Where(c => c.ArticleCount > 0)] };
@@ -76,12 +79,14 @@ internal sealed class GetMyCategoriesQueryHandler(WriterCategoryReader reader, I
         await reader.LoadAsync(currentUser.RequireUserId(), ct);
 }
 
-internal sealed class GetWriterCategoryQueryHandler(WriterCategoryReader reader, IFileStorage storage, TimeProvider clock)
+internal sealed class GetWriterCategoryQueryHandler(
+    WriterCategoryReader reader, IFileStorage storage, ICurrentUser currentUser, BlockRelations blocks, TimeProvider clock)
     : IQueryHandler<GetWriterCategoryQuery, Result<WriterCategoryPageDto>>
 {
     public async ValueTask<Result<WriterCategoryPageDto>> Handle(GetWriterCategoryQuery query, CancellationToken ct)
     {
         if (await reader.FindOwnerAsync(query.Username, clock.GetUtcNow().UtcDateTime, ct) is not { } owner) return UserErrors.NotFound;
+        if (await blocks.DirectLinkErrorAsync(currentUser, owner.Id, UserErrors.NotFound, ct) is { } blocked) return blocked;
 
         var list = await reader.CachedAsync(owner.Id, ct);
         var slug = CategorySlugs.FromRoute(query.Slug);
@@ -102,12 +107,14 @@ internal sealed class GetWriterCategoryArticlesQueryHandler(
     TypeAdapterConfig mapping,
     ArticleCards cards,
     HybridCache cache,
+    BlockRelations blocks,
     TimeProvider clock)
     : IQueryHandler<GetWriterCategoryArticlesQuery, Result<CursorPage<ArticleCardDto>>>
 {
     public async ValueTask<Result<CursorPage<ArticleCardDto>>> Handle(GetWriterCategoryArticlesQuery query, CancellationToken ct)
     {
         if (await reader.FindOwnerAsync(query.Username, clock.GetUtcNow().UtcDateTime, ct) is not { } owner) return UserErrors.NotFound;
+        if (await blocks.DirectLinkErrorAsync(currentUser, owner.Id, UserErrors.NotFound, ct) is { } blocked) return blocked;
 
         var slug = CategorySlugs.FromRoute(query.Slug);
         var (category, found) = CategorySlugs.Find(await reader.CachedAsync(owner.Id, ct), slug);

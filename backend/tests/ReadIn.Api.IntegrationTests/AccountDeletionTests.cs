@@ -41,7 +41,7 @@ public sealed class AccountDeletionTests(ApiFactory api)
             idToken = subject,
             nonce = provider == "apple" ? FakeExternalIdentityVerifier.AppleNonce : null,
             authorizationCode = code,
-            createAccount = true,
+            createAccount = true, acceptTerms = true,
         }, Ct);
         var session = await ApiFactory.ReadSessionAsync(response);
         return (api.ClientWithToken(session["accessToken"]!.GetValue<string>()), session["user"]!["id"]!.GetValue<Guid>());
@@ -362,6 +362,7 @@ public sealed class AccountDeletionTests(ApiFactory api)
         var again = await ApiFactory.ReadSessionAsync(await api.GuestClient().PostAsJsonAsync("/api/v1/auth/register", new
         {
             phoneNumber = user.PhoneNumber, password = ApiFactory.TestPassword, recoveryPin = ApiFactory.TestPin, uiLanguage = "en", timeZone = "Africa/Cairo",
+            acceptTerms = true,
         }, Ct));
 
         var me = again["user"]!.AsObject();

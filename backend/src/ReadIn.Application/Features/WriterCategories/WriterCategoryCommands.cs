@@ -66,7 +66,8 @@ internal sealed class ReorderWriterCategoriesCommandValidator : AbstractValidato
         .Must(ids => ids is null || ids.Count <= WriterCategory.MaxPerWriter).WithErrorCode(WriterCategoryErrors.Limit.Code);
 }
 
-internal sealed class CreateWriterCategoryCommandHandler(IAppDbContext db, ICurrentUser currentUser, WriterCategoryReader reader, TimeProvider clock)
+internal sealed class CreateWriterCategoryCommandHandler(
+    IAppDbContext db, ICurrentUser currentUser, WriterCategoryReader reader, ContentFilter.ContentScreening screening, TimeProvider clock)
     : ICommandHandler<CreateWriterCategoryCommand, Result<WriterCategoryDto>>
 {
     public async ValueTask<Result<WriterCategoryDto>> Handle(CreateWriterCategoryCommand command, CancellationToken cancellationToken)
@@ -74,6 +75,9 @@ internal sealed class CreateWriterCategoryCommandHandler(IAppDbContext db, ICurr
         var userId = currentUser.RequireUserId();
         var name = WriterCategoryNames.Clean(command.Name);
         var key = WriterCategoryNames.Normalize(name);
+        // F37: a category name is public on the writer's profile; a flag reports the writer.
+        var screened = await screening.ScreenAsync([new ContentFilter.ScreenedField("name", name)], cancellationToken);
+        if (screened.IsFailure) return screened.Error;
 
         // Two creates at the same moment (two devices, a double tap) run one after the other, so the count below is
         // never stale and the 50 limit holds.
@@ -104,12 +108,21 @@ internal sealed class CreateWriterCategoryCommandHandler(IAppDbContext db, ICurr
             return new WriterCategoryDto(category.Id, category.Slug, category.Name, 0, existing.Count + 1);
         }, cancellationToken);
 
-        if (result.IsSuccess) await reader.InvalidateAsync(userId, [], cancellationToken);
+        if (result.IsSuccess)
+        {
+            await reader.InvalidateAsync(userId, [], cancellationToken);
+            if (screened.Value.Count > 0)
+            {
+                await screening.FlagAsync(Domain.Moderation.ReportTargetType.User, userId, screened.Value, cancellationToken);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+        }
         return result;
     }
 }
 
-internal sealed class RenameWriterCategoryCommandHandler(IAppDbContext db, ICurrentUser currentUser, WriterCategoryReader reader)
+internal sealed class RenameWriterCategoryCommandHandler(
+    IAppDbContext db, ICurrentUser currentUser, WriterCategoryReader reader, ContentFilter.ContentScreening screening)
     : ICommandHandler<RenameWriterCategoryCommand, Result<WriterCategoryDto>>
 {
     public async ValueTask<Result<WriterCategoryDto>> Handle(RenameWriterCategoryCommand command, CancellationToken cancellationToken)
@@ -125,6 +138,10 @@ internal sealed class RenameWriterCategoryCommandHandler(IAppDbContext db, ICurr
 
         if (category.Name != name)
         {
+            // F37: the new name is public text; a flag reports the writer.
+            var screened = await screening.ScreenAsync([new ContentFilter.ScreenedField("name", name)], cancellationToken);
+            if (screened.IsFailure) return screened.Error;
+            await screening.FlagAsync(Domain.Moderation.ReportTargetType.User, userId, screened.Value, cancellationToken);
             category.Rename(name, key);
             try
             {

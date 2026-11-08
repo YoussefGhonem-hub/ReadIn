@@ -14,7 +14,8 @@ namespace ReadIn.Application.Features.LearningPaths;
 /// positions are dense (1..N) in path order, and progress is one user's completed reads (F04). A fixed number of
 /// queries per call, never one per path.
 /// </summary>
-public sealed class PathCards(IAppDbContext db, IFileStorage storage, TypeAdapterConfig mapping, ArticleCards articleCards)
+public sealed class PathCards(
+    IAppDbContext db, IFileStorage storage, TypeAdapterConfig mapping, ArticleCards articleCards, ICurrentUser currentUser)
 {
     /// <summary>Paths readers can see: published, in an enabled field. Callers still drop paths without visible articles.</summary>
     internal IQueryable<LearningPath> Listed() =>
@@ -58,7 +59,8 @@ public sealed class PathCards(IAppDbContext db, IFileStorage storage, TypeAdapte
 
         var items = await db.LearningPathItems.AsNoTracking()
             .Where(i => ids.Contains(i.PathId))
-            .Join(db.Articles.AsNoTracking().Visible(), i => i.ArticleId, a => a.Id, (i, a) => new
+            // F36: an article of someone the viewer is blocked with is skipped like one readers can't open.
+            .Join(db.Articles.AsNoTracking().Visible().WithoutBlockedFor(db, currentUser.UserId), i => i.ArticleId, a => a.Id, (i, a) => new
             {
                 i.PathId,
                 i.Order,

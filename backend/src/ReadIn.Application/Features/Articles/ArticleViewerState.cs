@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Mutes;
 using ReadIn.Domain.Engagement;
+using ReadIn.Domain.Moderation;
 
 namespace ReadIn.Application.Features.Articles;
 
@@ -11,7 +12,7 @@ namespace ReadIn.Application.Features.Articles;
 /// </summary>
 public sealed record ArticleViewerState(
     ReactionType? MyReaction, bool IsSaved, bool IsFollowingAuthor, bool IsAuthorMuted = false, bool IsFieldMuted = false, bool IsTopicMuted = false,
-    bool IsReposted = false);
+    bool IsReposted = false, bool ReportedByMe = false);
 
 /// <summary>
 /// Loads <see cref="ArticleViewerState"/> for a page of articles in one query: the page's articles LEFT JOIN the viewer's
@@ -51,11 +52,13 @@ public sealed class ArticleViewerStateReader(IAppDbContext db)
                     IsTopicMuted = mutedTopics.Any(id => id == article.TopicId),
                     // F29: an EXISTS lookup on the unique (UserId, ArticleId) index.
                     IsReposted = db.Reposts.Any(r => r.UserId == viewer && r.ArticleId == article.Id),
+                    // F22: the reporter stops seeing it (clients collapse it); an EXISTS on the reports' unique index.
+                    ReportedByMe = db.Reports.Any(r => r.ReporterId == viewer && r.TargetType == ReportTargetType.Article && r.TargetId == article.Id),
                 })
             .ToListAsync(cancellationToken);
 
         return rows.ToDictionary(r => r.Id, r => new ArticleViewerState(
-            r.MyReaction, r.IsSaved, r.IsFollowingAuthor, r.IsAuthorMuted, r.IsFieldMuted, r.IsTopicMuted, r.IsReposted));
+            r.MyReaction, r.IsSaved, r.IsFollowingAuthor, r.IsAuthorMuted, r.IsFieldMuted, r.IsTopicMuted, r.IsReposted, r.ReportedByMe));
     }
 }
 
@@ -73,6 +76,7 @@ internal static class ArticleViewerStateExtensions
                 IsFieldMuted = state.IsFieldMuted,
                 IsTopicMuted = state.IsTopicMuted,
                 IsReposted = state.IsReposted,
+                ReportedByMe = state.ReportedByMe,
             })
             : card;
 }

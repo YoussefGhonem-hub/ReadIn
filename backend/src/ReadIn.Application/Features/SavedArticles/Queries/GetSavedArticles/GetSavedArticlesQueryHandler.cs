@@ -6,6 +6,7 @@ using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Mapping;
 using ReadIn.Application.Common.Models;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
@@ -30,6 +31,9 @@ internal sealed class GetSavedArticlesQueryHandler(
         var saved = db.SavedArticles.AsNoTracking()
             // ArticleVisibility.Visible() through the navigation: published, enabled field, not hidden (SPEC F22).
             .Where(s => s.UserId == userId && s.Article.Status == ArticleStatus.Published && s.Article.Field.IsEnabled && s.Article.HiddenAt == null);
+        // F36: the articles of people you are blocked with, either way, leave your saved list and collections (the saves stay).
+        var blockedWith = db.BlockedWith(userId);
+        saved = saved.Where(s => !(s.Article.AuthorId != null && blockedWith.Contains(s.Article.AuthorId.Value)));
 
         if (!string.IsNullOrWhiteSpace(query.FieldSlug))
             saved = saved.Where(s => s.Article.Field.Slug == query.FieldSlug);

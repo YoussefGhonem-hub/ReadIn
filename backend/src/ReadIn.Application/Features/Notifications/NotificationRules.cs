@@ -117,6 +117,13 @@ public static class OfficialArticles
     public static int CountOf(NotificationData data) => data.ArticleIds is { Count: > 0 } ids ? ids.Count : 1;
 }
 
+/// <summary><c>report_resolved</c>'s outcome: the report was resolved (the content removed or action taken) or dismissed.</summary>
+public static class ReportOutcomes
+{
+    public const string Actioned = "actioned";
+    public const string NoViolation = "no_violation";
+}
+
 /// <summary>The deep links of SPEC F17 (docs/api/contract-v1.md), the same in the list and in pushes.</summary>
 public static class NotificationLinks
 {
@@ -144,15 +151,20 @@ public static class NotificationLinks
     /// <summary>The ticket in the admin console (F35, <c>support_ticket</c>).</summary>
     public static string AdminSupportTicket(Guid ticketId) => $"readin://admin/support/{ticketId}";
 
+    /// <summary>A report case in the console (F22 store requirements): <c>report_new</c>.</summary>
+    public static string AdminReport(string targetType, Guid targetId) => $"readin://admin/reports/{targetType}/{targetId}";
+
     /// <param name="actorUsername">The latest actor's @username, when they still have an account.</param>
     /// <param name="myUsername">The recipient's @username.</param>
     /// <param name="articleSlug">The article's slug, when it is shown.</param>
     /// <param name="articleCount">The articles the entry holds (<see cref="OfficialArticles.CountOf"/>); 1 for most entries.</param>
     /// <param name="pathSlug">An announcement's learning path (F23), when it links to one.</param>
     /// <param name="ticketId">A support entry's ticket (F35).</param>
+    /// <param name="reportTargetType">A <c>report_new</c> entry's target type (F22).</param>
+    /// <param name="reportTargetId">A <c>report_new</c> entry's target.</param>
     public static string For(
         string type, int actorCount, string? actorUsername, string myUsername, string? articleSlug, Guid? commentId, int articleCount = 1,
-        string? pathSlug = null, Guid? ticketId = null) =>
+        string? pathSlug = null, Guid? ticketId = null, string? reportTargetType = null, Guid? reportTargetId = null) =>
         type switch
         {
             NotificationTypes.NewFollower => actorCount == 1 && actorUsername is not null ? Profile(actorUsername) : Followers(myUsername),
@@ -174,6 +186,8 @@ public static class NotificationLinks
             // A support reply opens the member's ticket, a new support message the console's ticket (F35).
             NotificationTypes.SupportReply => ticketId is { } replyTicket ? SupportTicket(replyTicket) : Center,
             NotificationTypes.SupportTicket => ticketId is { } adminTicket ? AdminSupportTicket(adminTicket) : Center,
+            // A new report opens its case in the console; an outcome only informs, from the center (F22).
+            NotificationTypes.ReportNew => reportTargetType is not null && reportTargetId is { } target ? AdminReport(reportTargetType, target) : Center,
             _ => Center,
         };
 }
@@ -263,6 +277,9 @@ public static class NotificationTexts
                 ? (english ? SupportClosedTitleEn : SupportClosedTitleAr, TicketLine(input.Data))
                 : (english ? SupportReplyTitleEn : SupportReplyTitleAr, TicketLine(input.Data)),
             NotificationTypes.SupportTicket => (english ? $"New support message from {name}" : $"رسالة دعم جديدة من {name}", TicketLine(input.Data)),
+            // Reporters stay anonymous here; the body is the target as the queue shows it (F22 store requirements).
+            NotificationTypes.ReportNew => (ReportNewTitle(english, input.Data), Isolate(input.Data.TargetLabel ?? string.Empty)),
+            NotificationTypes.ReportResolved => (ReportResolvedTitle(english, input.Data), Isolate(input.Data.TargetLabel ?? string.Empty)),
             NotificationTypes.VerificationResult => input.Data.Approved switch
             {
                 true => (english ? VerificationApprovedTitleEn : VerificationApprovedTitleAr, string.Empty),
@@ -274,6 +291,33 @@ public static class NotificationTexts
             _ => ("ReadIn", string.Empty),
         };
     }
+
+    /// <summary>«بلاغ جديد عن تعليق» / "New report: comment"; a content-filter report «بلاغ جديد من فلتر المحتوى».</summary>
+    public static string ReportNewTitle(bool english, NotificationData data)
+    {
+        if (data.System == true) return english ? "New report from the content filter" : "بلاغ جديد من فلتر المحتوى";
+        return data.TargetType switch
+        {
+            "article" => english ? "New report: article" : "بلاغ جديد عن مقال",
+            "comment" => english ? "New report: comment" : "بلاغ جديد عن تعليق",
+            "user" => english ? "New report: account" : "بلاغ جديد عن حساب",
+            "repost" => english ? "New report: repost" : "بلاغ جديد عن إعادة نشر",
+            _ => english ? "New report" : "بلاغ جديد",
+        };
+    }
+
+    /// <summary>
+    /// The outcome of the reader's report (SPEC F22): never who acted, never what was done to a user. Resolved content: «راجعنا
+    /// بلاغك وأزلنا المحتوى»; a resolved user report: «…واتخذنا الإجراء المناسب»; dismissed: «…لا يخالف قواعد المجتمع».
+    /// </summary>
+    public static string ReportResolvedTitle(bool english, NotificationData data) => (data.Outcome, data.TargetType) switch
+    {
+        (ReportOutcomes.Actioned, "user") => english ? "We reviewed your report and took action" : "راجعنا بلاغك واتخذنا الإجراء المناسب",
+        (ReportOutcomes.Actioned, _) => english ? "We reviewed your report and removed the content" : "راجعنا بلاغك وأزلنا المحتوى",
+        _ => english
+            ? "We reviewed your report; the content doesn't break our guidelines"
+            : "راجعنا بلاغك، والمحتوى لا يخالف قواعد المجتمع",
+    };
 
     /// <summary>"#12 · Can't sign in": the ticket's number and subject (the subject isolated, it may be either language).</summary>
     public static string TicketLine(NotificationData data) =>

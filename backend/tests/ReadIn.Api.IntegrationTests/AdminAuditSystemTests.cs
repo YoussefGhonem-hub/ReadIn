@@ -75,10 +75,11 @@ public sealed class AdminAuditSystemTests(ApiFactory api)
         async Task<List<string>> ActionsAsync(string query) =>
             [.. (await admin.Client.GetAsync($"/api/v1/admin/audit?{query}", Ct).OkJsonAsync()).PageItems().Select(i => i!["action"]!.GetValue<string>())];
 
-        // The member's sign-up, the reset (audit) and the warning (moderation log; its audit copy is left out).
+        // The member's sign-up and the terms it accepted (F37), the reset (audit) and the warning (moderation log; its audit
+        // copy is left out).
         var all = await ActionsAsync($"target={member.Id}");
-        all.Should().Equal("admin.password_reset", "user.warn", "auth.sign_up");
-        (await ActionsAsync($"target={member.Id}&source=audit")).Should().Equal("admin.password_reset", "auth.sign_up");
+        all.Should().Equal("admin.password_reset", "user.warn", "auth.terms_accepted", "auth.sign_up");
+        (await ActionsAsync($"target={member.Id}&source=audit")).Should().Equal("admin.password_reset", "auth.terms_accepted", "auth.sign_up");
         (await ActionsAsync($"target={member.Id}&source=moderation")).Should().Equal("user.warn");
         (await ActionsAsync($"target={member.Id}&action=admin.")).Should().Equal("admin.password_reset");
         (await ActionsAsync($"target={member.Id}&action=user.warn")).Should().Equal("user.warn");
@@ -92,7 +93,7 @@ public sealed class AdminAuditSystemTests(ApiFactory api)
         // Offset pages: one row a page.
         var first = await admin.Client.GetAsync($"/api/v1/admin/audit?target={member.Id}&pageSize=1", Ct).OkJsonAsync();
         var second = await admin.Client.GetAsync($"/api/v1/admin/audit?target={member.Id}&pageSize=1&page=2", Ct).OkJsonAsync();
-        (first["totalCount"]!.GetValue<int>(), first["totalPages"]!.GetValue<int>(), first["pageSize"]!.GetValue<int>()).Should().Be((3, 3, 1));
+        (first["totalCount"]!.GetValue<int>(), first["totalPages"]!.GetValue<int>(), first["pageSize"]!.GetValue<int>()).Should().Be((4, 4, 1));
         first.PageItems()[0]!["id"]!.GetValue<Guid>().Should().NotBe(second.PageItems()[0]!["id"]!.GetValue<Guid>());
         (await admin.Client.GetAsync($"/api/v1/admin/audit?target={member.Id}&page=9", Ct).OkJsonAsync()).PageItems().Should().BeEmpty();
 

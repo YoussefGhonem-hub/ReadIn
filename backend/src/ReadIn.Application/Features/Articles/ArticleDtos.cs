@@ -117,6 +117,9 @@ public record ArticleCardDto
     /// </summary>
     public bool IsAuthorMuted { get; init; }
 
+    /// <summary>The viewer reported this article (SPEC F22): clients collapse it for them, with "Show". False for guests.</summary>
+    public bool ReportedByMe { get; init; }
+
     /// <summary>The viewer muted the article's field (the "كتم المواضيع" sheet's toggle); false for guests.</summary>
     public bool IsFieldMuted { get; init; }
 
@@ -169,6 +172,12 @@ public sealed record ArticleDetailsDto : ArticleCardDto
 
     /// <summary>The viewer's collections that hold this article; empty for guests and unsaved articles.</summary>
     public IReadOnlyList<Guid> CollectionIds { get; init; } = [];
+
+    /// <summary>
+    /// The mentioned users the viewer is blocked with, either way (SPEC F36): clients render those mentions as plain text,
+    /// without a link. Empty for guests.
+    /// </summary>
+    public IReadOnlyList<Guid> UnlinkedMentionIds { get; init; } = [];
 
     /// <summary>The viewer's reading progress, so the reader can resume (F04); null for guests and unopened articles.</summary>
     public MyProgressDto? MyProgress { get; init; }

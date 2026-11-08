@@ -1,0 +1,28 @@
+# Content filter, Arabic, flag level (SPEC F37): the text is saved and a system report goes to the moderation queue.
+# Insults and likely abuse; a moderator decides. Same rules as ar.block.txt.
+
+احا
+خرا
+طيز
+# Also ordinary words (a name, the verb خوّل): flagged for a moderator, never refused.
+نيك
+خول
+وسخ
+وسخه
+يا حمار
+يا كلب
+يا حيوان
+يا غبي
+يا متخلف
+يا جزمه
+تفو عليك
+يخرب بيتك
+ابن الكلب
+# Franco-Arabic
+a7a
+5ara
+teez
+ya 7mar
+ya kalb
+ya 7ayawan
+ya ghaby

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Security;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
@@ -16,11 +17,13 @@ namespace ReadIn.Application.Features.LearningPaths.Queries.GetArticlePath;
 [RequirePermission(Permissions.Articles.Read)]
 public sealed record GetArticlePathQuery(Guid ArticleId, string UiLanguage) : IQuery<Result<ArticlePathDto?>>;
 
-internal sealed class GetArticlePathQueryHandler(IAppDbContext db, ICurrentUser currentUser, PathCards cards)
+internal sealed class GetArticlePathQueryHandler(IAppDbContext db, ICurrentUser currentUser, PathCards cards, BlockRelations blocks)
     : IQueryHandler<GetArticlePathQuery, Result<ArticlePathDto?>>
 {
     public async ValueTask<Result<ArticlePathDto?>> Handle(GetArticlePathQuery query, CancellationToken ct)
     {
+        // F36: the blocker gets 403 block.blocked, the blocked person the same not-found as a deleted article.
+        if (await blocks.ArticleErrorAsync(currentUser, query.ArticleId, ct) is { } blocked) return blocked;
         if (!await db.Articles.AsNoTracking().Visible().AnyAsync(a => a.Id == query.ArticleId, ct)) return ArticleErrors.NotFound;
 
         var candidates = await cards.Listed()

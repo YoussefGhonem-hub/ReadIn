@@ -55,13 +55,15 @@ internal sealed class GetActivePathQueryHandler(IAppDbContext db, ICurrentUser c
     }
 }
 
-internal sealed class GetProfilePathsQueryHandler(IAppDbContext db, ICurrentUser currentUser, TimeProvider clock, PathCards cards)
+internal sealed class GetProfilePathsQueryHandler(
+    IAppDbContext db, ICurrentUser currentUser, TimeProvider clock, PathCards cards, Blocks.BlockRelations blocks)
     : IQueryHandler<GetProfilePathsQuery, Result<IReadOnlyList<PathCardDto>>>
 {
     public async ValueTask<Result<IReadOnlyList<PathCardDto>>> Handle(GetProfilePathsQuery query, CancellationToken ct)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         if (await db.FindProfileAsync(query.Username, now, ct) is not { } owner) return UserErrors.NotFound;
+        if (await blocks.DirectLinkErrorAsync(currentUser, owner.Id, UserErrors.NotFound, ct) is { } blocked) return blocked;
         if (!owner.ReadingStatsVisibleTo(currentUser.UserId)) return ProfileErrors.StatsPrivate;
 
         // Titles follow the viewer's article language, progress is the profile owner's.

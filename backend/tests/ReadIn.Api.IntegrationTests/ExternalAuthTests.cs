@@ -32,7 +32,7 @@ public sealed class ExternalAuthTests(ApiFactory api)
     {
         var subject = NewSubject();
         var session = await ApiFactory.ReadSessionAsync(
-            await ExternalAsync(new { provider = "google", idToken = subject, createAccount = true }));
+            await ExternalAsync(new { provider = "google", idToken = subject, createAccount = true, acceptTerms = true }));
         return (api.ClientWithToken(session["accessToken"]!.GetValue<string>()), session, subject);
     }
 
@@ -56,7 +56,7 @@ public sealed class ExternalAuthTests(ApiFactory api)
 
         var created = await ApiFactory.ReadSessionAsync(await ExternalAsync(new
         {
-            provider = "google", authorizationCode = $"{FakeGoogleCodeExchanger.Prefix}{subject}|{email}", createAccount = true,
+            provider = "google", authorizationCode = $"{FakeGoogleCodeExchanger.Prefix}{subject}|{email}", createAccount = true, acceptTerms = true,
         }));
         created["user"]!["email"]!.GetValue<string>().Should().Be(email);
 
@@ -109,7 +109,7 @@ public sealed class ExternalAuthTests(ApiFactory api)
         (await CodeOf(unknown)).Should().Be("auth.external_not_linked");
 
         var created = await ApiFactory.ReadSessionAsync(
-            await ExternalAsync(new { provider = "google", idToken = $"{subject}|{email}", createAccount = true, uiLanguage = "ar" }));
+            await ExternalAsync(new { provider = "google", idToken = $"{subject}|{email}", createAccount = true, acceptTerms = true, uiLanguage = "ar" }));
         var me = created["user"]!;
         me["phoneNumber"].Should().BeNull();
         me["email"]!.GetValue<string>().Should().Be(email);
@@ -133,13 +133,13 @@ public sealed class ExternalAuthTests(ApiFactory api)
     {
         var subject = NewSubject();
 
-        var noNonce = await ExternalAsync(new { provider = "apple", idToken = subject, createAccount = true });
+        var noNonce = await ExternalAsync(new { provider = "apple", idToken = subject, createAccount = true, acceptTerms = true });
         noNonce.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         (await CodeOf(noNonce)).Should().Be("auth.external_invalid");
 
         var created = await ApiFactory.ReadSessionAsync(await ExternalAsync(new
         {
-            provider = "apple", idToken = subject, nonce = FakeExternalIdentityVerifier.AppleNonce, displayName = "Mona Ali", createAccount = true,
+            provider = "apple", idToken = subject, nonce = FakeExternalIdentityVerifier.AppleNonce, displayName = "Mona Ali", createAccount = true, acceptTerms = true,
         }));
         created["user"]!["displayName"]!.GetValue<string>().Should().Be("Mona Ali");
     }
@@ -157,7 +157,7 @@ public sealed class ExternalAuthTests(ApiFactory api)
 
         var both = await ExternalAsync(new
         {
-            provider = "google", idToken = NewSubject(), createAccount = true, link = new { phoneNumber = Reader9Phone, password = "x" },
+            provider = "google", idToken = NewSubject(), createAccount = true, acceptTerms = true, link = new { phoneNumber = Reader9Phone, password = "x" },
         });
         both.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -311,7 +311,7 @@ public sealed class ExternalAuthTests(ApiFactory api)
         deleted.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         (await CodeOf(await ExternalAsync(Google(subject)))).Should().Be("auth.external_not_linked");
-        var again = await ApiFactory.ReadSessionAsync(await ExternalAsync(new { provider = "google", idToken = subject, createAccount = true }));
+        var again = await ApiFactory.ReadSessionAsync(await ExternalAsync(new { provider = "google", idToken = subject, createAccount = true, acceptTerms = true }));
         again["user"]!["id"]!.GetValue<Guid>().Should().NotBe(session["user"]!["id"]!.GetValue<Guid>());
     }
 }

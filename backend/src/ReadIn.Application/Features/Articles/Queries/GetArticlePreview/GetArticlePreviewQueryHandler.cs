@@ -5,16 +5,20 @@ using ReadIn.Application.Common.Behaviors;
 using ReadIn.Application.Common.Content;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Common.Uploads;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 
 namespace ReadIn.Application.Features.Articles.Queries.GetArticlePreview;
 
-internal sealed class GetArticlePreviewQueryHandler(IAppDbContext db, HybridCache cache, IFileStorage storage, ICurrentUser viewer)
+internal sealed class GetArticlePreviewQueryHandler(
+    IAppDbContext db, HybridCache cache, IFileStorage storage, ICurrentUser viewer, BlockRelations blocks)
     : IQueryHandler<GetArticlePreviewQuery, Result<ArticlePreviewDto>>
 {
     public async ValueTask<Result<ArticlePreviewDto>> Handle(GetArticlePreviewQuery query, CancellationToken cancellationToken)
     {
+        // F36: the blocker gets 403 block.blocked, the blocked person the same not-found as a deleted article.
+        if (await blocks.ArticleErrorAsync(viewer, query.ArticleId, cancellationToken) is { } blocked) return blocked;
         var language = ArticleLanguages.IsValid(query.Language) ? query.Language : null;
 
         CachedArticlePreview cached;

@@ -32,7 +32,8 @@ internal sealed class RepostArticleCommandValidator : AbstractValidator<RepostAr
         RuleFor(c => c.Caption).Must(Repost.CaptionFits).WithErrorCode(RepostErrors.CaptionTooLongCode);
 }
 
-internal sealed class RepostArticleCommandHandler(IAppDbContext db, ICurrentUser currentUser, TimeProvider clock)
+internal sealed class RepostArticleCommandHandler(
+    IAppDbContext db, ICurrentUser currentUser, Blocks.BlockRelations blocks, ContentFilter.ContentScreening screening, TimeProvider clock)
     : ICommandHandler<RepostArticleCommand, Result<RepostStateDto>>
 {
     public async ValueTask<Result<RepostStateDto>> Handle(RepostArticleCommand command, CancellationToken cancellationToken)
@@ -46,10 +47,16 @@ internal sealed class RepostArticleCommandHandler(IAppDbContext db, ICurrentUser
 
         var userId = currentUser.RequireUserId();
         if (article.AuthorId == userId) return RepostErrors.OwnArticle;
+        // F36: never the article of someone you are blocked with (they see a plain 404; the blocker 403 block.blocked).
+        if (await blocks.ErrorForAsync(userId, article.AuthorId, ArticleErrors.NotFound, cancellationToken) is { } blocked) return blocked;
+        // F37: the caption is public text: the content filter, spam signs included.
+        var screened = await screening.ScreenAsync([new ContentFilter.ScreenedField("caption", command.Caption, SpamSignals: true)], cancellationToken);
+        if (screened.IsFailure) return screened.Error;
 
         var existing = await db.Reposts.FirstOrDefaultAsync(r => r.UserId == userId && r.ArticleId == command.ArticleId, cancellationToken);
         if (existing is not null)
         {
+            await screening.FlagAsync(Domain.Moderation.ReportTargetType.Repost, existing.Id, screened.Value, cancellationToken);
             var edited = await EditCaptionAsync(existing, command.Caption, cancellationToken);
             if (edited.IsFailure) return edited.Error;
         }
@@ -59,6 +66,7 @@ internal sealed class RepostArticleCommandHandler(IAppDbContext db, ICurrentUser
             if (created.IsFailure) return created.Error;
 
             db.Reposts.Add(created.Value);
+            await screening.FlagAsync(Domain.Moderation.ReportTargetType.Repost, created.Value.Id, screened.Value, cancellationToken);
             try
             {
                 await db.SaveChangesAsync(cancellationToken);

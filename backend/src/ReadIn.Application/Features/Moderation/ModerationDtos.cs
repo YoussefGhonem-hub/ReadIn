@@ -8,7 +8,11 @@ namespace ReadIn.Application.Features.Moderation;
 /// <summary>GET /moderation/summary: targets with open reports, for the nav badge.</summary>
 public sealed record ModerationSummaryDto(OpenReportCountsDto Open);
 
-public sealed record OpenReportCountsDto(int Article, int Comment, int User, int Total);
+public sealed record OpenReportCountsDto(int Article, int Comment, int User, int Total)
+{
+    /// <summary>Reposts with open reports (F22 store requirements); also in <see cref="Total"/>.</summary>
+    public int Repost { get; init; }
+}
 
 /// <summary>One target in the queue, with its reports in <see cref="Status"/> (SPEC F22).</summary>
 /// <param name="Reasons">Reports per reason (<c>spam</c>, <c>misinformation</c>…); reasons nobody picked are left out.</param>
@@ -22,7 +26,24 @@ public sealed record ModerationQueueItemDto(
     DateTime FirstReportedAt,
     DateTime LastReportedAt,
     DateTime? ClosedAt,
-    ModerationTargetDto Target);
+    ModerationTargetDto Target)
+{
+    /// <summary>
+    /// Open cases: whole hours since the oldest open report (the F22 24-hour target); null for resolved and dismissed ones.
+    /// </summary>
+    public int? AgeHours { get; init; }
+
+    /// <summary>Open and at least 12 hours old: «عاجل» / "Urgent".</summary>
+    public bool Urgent { get; init; }
+
+    /// <summary>The case's age and urgency at <paramref name="now"/> (open cases only).</summary>
+    public ModerationQueueItemDto Aged(DateTime oldestOpenReportAt, DateTime now)
+    {
+        if (Status != ReportStatus.Open) return this;
+        var age = now - oldestOpenReportAt;
+        return this with { AgeHours = Math.Max(0, (int)Math.Floor(age.TotalHours)), Urgent = age >= Report.UrgentAfter };
+    }
+}
 
 /// <summary>
 /// The reported target as moderators see it. Articles fill <see cref="Title"/>, <see cref="Slug"/> and
@@ -78,7 +99,14 @@ public sealed record ModerationReportDto(
     ReportStatus Status,
     DateTime CreatedAt,
     DateTime? ClosedAt,
-    UserSummaryDto? ClosedBy);
+    UserSummaryDto? ClosedBy)
+{
+    /// <summary>Filed by the content filter (F37): <see cref="Reporter"/> is null; clients show «فلتر المحتوى» / "Content filter".</summary>
+    public bool IsSystem { get; init; }
+
+    /// <summary>What the filter matched (system reports only; staff see them, members never).</summary>
+    public IReadOnlyList<string>? MatchedTerms { get; init; }
+}
 
 /// <param name="Item">Status open when any report is open, else the latest closed status.</param>
 /// <param name="Reports">Every report on the target, newest first.</param>

@@ -267,4 +267,9 @@ public static class AuditActions
     public const string TicketClosed = "admin.ticket_closed";
     public const string TicketReopened = "admin.ticket_reopened";
     public const string TicketCategoryChanged = "admin.ticket_category_changed";
+
+    // Store requirements (SPEC F22, F37).
+    public const string RepostDeleted = "moderation.repost_deleted";
+    public const string TermsAccepted = "auth.terms_accepted";
+    public const string ContentFilterUpdated = "admin.content_filter_updated";
 }

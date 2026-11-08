@@ -335,30 +335,43 @@ public static class NotificationTypes
     /// <summary>A new ticket or a member's message, to holders of <c>support.manage</c> (SPEC F35): configurable by them only.</summary>
     public const string SupportTicket = "support_ticket";
 
+    /// <summary>
+    /// A new report, to holders of <c>moderation.manage</c> (SPEC F22 store requirements): grouped per target, at most one
+    /// push per target per hour, configurable by them only; no actor (reporters stay anonymous here).
+    /// </summary>
+    public const string ReportNew = "report_new";
+
+    /// <summary>A moderator closed your report (SPEC F22 store requirements): in-app only, never pushed, always comes.</summary>
+    public const string ReportResolved = "report_resolved";
+
     public static readonly IReadOnlyList<string> All =
     [
         NewFollower, ArticleComment, CommentReply, Mention, ReactionsMilestone, FollowedWriterArticle, DailyArticle, StreakReminder,
-        SecurityAlert, VerificationResult, ModerationNotice, ArticleReposted, Announcement, SupportReply, SupportTicket,
+        SecurityAlert, VerificationResult, ModerationNotice, ArticleReposted, Announcement, SupportReply, SupportTicket, ReportNew,
+        ReportResolved,
     ];
 
     /// <summary>
     /// The types a user can set to all / in-app / off. Security alerts, moderation notices, verification results and
-    /// support replies always come. <see cref="SupportTicket"/> is configurable only by holders of <c>support.manage</c>
-    /// (<see cref="ConfigurableFor"/>).
+    /// support replies (and report outcomes, in-app) always come. <see cref="SupportTicket"/> is configurable only by holders
+    /// of <c>support.manage</c>, <see cref="ReportNew"/> only by holders of <c>moderation.manage</c> (<see cref="ConfigurableFor"/>).
     /// </summary>
     public static readonly IReadOnlyList<string> Configurable =
     [
         NewFollower, ArticleComment, CommentReply, Mention, ReactionsMilestone, FollowedWriterArticle, DailyArticle, StreakReminder,
-        ArticleReposted, Announcement, SupportTicket,
+        ArticleReposted, Announcement, SupportTicket, ReportNew,
     ];
 
     public static bool IsKnown(string? type) => type is not null && All.Contains(type);
 
     public static bool IsConfigurable(string? type) => type is not null && Configurable.Contains(type);
 
-    /// <summary>The types this user can set: <see cref="SupportTicket"/> only with <paramref name="managesSupport"/>.</summary>
-    public static IReadOnlyList<string> ConfigurableFor(bool managesSupport) =>
-        managesSupport ? Configurable : [.. Configurable.Where(t => t != SupportTicket)];
+    /// <summary>
+    /// The types this user can set: <see cref="SupportTicket"/> only with <paramref name="managesSupport"/>,
+    /// <see cref="ReportNew"/> only with <paramref name="managesModeration"/>.
+    /// </summary>
+    public static IReadOnlyList<string> ConfigurableFor(bool managesSupport, bool managesModeration = false) =>
+        [.. Configurable.Where(t => (t != SupportTicket || managesSupport) && (t != ReportNew || managesModeration))];
 
     /// <summary>Security alerts go out at once, even at night (SPEC §9.5, §21.1).</summary>
     public static bool IgnoresQuietHours(string type) => type == SecurityAlert;

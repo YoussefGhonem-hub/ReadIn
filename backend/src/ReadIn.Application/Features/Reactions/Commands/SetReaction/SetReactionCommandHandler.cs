@@ -2,18 +2,21 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using ReadIn.Application.Common.Interfaces;
 using ReadIn.Application.Features.Articles;
+using ReadIn.Application.Features.Blocks;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Common;
 using ReadIn.Domain.Engagement;
 
 namespace ReadIn.Application.Features.Reactions.Commands.SetReaction;
 
-internal sealed class SetReactionCommandHandler(IAppDbContext db, ICurrentUser currentUser, TimeProvider clock)
+internal sealed class SetReactionCommandHandler(IAppDbContext db, ICurrentUser currentUser, BlockRelations blocks, TimeProvider clock)
     : ICommandHandler<SetReactionCommand, Result<ArticleReactionsDto>>
 {
     public async ValueTask<Result<ArticleReactionsDto>> Handle(SetReactionCommand command, CancellationToken cancellationToken)
     {
         if (!ReactionTypes.TryParse(command.Type, out var type)) throw new InvalidOperationException("The validator checks the type.");
+        // F36: the blocker gets 403 block.blocked, the blocked person the same not-found as a deleted article.
+        if (await blocks.ArticleErrorAsync(currentUser, command.ArticleId, cancellationToken) is { } blocked) return blocked;
         if (!await db.Articles.VisibleTo(currentUser).AnyAsync(a => a.Id == command.ArticleId, cancellationToken)) return ArticleErrors.NotFound;
 
         var userId = currentUser.RequireUserId();

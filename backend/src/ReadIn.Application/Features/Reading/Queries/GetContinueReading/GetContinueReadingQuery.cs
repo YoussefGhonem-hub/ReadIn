@@ -44,7 +44,8 @@ internal sealed class GetContinueReadingQueryHandler(IAppDbContext db, ICurrentU
                 && r.CompletedAt == null
                 && r.Percent >= GetContinueReadingQuery.MinPercent
                 && r.UpdatedAt >= since
-                && db.Articles.Visible().Any(a => a.Id == r.ArticleId))
+                // F36: not the articles of people you are blocked with.
+                && db.Articles.Visible().WithoutBlockedFor(db, userId).Any(a => a.Id == r.ArticleId))
             .OrderByDescending(r => r.UpdatedAt)
             .ThenByDescending(r => r.Id)
             .Take(limit)

@@ -122,7 +122,7 @@ internal sealed class GetNotificationsQueryHandler(IAppDbContext db, ICurrentUse
                         data.ToDto(currentUser.UiLanguage),
                         NotificationLinks.For(
                             p.Type, p.ActorCount, actor?.Username, viewer.Username, article?.Slug, p.CommentId, OfficialArticles.CountOf(data),
-                            data.PathSlug, data.TicketId));
+                            data.PathSlug, data.TicketId, data.TargetType, data.TargetId));
                 }),
             ],
             next);
@@ -153,7 +153,8 @@ internal sealed class GetNotificationSettingsQueryHandler(IAppDbContext db, ICur
         return new NotificationSettingsDto(
             new QuietHoursDto(quiet.QuietHoursEnabled, Format(quiet.QuietHoursStart), Format(quiet.QuietHoursEnd)),
             // support_ticket (F35) is listed only for those who get it: holders of support.manage.
-            NotificationTypes.ConfigurableFor(currentUser.Permissions.Contains(Permissions.Support.Manage))
+            NotificationTypes.ConfigurableFor(
+                currentUser.Permissions.Contains(Permissions.Support.Manage), currentUser.Permissions.Contains(Permissions.Moderation.Manage))
                 .ToDictionary(t => t, t => stored.GetValueOrDefault(t, NotificationMode.All)));
     }
 

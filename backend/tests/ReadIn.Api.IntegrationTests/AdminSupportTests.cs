@@ -236,7 +236,7 @@ public sealed class AdminSupportTests(ApiFactory api)
         var member = await api.UserAsync("Settings Member");
 
         (await admin.Client.GetAsync("/api/v1/me/notification-settings", Ct).OkJsonAsync())["types"]!.AsObject()
-            .Select(t => t.Key).Should().Contain("support_ticket").And.HaveCount(11);
+            .Select(t => t.Key).Should().Contain("support_ticket").And.Contain("report_new").And.HaveCount(12); // report_new: F22
         (await member.Client.GetAsync("/api/v1/me/notification-settings", Ct).OkJsonAsync())["types"]!.AsObject()
             .Select(t => t.Key).Should().NotContain("support_ticket").And.NotContain("support_reply").And.HaveCount(10);
         foreach (var type in new[] { "support_ticket", "support_reply" })
