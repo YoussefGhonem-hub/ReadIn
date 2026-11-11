@@ -148,3 +148,11 @@ flutter:
           weight: 400
         - asset: assets/fonts/JetBrainsMono-Medium.ttf
           weight: 500
+    # The private corner's surahs (F38): the Uthmani text needs a Quran font (OFL, assets/fonts/AmiriQuran-OFL.txt).
+    - family: Amiri Quran
+      fonts:
+        - asset: assets/fonts/AmiriQuran-Regular.ttf
+
+  # The private corner (F38): the surahs (Tanzil, verbatim) and the morning and evening adhkar (Hisn al-Muslim).
+  assets:
+    - assets/devotions/

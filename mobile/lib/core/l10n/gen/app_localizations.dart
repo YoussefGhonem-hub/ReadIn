@@ -11473,6 +11473,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete my account'**
   String get termsGateDeleteAccount;
+
+  /// No description provided for @devotionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Private corner'**
+  String get devotionsTitle;
+
+  /// No description provided for @devotionsEntryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ya-Sin, Al-Waqiah, the adhkar and your duas'**
+  String get devotionsEntryHint;
+
+  /// No description provided for @devotionsSurahYasin.
+  ///
+  /// In en, this message translates to:
+  /// **'Surah Ya-Sin'**
+  String get devotionsSurahYasin;
+
+  /// No description provided for @devotionsSurahWaqiah.
+  ///
+  /// In en, this message translates to:
+  /// **'Surah Al-Waqiah'**
+  String get devotionsSurahWaqiah;
+
+  /// No description provided for @devotionsMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning adhkar'**
+  String get devotionsMorning;
+
+  /// No description provided for @devotionsEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening adhkar'**
+  String get devotionsEvening;
+
+  /// No description provided for @devotionsDuas.
+  ///
+  /// In en, this message translates to:
+  /// **'My duas'**
+  String get devotionsDuas;
+
+  /// No description provided for @devotionsAyat.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} ayat'**
+  String devotionsAyat(int count);
+
+  /// No description provided for @devotionsAdhkarCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} adhkar'**
+  String devotionsAdhkarCount(int count);
+
+  /// No description provided for @devotionsDuasHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own duas, kept on your account'**
+  String get devotionsDuasHint;
+
+  /// No description provided for @devotionsTextSmaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Smaller text'**
+  String get devotionsTextSmaller;
+
+  /// No description provided for @devotionsTextLarger.
+  ///
+  /// In en, this message translates to:
+  /// **'Larger text'**
+  String get devotionsTextLarger;
+
+  /// No description provided for @devotionsQuranSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran text: Tanzil Project (tanzil.net)'**
+  String get devotionsQuranSource;
+
+  /// No description provided for @devotionsAdhkarSource.
+  ///
+  /// In en, this message translates to:
+  /// **'From Hisn al-Muslim (hisnmuslim.com)'**
+  String get devotionsAdhkarSource;
+
+  /// No description provided for @devotionsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{left} of {total} left'**
+  String devotionsLeft(String left, String total);
+
+  /// No description provided for @duasRepeatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Times to say it'**
+  String get duasRepeatLabel;
+
+  /// No description provided for @devotionsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get devotionsDone;
+
+  /// No description provided for @devotionsReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get devotionsReset;
+
+  /// No description provided for @devotionsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done'**
+  String devotionsProgress(int done, int total);
+
+  /// No description provided for @devotionsTapToCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a dhikr to count it.'**
+  String get devotionsTapToCount;
+
+  /// No description provided for @duasEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No duas yet'**
+  String get duasEmptyTitle;
+
+  /// No description provided for @duasEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the duas you want to keep and come back to.'**
+  String get duasEmptyBody;
+
+  /// No description provided for @duasAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a dua'**
+  String get duasAdd;
+
+  /// No description provided for @duasEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit dua'**
+  String get duasEdit;
+
+  /// No description provided for @duasTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (optional)'**
+  String get duasTitleLabel;
+
+  /// No description provided for @duasTextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dua'**
+  String get duasTextLabel;
+
+  /// No description provided for @duasDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this dua?'**
+  String get duasDeleteTitle;
+
+  /// No description provided for @duasDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It can\'t be brought back.'**
+  String get duasDeleteBody;
+
+  /// No description provided for @duasSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Dua saved.'**
+  String get duasSaved;
+
+  /// No description provided for @duasDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Dua deleted.'**
+  String get duasDeleted;
+
+  /// No description provided for @errDuaNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This dua no longer exists.'**
+  String get errDuaNotFound;
+
+  /// No description provided for @errDuaLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can keep up to 200 duas.'**
+  String get errDuaLimit;
 }
 
 class _AppLocalizationsDelegate

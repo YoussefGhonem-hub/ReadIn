@@ -6965,4 +6965,109 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get termsGateDeleteAccount => 'حذف حسابي';
+
+  @override
+  String get devotionsTitle => 'الركن الخاص';
+
+  @override
+  String get devotionsEntryHint => 'يس والواقعة والأذكار وأدعيتك';
+
+  @override
+  String get devotionsSurahYasin => 'سورة يس';
+
+  @override
+  String get devotionsSurahWaqiah => 'سورة الواقعة';
+
+  @override
+  String get devotionsMorning => 'أذكار الصباح';
+
+  @override
+  String get devotionsEvening => 'أذكار المساء';
+
+  @override
+  String get devotionsDuas => 'أدعيتي';
+
+  @override
+  String devotionsAyat(int count) {
+    return '$count آية';
+  }
+
+  @override
+  String devotionsAdhkarCount(int count) {
+    return '$count ذكرًا';
+  }
+
+  @override
+  String get devotionsDuasHint => 'أدعيتك الخاصة، محفوظة في حسابك';
+
+  @override
+  String get devotionsTextSmaller => 'تصغير الخط';
+
+  @override
+  String get devotionsTextLarger => 'تكبير الخط';
+
+  @override
+  String get devotionsQuranSource => 'نص المصحف من مشروع تنزيل (tanzil.net)';
+
+  @override
+  String get devotionsAdhkarSource => 'من كتاب حصن المسلم (hisnmuslim.com)';
+
+  @override
+  String devotionsLeft(String left, String total) {
+    return 'المتبقي: $left من $total';
+  }
+
+  @override
+  String get duasRepeatLabel => 'عدد المرات';
+
+  @override
+  String get devotionsDone => 'تم';
+
+  @override
+  String get devotionsReset => 'إعادة';
+
+  @override
+  String devotionsProgress(int done, int total) {
+    return 'أتممت $done من $total';
+  }
+
+  @override
+  String get devotionsTapToCount => 'اضغط على الذكر لتعدّه.';
+
+  @override
+  String get duasEmptyTitle => 'لا توجد أدعية بعد';
+
+  @override
+  String get duasEmptyBody =>
+      'اكتب الأدعية التي تريد الاحتفاظ بها والرجوع إليها.';
+
+  @override
+  String get duasAdd => 'إضافة دعاء';
+
+  @override
+  String get duasEdit => 'تعديل الدعاء';
+
+  @override
+  String get duasTitleLabel => 'العنوان (اختياري)';
+
+  @override
+  String get duasTextLabel => 'الدعاء';
+
+  @override
+  String get duasDeleteTitle => 'حذف هذا الدعاء؟';
+
+  @override
+  String get duasDeleteBody => 'لا يمكن استعادته بعد الحذف.';
+
+  @override
+  String get duasSaved => 'حُفظ الدعاء.';
+
+  @override
+  String get duasDeleted => 'حُذف الدعاء.';
+
+  @override
+  String get errDuaNotFound => 'هذا الدعاء لم يعد موجودًا.';
+
+  @override
+  String get errDuaLimit => 'يمكنك الاحتفاظ بـ 200 دعاء كحد أقصى.';
 }

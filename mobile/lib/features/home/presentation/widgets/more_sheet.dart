@@ -18,6 +18,7 @@ import '../../../admin/presentation/widgets/admin_entry.dart';
 import '../../../auth/domain/entities/me.dart';
 import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
+import '../../../devotions/presentation/devotions_routes.dart';
 import '../../../moderation/presentation/moderation_routes.dart';
 import '../../../mutes/presentation/pages/muted_page.dart';
 import '../../../notifications/presentation/cubit/unread_badge_cubit.dart';
@@ -193,6 +194,9 @@ class ConsoleMoreSheet extends StatelessWidget {
           AdminRoutes.verification,
           summaryCount: (summary) => summary.pendingVerifications,
         ),
+      // The private corner (F38): the SuperAdmin's alone.
+      if (me.canUseDevotions)
+        _Shortcut('console-devotions', Icons.auto_stories_outlined, l10n.devotionsTitle, _Tint.green, DevotionsRoutes.home),
       _Shortcut('console-profile', Icons.person_outline_rounded, l10n.navProfile, _Tint.primary, profile),
       _Shortcut('console-settings', Icons.settings_outlined, l10n.settings, _Tint.neutral, '/settings'),
       _Shortcut('console-reader', Icons.auto_stories_outlined, l10n.adminViewAsReader, _Tint.amber, '/home', tab: true),

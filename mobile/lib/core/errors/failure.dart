@@ -244,6 +244,10 @@ abstract final class FailureCodes {
   static const categoryNameTaken = 'category.name_taken';
   static const categoryNameInvalid = 'category.name_invalid';
 
+  // The private corner's du'as (F38).
+  static const duaNotFound = 'dua.not_found';
+  static const duaLimit = 'dua.limit';
+
   // Search (F16): the app checks the query and the filters first, so these are rare.
   static const searchQueryInvalid = 'search.query_invalid';
   static const searchTypeInvalid = 'search.type_invalid';

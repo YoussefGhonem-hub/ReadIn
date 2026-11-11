@@ -28,6 +28,11 @@ import '../features/auth/presentation/session/session_cubit.dart';
 import '../features/blocks/presentation/pages/blocked_page.dart';
 import '../features/categories/presentation/category_routes.dart';
 import '../features/categories/presentation/pages/category_page.dart';
+import '../features/devotions/presentation/devotions_routes.dart';
+import '../features/devotions/presentation/pages/adhkar_page.dart';
+import '../features/devotions/presentation/pages/devotions_page.dart';
+import '../features/devotions/presentation/pages/duas_page.dart';
+import '../features/devotions/presentation/pages/surah_page.dart';
 import '../features/editor/presentation/pages/article_editor_page.dart';
 import '../features/editor/presentation/pages/my_articles_page.dart';
 import '../features/explore/domain/entities/explore.dart';
@@ -183,7 +188,9 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
       // The admin console (F23) and Help & support (F35); the pages check the permissions.
       AdminRoutes.isConsoleTab(targetPath) ||
       AdminRoutes.isConsole(targetPath) ||
-      SupportRoutes.isSupport(targetPath);
+      SupportRoutes.isSupport(targetPath) ||
+      // The private corner (F38): only holders of devotions.access, below.
+      DevotionsRoutes.isDevotions(targetPath);
   // Shared links (articles, profiles, tag pages, field pages) open for first-time guests too, without Welcome first.
   final isArticle = targetPath.startsWith('/a/') ||
       targetPath.startsWith('/u/') ||
@@ -222,6 +229,8 @@ String? resolveRedirect({required Uri uri, required SessionState session, requir
     if (isAuthRoute || targetPath == AppRoutes.setRecoveryPin || targetPath == AppRoutes.completeProfile) {
       return AppRoutes.home;
     }
+    // The private corner (F38) is the SuperAdmin's alone: anyone else is sent Home.
+    if (DevotionsRoutes.isDevotions(targetPath) && !(session.me?.canUseDevotions ?? false)) return AppRoutes.home;
     // A console ticket (a `support_ticket` push, F35) for someone without support.manage: the notification center.
     if (AdminRoutes.isTicket(targetPath) && !(session.me?.can(Permissions.supportManage) ?? false)) {
       return AppRoutes.notifications;
@@ -281,6 +290,19 @@ GoRouter buildRouter({required SessionCubit session, required SettingsCubit sett
       GoRoute(
         path: '${SupportRoutes.ticketsPrefix}/:id',
         builder: (_, state) => SupportTicketPage(ticketId: state.pathParameters['id']!),
+      ),
+      // The private corner (F38); the redirect keeps everyone without devotions.access out.
+      GoRoute(path: DevotionsRoutes.home, builder: (_, _) => const DevotionsPage()),
+      GoRoute(path: DevotionsRoutes.duas, builder: (_, _) => const DuasPage()),
+      GoRoute(
+        path: '${DevotionsRoutes.surahPrefix}/:number',
+        redirect: (_, state) => DevotionsRoutes.surahOf(state.pathParameters['number']) == null ? DevotionsRoutes.home : null,
+        builder: (_, state) => SurahPage(number: DevotionsRoutes.surahOf(state.pathParameters['number'])!),
+      ),
+      GoRoute(
+        path: '${DevotionsRoutes.adhkarPrefix}/:session',
+        redirect: (_, state) => DevotionsRoutes.sessionOf(state.pathParameters['session']) == null ? DevotionsRoutes.home : null,
+        builder: (_, state) => AdhkarPage(session: DevotionsRoutes.sessionOf(state.pathParameters['session'])!),
       ),
       // The admin console (F23): each page checks its own permission.
       GoRoute(path: AdminRoutes.home, builder: (_, _) => const AdminConsolePage()),

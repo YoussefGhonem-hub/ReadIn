@@ -6844,4 +6844,110 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termsGateDeleteAccount => 'Delete my account';
+
+  @override
+  String get devotionsTitle => 'Private corner';
+
+  @override
+  String get devotionsEntryHint =>
+      'Ya-Sin, Al-Waqiah, the adhkar and your duas';
+
+  @override
+  String get devotionsSurahYasin => 'Surah Ya-Sin';
+
+  @override
+  String get devotionsSurahWaqiah => 'Surah Al-Waqiah';
+
+  @override
+  String get devotionsMorning => 'Morning adhkar';
+
+  @override
+  String get devotionsEvening => 'Evening adhkar';
+
+  @override
+  String get devotionsDuas => 'My duas';
+
+  @override
+  String devotionsAyat(int count) {
+    return '$count ayat';
+  }
+
+  @override
+  String devotionsAdhkarCount(int count) {
+    return '$count adhkar';
+  }
+
+  @override
+  String get devotionsDuasHint => 'Your own duas, kept on your account';
+
+  @override
+  String get devotionsTextSmaller => 'Smaller text';
+
+  @override
+  String get devotionsTextLarger => 'Larger text';
+
+  @override
+  String get devotionsQuranSource => 'Quran text: Tanzil Project (tanzil.net)';
+
+  @override
+  String get devotionsAdhkarSource => 'From Hisn al-Muslim (hisnmuslim.com)';
+
+  @override
+  String devotionsLeft(String left, String total) {
+    return '$left of $total left';
+  }
+
+  @override
+  String get duasRepeatLabel => 'Times to say it';
+
+  @override
+  String get devotionsDone => 'Done';
+
+  @override
+  String get devotionsReset => 'Start over';
+
+  @override
+  String devotionsProgress(int done, int total) {
+    return '$done of $total done';
+  }
+
+  @override
+  String get devotionsTapToCount => 'Tap a dhikr to count it.';
+
+  @override
+  String get duasEmptyTitle => 'No duas yet';
+
+  @override
+  String get duasEmptyBody =>
+      'Write the duas you want to keep and come back to.';
+
+  @override
+  String get duasAdd => 'Add a dua';
+
+  @override
+  String get duasEdit => 'Edit dua';
+
+  @override
+  String get duasTitleLabel => 'Title (optional)';
+
+  @override
+  String get duasTextLabel => 'Dua';
+
+  @override
+  String get duasDeleteTitle => 'Delete this dua?';
+
+  @override
+  String get duasDeleteBody => 'It can\'t be brought back.';
+
+  @override
+  String get duasSaved => 'Dua saved.';
+
+  @override
+  String get duasDeleted => 'Dua deleted.';
+
+  @override
+  String get errDuaNotFound => 'This dua no longer exists.';
+
+  @override
+  String get errDuaLimit => 'You can keep up to 200 duas.';
 }

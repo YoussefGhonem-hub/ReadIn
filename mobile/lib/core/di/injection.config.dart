@@ -146,6 +146,17 @@ import '../../features/comments/presentation/cubit/comments_cubit.dart'
     as _i921;
 import '../../features/comments/presentation/cubit/mention_suggestions_cubit.dart'
     as _i360;
+import '../../features/devotions/data/datasources/devotions_assets.dart'
+    as _i578;
+import '../../features/devotions/data/datasources/duas_api.dart' as _i130;
+import '../../features/devotions/data/repositories/devotions_repository_impl.dart'
+    as _i9;
+import '../../features/devotions/domain/repositories/devotions_repository.dart'
+    as _i400;
+import '../../features/devotions/domain/usecases/devotion_usecases.dart'
+    as _i480;
+import '../../features/devotions/presentation/cubit/devotions_cubits.dart'
+    as _i190;
 import '../../features/editor/data/datasources/article_editor_api.dart'
     as _i880;
 import '../../features/editor/data/datasources/editor_backup_store.dart'
@@ -470,6 +481,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i811.GoogleSignInDataSource>(
       () => _i811.GoogleSignInDataSource(),
     );
+    gh.lazySingleton<_i578.DevotionsAssets>(() => _i578.DevotionsAssets());
     gh.lazySingleton<_i221.ImageCompressor>(() => _i221.ImageCompressor());
     gh.lazySingleton<_i194.DeviceNameProvider>(
       () => _i1018.DeviceNameService(),
@@ -503,6 +515,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i725.UpdatePolicyCache>(
       () => _i725.UpdatePolicyCache(gh<_i892.KeyValueStore>()),
+    );
+    gh.lazySingleton<_i190.DevotionsTextSizeCubit>(
+      () => _i190.DevotionsTextSizeCubit(gh<_i892.KeyValueStore>()),
     );
     gh.lazySingleton<_i1027.RecentSearchesStore>(
       () => _i1027.RecentSearchesStore(gh<_i892.KeyValueStore>()),
@@ -608,6 +623,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1070.CommentsApi>(
       () => _i1070.CommentsApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i130.DuasApi>(() => _i130.DuasApi(gh<_i361.Dio>()));
     gh.lazySingleton<_i880.ArticleEditorApi>(
       () => _i880.ArticleEditorApi(gh<_i361.Dio>()),
     );
@@ -768,6 +784,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i488.CategoriesRepository>(
       () => _i245.CategoriesRepositoryImpl(gh<_i494.CategoriesApi>()),
+    );
+    gh.lazySingleton<_i400.DevotionsRepository>(
+      () => _i9.DevotionsRepositoryImpl(
+        gh<_i130.DuasApi>(),
+        gh<_i578.DevotionsAssets>(),
+      ),
     );
     gh.factory<_i904.GetArticle>(
       () => _i904.GetArticle(gh<_i904.ArticleRepository>()),
@@ -1051,6 +1073,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i854.RealtimeService>(),
         drafts: gh<_i539.CommentDrafts>(),
       ),
+    );
+    gh.factory<_i480.GetSurah>(
+      () => _i480.GetSurah(gh<_i400.DevotionsRepository>()),
+    );
+    gh.factory<_i480.GetAdhkar>(
+      () => _i480.GetAdhkar(gh<_i400.DevotionsRepository>()),
+    );
+    gh.factory<_i480.GetDuas>(
+      () => _i480.GetDuas(gh<_i400.DevotionsRepository>()),
+    );
+    gh.factory<_i480.SaveDua>(
+      () => _i480.SaveDua(gh<_i400.DevotionsRepository>()),
+    );
+    gh.factory<_i480.DeleteDua>(
+      () => _i480.DeleteDua(gh<_i400.DevotionsRepository>()),
     );
     gh.factory<_i892.ReportReadingProgress>(
       () => _i892.ReportReadingProgress(gh<_i634.ReadingRepository>()),
@@ -1376,6 +1413,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i864.UpdateNotificationSettings>(),
       ),
     );
+    gh.factory<_i190.DuasCubit>(
+      () => _i190.DuasCubit(
+        gh<_i480.GetDuas>(),
+        gh<_i480.SaveDua>(),
+        gh<_i480.DeleteDua>(),
+      ),
+    );
     gh.factory<_i956.ReportCubit>(
       () => _i956.ReportCubit(gh<_i130.SubmitReport>()),
     );
@@ -1409,6 +1453,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i956.MediaPicker>(),
       ),
     );
+    gh.factory<_i190.AdhkarCubit>(
+      () => _i190.AdhkarCubit(gh<_i480.GetAdhkar>()),
+    );
     gh.factoryParam<_i518.AdminArticleCubit, String, dynamic>(
       (articleId, _) => _i518.AdminArticleCubit(
         gh<_i817.GetAdminArticle>(),
@@ -1429,6 +1476,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i835.MyPathsCubit>(
       () => _i835.MyPathsCubit(gh<_i924.GetMyPaths>()),
     );
+    gh.factory<_i190.SurahCubit>(() => _i190.SurahCubit(gh<_i480.GetSurah>()));
     gh.factory<_i55.ReactorsCubit>(
       () => _i55.ReactorsCubit(gh<_i27.GetReactors>()),
     );

@@ -11,6 +11,7 @@ import '../../../auth/domain/entities/permissions.dart';
 import '../../../auth/presentation/cubit/linked_accounts_cubit.dart';
 import '../../../auth/presentation/session/session_cubit.dart';
 import '../../../blocks/presentation/pages/blocked_page.dart';
+import '../../../devotions/presentation/pages/devotions_page.dart' show DevotionsEntryTile;
 import '../../../highlights/presentation/widgets/show_highlights_switch.dart';
 import '../../../legal/presentation/widgets/legal_links.dart';
 import '../../../moderation/presentation/cubit/moderation_summary_cubit.dart';
@@ -118,6 +119,8 @@ class _SettingsViewState extends State<SettingsView> {
         children: [
           // The admin console first, for holders of admin.access (F23); it replaces Moderation for them.
           if (session.me?.isAdmin ?? false) const SettingsBlock(rows: [AdminConsoleEntryTile()]),
+          // The private corner (F38): the SuperAdmin's alone.
+          if (session.me?.canUseDevotions ?? false) const SettingsBlock(rows: [DevotionsEntryTile()]),
           SettingsBlock(title: l10n.appearance, rows: [choice(const ThemeSelector()), choice(const UiLanguageSelector())]),
           SettingsBlock(
             title: l10n.reading,

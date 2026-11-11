@@ -44,6 +44,9 @@ abstract final class Permissions {
 
   /// The console's ticket queue and the `support_ticket` notification (F35).
   static const supportManage = 'support.manage';
+
+  /// The private corner: the surahs, the adhkar and the account's own du'as (F38). Only the SuperAdmin has it.
+  static const devotionsAccess = 'devotions.access';
 }
 
 extension MePermissions on Me {
@@ -77,4 +80,7 @@ extension MePermissions on Me {
 
   /// Features articles on Explore (F23).
   bool get canFeature => can(Permissions.articlesFeature);
+
+  /// Opens the private corner (F38).
+  bool get canUseDevotions => can(Permissions.devotionsAccess);
 }

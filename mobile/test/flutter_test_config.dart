@@ -28,6 +28,8 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     'assets/fonts/IBMPlexSans-Bold.ttf',
   ]);
   await _loadFont('JetBrains Mono', ['assets/fonts/JetBrainsMono-Regular.ttf', 'assets/fonts/JetBrainsMono-Medium.ttf']);
+  // The private corner's surahs (F38).
+  await _loadFont('Amiri Quran', ['assets/fonts/AmiriQuran-Regular.ttf']);
   await _loadFont('MaterialIcons', ['fonts/MaterialIcons-Regular.otf']);
   await _loadEmojiFont();
   AppNetworkImage.providerFactory = NetworkImage.new;

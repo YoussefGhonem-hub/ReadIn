@@ -286,4 +286,29 @@ void main() {
       expect(redirect('/admin/tickets/t-1', onboarded), AppRoutes.notifications);
     });
   });
+
+  group('the private corner (F38)', () {
+    const holder = Me(
+      id: 'u-super',
+      displayName: 'Super Admin',
+      username: 'superadmin',
+      onboardingCompleted: true,
+      permissions: [Permissions.devotionsAccess],
+    );
+    const paths = ['/devotions', '/devotions/duas', '/devotions/surah/36', '/devotions/adhkar/evening'];
+
+    test('opens for holders of devotions.access', () {
+      for (final path in paths) {
+        expect(redirect(path, signedIn(holder)), isNull, reason: path);
+      }
+    });
+
+    test('sends members Home and guests where account screens send them', () {
+      for (final path in paths) {
+        expect(redirect(path, onboarded), AppRoutes.home, reason: path);
+        expect(redirect(path, guest), AppRoutes.home, reason: path);
+        expect(redirect(path, guest, fresh), AppRoutes.welcome, reason: path);
+      }
+    });
+  });
 }
