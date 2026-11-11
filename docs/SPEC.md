@@ -667,6 +667,7 @@ Delete account ([F01](#f01--authentication--account)) is **immediate and for goo
 | Mutes and "show less" marks (F28): the writers, fields and topics the account muted, other people's mutes of the account, its "show less" marks | `UserMutes`, `ContentMutes`, `ArticleFeedback` | **Deleted** (cascade from `Users`; mutes *of* the account deleted explicitly) | Private choices; nobody was ever told about them |
 | Blocks (F36): the people the account blocked and other people's blocks of the account | `UserBlocks` | **Deleted** (both directions) | Private choices |
 | Terms acceptance (F37): accepted version and date | `Users` | **Deleted** with the row | |
+| Personal du'as (F38) | `PersonalDuas` | **Deleted** (cascade from `Users`) | Private |
 | Database, uploads and private files backups | backup storage | **Retained up to 14 days**, then overwritten | Disaster recovery ([deployment](setup/deployment.md)) |
 | Server logs | Serilog sink | May hold the account id and masked phone numbers (§9.5) for the log store's retention | Operations |
 
@@ -714,6 +715,7 @@ Endpoints require **permissions**, not roles. Roles are bundles of permissions.
 | `taxonomy.manage` (fields, topics, tags) | | | ✅ |
 | `paths.manage` | | | ✅ |
 | `system.settings` | | | ✅ |
+| `devotions.access` (the private corner: surahs, adhkar and the account's own du'as, F38) | | | ✅ |
 
 
 **Ownership rules:** a user can always edit/delete their own articles, comments and reactions. Editing a published article happens in a private working copy; readers see the change after **Update**, which records a revision (F05).
@@ -1442,6 +1444,32 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 
 **Data and API:** `Users.TermsVersion`, `Users.TermsAcceptedAt`, `ContentFilterTerms` (§16.2), `GET /legal` (current terms version and page links), `POST /me/terms/accept`, `GET/PUT /admin/content-filter` (§17.2).
 
+### F38 — Private Devotions (الركن الخاص)
+**Added 2026-11-11 (user request).** A private corner for the SuperAdmin's own worship: two surahs, the morning and evening adhkar, and their own du'as. **Mobile only.** It ships in an app version after the first App Store approval, so the build under review has no feature the reviewer can't reach (Guideline 2.3.1).
+
+**Who sees it:** holders of `devotions.access`, which only the SuperAdmin role has (§10.2). Nobody else sees the entry, the routes send them Home, and the API answers `403`. Du'as belong to the account that wrote them.
+
+**Where:** "الركن الخاص" / "Private corner" in the console's More (F23), and a row in Settings. Its page has five cards: سورة يس، سورة الواقعة، أذكار الصباح، أذكار المساء، أدعيتي.
+
+**The surahs (Ya-Sin 36, Al-Waqi'ah 56):**
+- Text: Tanzil Quran Text (Uthmani, version 1.1), copied verbatim into the app's assets with its copyright notice (CC BY 3.0: the text may not be changed; the source is named with a link to tanzil.net). Never typed by hand.
+- Shown in the Uthmani script with the Amiri Quran font (OFL), right to left, the ayat flowing as in a mushaf, each ending with its number in an ayah mark (۝, Arabic-Indic digits). The basmala that Tanzil puts before ayah 1 is shown as the surah's opening line.
+- A − / + control changes the text size (kept on the device). The footer names the source: "نص المصحف من مشروع تنزيل (tanzil.net)".
+
+**Morning and evening adhkar:**
+- Text: Hisn al-Muslim (حصن المسلم), chapter "أذكار الصباح والمساء", from the book's site (hisnmuslim.com), copied verbatim with its notes ("وإذا أمسى قال: …"), 24 adhkar. The footer names the source.
+- Morning shows the adhkar for the morning and for both; evening those for the evening and for both. The notes in the text say which are for one time only (Hisn al-Muslim IDs 93, 94, 95 morning; 97 evening).
+- Each card has a counter with the number of repetitions the text gives (e.g. 3, 7, 100): «المتبقي: ٣ من ٣», in Arabic-Indic digits in Arabic. Tapping the card counts down; at zero it shows done. "إعادة" resets the page. Counts live while the page is open.
+- The same text-size control as the surahs.
+
+**My du'as (أدعيتي):**
+- A list of the account's own du'as, oldest first. Add, edit and delete (with a confirmation). Each has an optional title (≤ 100), its text (1–2,000 characters, kept as written, line breaks included) and how many times it is said (1–1,000, default 1). At most 200.
+- Each card counts down like the adhkar: «المتبقي: ١ من ١»; a tap counts one, and it shows done at zero. «إعادة» starts over.
+- **Starter du'as** (user request, 2026-11-11): the SuperAdmin's account starts with `content/devotions/starter-duas.json`: six du'as the owner gave (as written), then du'as from the Sunnah for worry, distress, debt and hardship, copied verbatim from Hisn al-Muslim. The `starter-duas` seeder adds them once; after that they are ordinary du'as of the account.
+- Stored on the server, so they survive a reinstall and a new phone. Deleted with the account (§9.6).
+
+**Data and API:** `PersonalDuas` (§16.2), `GET /me/duas`, `POST /me/duas`, `PATCH /me/duas/{id}`, `DELETE /me/duas/{id}` (§17.2; [`docs/api/contract-v1.md`](api/contract-v1.md) "Private devotions (F38)").
+
 ---
 
 ## 12. Feature Parity Matrix (Web + Mobile)
@@ -1485,6 +1513,7 @@ Parts that belong to a feature not built yet (F24, F28, F29, F32) appear when th
 | F35 | Help & Support Tickets | ✅ | ✅ | 1 (store requirement) |
 | F36 | Block Users | ✅ | ✅ | 1 (store requirement) |
 | F37 | Terms Acceptance & Content Filter | ✅ | ✅ | 1 (store requirement) |
+| F38 | Private Devotions (SuperAdmin only) | — | ✅ | after the first App Store approval |
 
 **Process:** each feature is one GitHub issue with three sub-tasks (`backend`, `web`, `mobile`). The issue closes only when all three are committed to `dev` (see [§29](#29-git-workflow--conventions)).
 
@@ -1679,6 +1708,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Reading | `ReadingProgress` (UserId, ArticleId, Language, Percent, LastPosition, ActiveSeconds, StartedAt, CompletedAt), `DailyPicks` (UserId, Date, ArticleId, OpenedAt), `UserStats` (CurrentStreak, LongestStreak, LastReadDate, LastFreezeDate, TotalArticles, TotalSeconds), `ReadingDays` (UserId, local Date, ArticlesRead, ActiveSeconds; streaks + heatmap) |
 | Learning | `LearningPaths` (Slug, FieldId, TitleAr/En, DescriptionAr/En, SortOrder, IsPublished, IsEditorial, IsFeatured + FeaturedOrder (Explore's featured paths, F15; editorial paths start featured in their sort order, F23 will manage it)), `LearningPathItems` (PathId + ArticleId unique, Order), `PathEnrollments` (UserId + PathId unique, EnrolledAt, LastActivityAt, CompletedAt) |
 | Glossary | `GlossaryTerms` (Slug = the RDoc `termId` unique, TermEn, DefinitionEn, ExplanationAr), `ArticleTerms` (ArticleId + TermId key; rebuilt from the content's `term` nodes) |
+| Private devotions | `PersonalDuas` (F38: UserId → Users cascade, Title ≤ 100 nullable, Text ≤ 2000, Repeat 1–1,000, CreatedAt, UpdatedAt; index UserId + CreatedAt) |
 | Trust & Moderation | `VerificationRequests` (F19: UserId → Users cascade, FieldId → Fields no cascade, JobTitle ≤ 100, ProofUrl ≤ 500, ProofFilePath / ProofFileContentType / ProofFileSizeBytes / ProofFileName ≤ 120 (null once decided), Note ≤ 500, Status `Pending`/`Approved`/`Rejected` (a concurrency token), SubmittedAt, DecidedAt, DecidedById (no FK; account deletion nulls it), RejectionReason ≤ 500), `Reports` (TargetType article/comment/user, TargetId, ReporterId, Reason, Details, Status open/resolved/dismissed, ResolvedAt, ResolvedById (resolved or dismissed by); one per reporter and target), `ModerationActions` (the moderation log, F22: Action `varchar(32)` e.g. `article.hide`, TargetType, TargetId, TargetUserId, ModeratorId, TargetLabel ≤ 200 (title / first 80 characters / @username at the time), Note ≤ 500, SuspendedUntil, ReportsClosed, CreatedAt, NoticeKind warning/article_hidden (a notice the user acknowledges), AcknowledgedAt; no FKs to Users, account deletion nulls them), `AuditLogs` |
 | Notifications | `Notifications` (UserId, Type, Payload JSON, IsRead), `NotificationPreferences` |
 | Support (F35) | `SupportTickets` (UserId → Users cascade, Category, Subject ≤ 120, Status Open/Answered/Closed, Platform, OsVersion, AppVersion, Language, Screen, CreatedAt, UpdatedAt, LastUserMessageAt, LastAdminReplyAt, ClosedAt, ClosedById no FK), `SupportMessages` (TicketId → cascade, AuthorId no FK (null once removed), IsInternalNote, Body ≤ 2000, CreatedAt), `SupportAttachments` (MessageId → cascade, private file path, ContentType, Size) |
@@ -1730,6 +1760,7 @@ All text/background pairs must pass **WCAG AA** contrast in both modes.
 | Highlights | `GET /articles/{id}/highlights?lang=` (returns `{ articleId, language, mine[], popular[] }`) · `POST /articles/{id}/highlights` (`{ language, blockId, startOffset, endOffset, text }` → `{ highlight, replacedIds }`) · `DELETE /highlights/{id}` · `GET /me/highlights?cursor=&limit=` (groups per article version) — contract in [`docs/api/contract-v1.md`](api/contract-v1.md) ("Highlights (F30)") |
 | Comments | `GET /articles/{id}/comments?sort=top\|new` · `POST /articles/{id}/comments` · `GET /comments/{id}` · `GET /comments/{id}/replies` · `POST /comments/{id}/replies` · `PATCH /comments/{id}` · `DELETE /comments/{id}` · `PUT/DELETE /comments/{id}/like` · `POST/DELETE /comments/{id}/pin` · `GET /users/mention-suggestions?q=` |
 | Block (F36) | `PUT /users/{id}/block` · `DELETE /users/{id}/block` · `GET /me/blocked` |
+| Private devotions (F38) | `GET /me/duas` · `POST /me/duas` · `PATCH /me/duas/{id}` · `DELETE /me/duas/{id}` (all `devotions.access`) |
 | Legal & content filter (F37) | `GET /legal` (terms version, page links) · `POST /me/terms/accept` · `GET/PUT /admin/content-filter` (`system.settings`); `POST /auth/register` and new Google/Apple accounts require `acceptTerms: true` |
 | Follow | `PUT /users/{id}/follow` · `DELETE /users/{id}/follow` · `GET /users/{id}/followers` · `GET /users/{id}/following` · `GET /users/suggested` · `PUT/DELETE /me/interests/fields/{id}` · `PUT/DELETE /me/interests/topics/{id}` |
 | Saved | `GET /me/saved` · `PUT /me/saved/{articleId}` · `DELETE /me/saved/{articleId}` · `CRUD /me/collections` · `PUT/DELETE /me/collections/{id}/articles/{articleId}` |

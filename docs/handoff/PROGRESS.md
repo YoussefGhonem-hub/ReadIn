@@ -495,6 +495,15 @@ Later decisions (user, 2026-11-05):
   (`[data-accept-terms]`) before signing up, and the baselines for sign up, the profile and card menus, settings,
   the moderation queue and the footer change. After the deploy, run the production seed (`deploy.sh seed`) so the
   filter lists land and the review account is flagged.
+- **F38 Private devotions built, 2026-11-11 (user request; SuperAdmin only, mobile only).** Ya-Sin and Al-Waqi'ah
+  (Tanzil Uthmani text, verbatim, Amiri Quran font), Hisn al-Muslim's morning and evening adhkar (verbatim, a tap
+  counter each: «المتبقي: ١ من ٣»), and «أدعيتي»: the account's own du'as on the server (`PersonalDuas`, CRUD under
+  `/me/duas`, permission `devotions.access`, a repeat count each, counted down like the adhkar). The `starter-duas`
+  seeder adds `content/devotions/starter-duas.json` to every SuperAdmin: the six du'as the user gave, as written, then
+  eight from the Sunnah (worry, distress, debt, hardship) copied verbatim from Hisn al-Muslim. One migration,
+  `PersonalDuas`. **Release:** the mobile part ships in a TestFlight build after the first App Store approval
+  (Guideline 2.3.1), so don't push it to `uat` until the user says. The API part is harmless to deploy earlier; after
+  the deploy, run the production seed so the permission and the starter du'as land.
 - **Blocked, needs the user (2026-11-06):** GitHub Actions stopped starting jobs from 5fd40c08 (F24) on: "The job was
   not started because recent account payments have failed or your spending limit needs to be increased" (GitHub →
   Settings → Billing & plans). The last runs that did start (f6551dee) passed. Until billing is fixed, CI can't check

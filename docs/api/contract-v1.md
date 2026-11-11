@@ -2536,6 +2536,46 @@ comments, `429 content.too_many`.
   change; collection names and ticket subjects are block-only (a flag there does nothing). The starter lists are in
   `content/moderation/` (146 lines); the tests use neutral placeholder words from a test list.
 
+### Private devotions (F38) — SPEC F38
+
+The SuperAdmin's own du'as, for the private corner of the app (mobile only). The surahs and the adhkar are assets in
+the app, not API data. Every call needs a Bearer token and the permission `devotions.access` (only the SuperAdmin role
+has it): anyone else gets `403 auth.forbidden`. A du'a belongs to the account that wrote it; another account's id is
+`404 dua.not_found`, as if it didn't exist. Rate limit `writes` on writes. Never cached.
+
+| Method | Path | Body → Response |
+|---|---|---|
+| GET | `/me/duas` | → `PersonalDuaDto[]`: all your du'as, oldest first (`createdAt`, then `id`) |
+| POST | `/me/duas` | `{ title?: string \| null, text: string, repeat?: number }` → `201 PersonalDuaDto`, added last (`repeat` is 1 when missing). `409 dua.limit` at 200 du'as (it holds when several creates arrive at once) |
+| PATCH | `/me/duas/{id}` | `{ title?: string \| null, text: string, repeat?: number }` → `200 PersonalDuaDto`. Replaces all three: a missing or empty `title` clears it, a missing `repeat` is 1. `404 dua.not_found` |
+| DELETE | `/me/duas/{id}` | → `204`. `404 dua.not_found` |
+
+```ts
+interface PersonalDuaDto {
+  id: string;
+  title: string | null;   // ≤ 100
+  text: string;           // 1–2,000, as written (line breaks kept)
+  repeat: number;         // how many times it is said, 1–1,000; the app counts it down
+  createdAt: string;      // ISO 8601 UTC
+  updatedAt: string;      // = createdAt until the first edit
+}
+```
+
+- **Text.** Trimmed at both ends; inner whitespace and line breaks are kept as written (`\r\n` and a lone `\r` are
+  stored as `\n`). Control characters other than line breaks are removed (tabs too). After that `text` needs 1–2,000
+  characters (UTF-16 code units) and `title` 0–100 (an empty title is `null`), on one line (line breaks in a title,
+  U+2028 and U+2029 included, become spaces). Errors: `400 validation.failed` with
+  `errors.text: ["validation.required"]` or `["validation.length"]`, `errors.title: ["validation.length"]`, and
+  `errors.repeat: ["validation.range"]` outside 1–1,000.
+- **Answers.** `POST` answers `201` with `Location: /api/v1/me/duas/{id}`; `GET` sends `Cache-Control: no-store`.
+  Creates for one account run one after another (a per-account lock), so `dua.limit` holds under concurrent creates.
+- **No content filter (F37)** and no moderation: nobody else ever sees these texts.
+- **Starter du'as.** The `starter-duas` seeder adds `content/devotions/starter-duas.json` (the owner's own du'as, then
+  du'as from the Sunnah copied verbatim from Hisn al-Muslim) to every SuperAdmin account, after its own and in the
+  file's order. A text the account already has is skipped and the 200 limit holds. It runs again only when the file
+  changes, so a deleted one comes back only then.
+- **Account deletion (SPEC §9.6).** Deleted with the account (cascade).
+
 ## DTOs (TypeScript notation)
 
 ```ts
