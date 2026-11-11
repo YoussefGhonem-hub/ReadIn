@@ -2177,7 +2177,7 @@ Upload it as an unlisted video or a file link, and put the link in the Notes.
 ### 32.3 Store screenshots (Guideline 2.3.3)
 - They must show the **real app in use**, not the design mockup. The first set (`tools/app-store-assets`, generated from the mockup) is replaced before resubmitting.
 - **Capture** real screens from the release build (iPhone 6.9" and 6.3", Arabic and English, light, plus one dark), then frame them with the same template: replace the mockup phone content in `screenshots.html` with the captured PNG.
-- The app supports iPad (`TARGETED_DEVICE_FAMILY = 1,2`), so iPad 13" screenshots are required too, unless the iOS target is limited to iPhone. That is a product decision for the user.
+- The app is iPhone only (`TARGETED_DEVICE_FAMILY = 1`, user decision 2026-11-11), so no iPad screenshots are needed. iPad can't be dropped again once a version that supports it is on the App Store.
 
 ### 32.4 App Review notes (App Store Connect → App Review Information → Notes)
 Keep the English template below up to date with the app, and fill the brackets at submission:
