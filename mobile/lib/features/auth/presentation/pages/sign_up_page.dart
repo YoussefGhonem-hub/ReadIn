@@ -13,6 +13,7 @@ import '../../../legal/presentation/widgets/legal_links.dart';
 import '../cubit/form_support.dart';
 import '../cubit/sign_up_cubit.dart';
 import '../widgets/auth_widgets.dart';
+import '../widgets/leave_when_signed_in.dart';
 import 'sign_in_page.dart';
 
 class SignUpPage extends StatelessWidget {
@@ -21,7 +22,7 @@ class SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider(
         create: (_) => getIt<SignUpCubit>()..loadConfig(),
-        child: const SignUpView(),
+        child: const LeaveWhenSignedIn(child: SignUpView()),
       );
 }
 

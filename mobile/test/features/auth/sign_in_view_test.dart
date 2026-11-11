@@ -106,6 +106,12 @@ void main() {
     expect(find.text('Password changed. Sign in with your new password.'), findsOneWidget);
   });
 
+  testWidgets('a wrong number or password says so above the form, as one message (SPEC §9.5)', (tester) async {
+    await pump(tester, const SignInState(failure: Failure(FailureCodes.authInvalidCredentials, statusCode: 401)));
+
+    expect(find.text('The phone number or password is incorrect.'), findsOneWidget);
+  });
+
   testWidgets('other ways to sign in go under an "or" divider; the dev panel only when asked', (tester) async {
     await pump(tester, const SignInState());
     expect(find.byType(OrDivider), findsNothing);

@@ -19,6 +19,7 @@ import '../widgets/auth_showcase.dart';
 import '../widgets/auth_widgets.dart';
 import '../widgets/dev_login_panel.dart';
 import '../widgets/external_sign_in.dart';
+import '../widgets/leave_when_signed_in.dart';
 
 /// Arguments of the Sign in route: the number to pre-fill, whether a password was just reset, whether the account was
 /// just deleted on this device, and why the session ended when the app sent the user here (a suspended account, F22).
@@ -47,12 +48,14 @@ class SignInPage extends StatelessWidget {
           BlocProvider(create: (_) => getIt<SignInCubit>()),
           BlocProvider(create: (_) => getIt<ExternalSignInCubit>()..load()),
         ],
-        child: BlocSelector<ExternalSignInCubit, ExternalSignInState, bool>(
-          selector: (state) => state.providers.isNotEmpty,
-          builder: (_, hasProviders) => SignInView(
-            args: args,
-            showDevLogin: !kReleaseMode && DevLogin.available,
-            alternatives: [if (hasProviders) const ExternalSignInButtons(compact: true)],
+        child: LeaveWhenSignedIn(
+          child: BlocSelector<ExternalSignInCubit, ExternalSignInState, bool>(
+            selector: (state) => state.providers.isNotEmpty,
+            builder: (_, hasProviders) => SignInView(
+              args: args,
+              showDevLogin: !kReleaseMode && DevLogin.available,
+              alternatives: [if (hasProviders) const ExternalSignInButtons(compact: true)],
+            ),
           ),
         ),
       );
