@@ -108,9 +108,10 @@ public sealed class SeedRulesTests(ApiFactory api)
 
         seeders.Where(s => s.AppliesTo(new TestEnvironment(Environments.Production))).Select(s => s.Name).Should().BeEquivalentTo(
             ["roles-and-permissions", "taxonomy", "system-accounts", "official-account-avatar", "articles", "learning-paths", "glossary",
-             "content-filter", "terms-acceptance", "reviewer-account"],
+             "content-filter", "terms-acceptance", "reviewer-account", "starter-duas"],
             "production gets the reference data, the system accounts, @readin's articles, the content filter's word lists, the " +
-            "system accounts' terms acceptance and the App Review account (SPEC F37, §18.3), nothing else");
+            "system accounts' terms acceptance, the App Review account and the SuperAdmin's starter du'as (SPEC F37, F38, " +
+            "§18.3), nothing else");
         seeders.Where(s => s.Name.StartsWith("demo-", StringComparison.Ordinal))
             .Should().OnlyContain(s => !s.AppliesTo(new TestEnvironment(Environments.Production)) && !s.AppliesTo(new TestEnvironment(Environments.Staging)));
         seeders.Select(s => s.Name).Should().NotContain(["demo-writers", "demo-media", "demo-editor", "demo-categories"],

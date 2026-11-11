@@ -5,6 +5,7 @@ using ReadIn.Domain.Admin;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
 using ReadIn.Domain.Common;
+using ReadIn.Domain.Devotions;
 using ReadIn.Domain.Engagement;
 using ReadIn.Domain.Glossary;
 using ReadIn.Domain.Identity;
@@ -95,6 +96,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<SupportMessage> SupportMessages => Set<SupportMessage>();
     public DbSet<SupportAttachment> SupportAttachments => Set<SupportAttachment>();
+
+    public DbSet<PersonalDua> PersonalDuas => Set<PersonalDua>();
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<SeedHistory> SeedHistory => Set<SeedHistory>();

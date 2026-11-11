@@ -241,6 +241,9 @@ public static class ErrorMessages
         ["support.attachment_invalid"] = ("يجب أن تكون الصورة بصيغة JPEG أو PNG أو WebP، وألا يزيد حجمها على 5 م.ب.", "Screenshots must be JPEG, PNG or WebP, up to 5 MB each."),
         ["support.too_many_attachments"] = ("يمكن إرفاق 3 صور على الأكثر.", "You can attach up to 3 images."),
         ["support.category_invalid"] = ("اختر تصنيفًا من القائمة.", "Choose a category from the list."),
+        // Private devotions (SPEC F38), Modern Standard Arabic
+        ["dua.not_found"] = ("هذا الدعاء غير موجود.", "Du'a not found."),
+        ["dua.limit"] = ("وصلت إلى الحد الأقصى للأدعية (200 دعاء).", "You can have at most 200 du'as."),
         ["request.too_large"] = ("الطلب أكبر من المسموح.", "The request is too large."),
         ["request.unsupported_media_type"] = ("نوع البيانات المبعوتة مش مدعوم.", "This content type is not supported."),
         ["route.not_found"] = ("الصفحة مش موجودة.", "Not found."),

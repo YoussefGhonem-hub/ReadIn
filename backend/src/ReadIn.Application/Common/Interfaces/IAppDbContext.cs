@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ReadIn.Domain.Admin;
 using ReadIn.Domain.Articles;
 using ReadIn.Domain.Authorization;
+using ReadIn.Domain.Devotions;
 using ReadIn.Domain.Engagement;
 using ReadIn.Domain.Glossary;
 using ReadIn.Domain.Identity;
@@ -86,6 +87,9 @@ public interface IAppDbContext
     DbSet<SupportTicket> SupportTickets { get; }
     DbSet<SupportMessage> SupportMessages { get; }
     DbSet<SupportAttachment> SupportAttachments { get; }
+
+    // Private devotions (SPEC F38)
+    DbSet<PersonalDua> PersonalDuas { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

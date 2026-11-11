@@ -1,0 +1,8 @@
+{
+  "about": "Test fixture for the starter-duas seeder (SPEC F38): neutral placeholder texts, like the content filter's test lists. The real list is content/devotions/starter-duas.json.",
+  "duas": [
+    { "title": "Starter one", "text": "First starter du'a\nin two lines", "repeat": 1 },
+    { "title": null, "text": "Second starter du'a", "repeat": 3 },
+    { "title": "Starter three", "text": "Third starter du'a" }
+  ]
+}

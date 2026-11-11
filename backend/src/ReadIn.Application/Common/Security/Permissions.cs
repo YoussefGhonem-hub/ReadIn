@@ -118,6 +118,12 @@ public static class Permissions
         public const string Read = "audit.read";
     }
 
+    /// <summary>The private corner: surahs, adhkar and the account's own du'as (SPEC F38). Only the SuperAdmin role has it.</summary>
+    public static class Devotions
+    {
+        public const string Access = "devotions.access";
+    }
+
     public static readonly IReadOnlyDictionary<string, string> All = new Dictionary<string, string>
     {
         [Articles.Read] = "Read published articles",
@@ -146,5 +152,6 @@ public static class Permissions
         [Notifications.Broadcast] = "Send announcements",
         [Audit.Read] = "Browse the audit log",
         [Blocks.Manage] = "Block and unblock people",
+        [Devotions.Access] = "Open the private corner and keep your own du'as",
     };
 }

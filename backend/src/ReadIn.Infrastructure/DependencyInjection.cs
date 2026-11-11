@@ -191,6 +191,7 @@ public static class DependencyInjection
         // SPEC F37 and §18.3: the content filter's lists, the seeded accounts' terms, and the App Review account.
         services.AddScoped<ISeeder, ContentFilterSeeder>();
         services.AddScoped<ISeeder, TermsAcceptanceSeeder>();
+        services.AddScoped<ISeeder, StarterDuasSeeder>();
         services.AddScoped<ISeeder, ReviewerAccountSeeder>();
         services.AddScoped<SeedRunner>();
 

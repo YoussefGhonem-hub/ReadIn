@@ -150,6 +150,11 @@ public sealed class RoleMatrixTests
             .Should().Equal(RoleNames.SuperAdmin);
 
     [Fact]
+    public void Only_super_admin_has_devotions_access() => // SPEC F38: the private corner
+        RoleMatrix.Roles.Where(r => r.Permissions.Contains(Permissions.Devotions.Access)).Select(r => r.Name)
+            .Should().Equal(RoleNames.SuperAdmin);
+
+    [Fact]
     public void Guests_can_only_read() =>
         RoleMatrix.Roles.Single(r => r.Name == RoleNames.Guest).Permissions.Should().Equal(Permissions.Articles.Read);
 

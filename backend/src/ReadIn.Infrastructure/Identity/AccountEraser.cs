@@ -197,7 +197,7 @@ internal sealed partial class AccountEraser(
             // tokens, reading progress and days, streak stats, reactions, saves, collections, follows of other accounts,
             // daily picks, comment likes, mentions of the account, the reports it filed, its notifications and notification
             // settings go with the row (cascades). So do its writer categories (F31), and the published articles that stay
-            // lose their category (Articles.WriterCategoryId ON DELETE SET NULL).
+            // lose their category (Articles.WriterCategoryId ON DELETE SET NULL), and its personal du'as (F38).
             erased = await db.Users.IgnoreQueryFilters().Where(u => u.Id == userId).ExecuteDeleteAsync(ct) > 0;
             if (liked.Count > 0)
             {

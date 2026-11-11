@@ -125,6 +125,16 @@ public sealed class ErrorMessagesTests
         ErrorMessages.Title(code, "en").Should().Be(english);
     }
 
+    /// <summary>Private devotions (SPEC F38), in Modern Standard Arabic.</summary>
+    [Theory]
+    [InlineData("dua.not_found", "هذا الدعاء غير موجود.", "Du'a not found.")]
+    [InlineData("dua.limit", "وصلت إلى الحد الأقصى للأدعية (200 دعاء).", "You can have at most 200 du'as.")]
+    public void Devotion_codes_have_titles_in_arabic_and_english(string code, string arabic, string english)
+    {
+        ErrorMessages.Title(code, "ar").Should().Be(arabic);
+        ErrorMessages.Title(code, "en").Should().Be(english);
+    }
+
     [Fact]
     public void An_unknown_code_has_no_title() => ErrorMessages.Title("nope.unknown", "en").Should().BeNull();
 }
