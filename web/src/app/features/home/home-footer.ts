@@ -16,7 +16,7 @@ import { environment } from '../../../environments/environment';
     <nav [attr.aria-label]="'home.footer.label' | transloco" data-home-footer>
       <ul class="m-0 flex list-none flex-wrap justify-center gap-x-3 gap-y-1 p-0">
         <li><a [href]="site + '/'" target="_blank" rel="noopener" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.about' | transloco }}</a></li>
-        <li><a [href]="site + '/privacy'" target="_blank" rel="noopener" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.privacy' | transloco }}</a></li>
+        <li><a href="/privacy" target="_blank" rel="noopener" class="text-text-secondary no-underline hover:underline">{{ 'home.footer.privacy' | transloco }}</a></li>
         <!-- F37: the terms and the guidelines are the app's own pages -->
         <li><a routerLink="/terms" class="text-text-secondary no-underline hover:underline" data-footer-terms>{{ 'home.footer.terms' | transloco }}</a></li>
         <li><a routerLink="/community-guidelines" class="text-text-secondary no-underline hover:underline" data-footer-guidelines>{{ 'legal.guidelines.title' | transloco }}</a></li>

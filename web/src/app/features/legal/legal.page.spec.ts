@@ -56,7 +56,7 @@ describe('Terms of Use and Community Guidelines (F37)', () => {
 
   it('link to the other page, the privacy policy and help', () => {
     let links = [...render('terms').root.querySelectorAll<HTMLAnchorElement>('[data-legal-links] a')];
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/community-guidelines', `${new URL(environment.accountDeletionUrl).origin}/privacy`, '/support']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/community-guidelines', '/privacy?lang=ar', '/support']);
     links = [...render('guidelines').root.querySelectorAll<HTMLAnchorElement>('[data-legal-links] a')];
     expect(links[0].getAttribute('href')).toBe('/terms');
   });

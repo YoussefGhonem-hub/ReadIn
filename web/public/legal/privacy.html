@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-title-ar="سياسة الخصوصية · ReadIn" data-title-en="Privacy Policy · ReadIn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>سياسة الخصوصية · Privacy Policy · ReadIn</title>
+  <script>
+    (function () {
+      var d = document.documentElement;
+      var q = new URLSearchParams(location.search).get('lang');
+      var nav = ((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+      var l = q === 'ar' || q === 'en' ? q : nav.indexOf('ar') === 0 ? 'ar' : 'en';
+      d.setAttribute('data-lang', l); d.lang = l; d.dir = l === 'ar' ? 'rtl' : 'ltr';
+      document.title = d.getAttribute('data-title-' + l);
+    })();
+  </script>
+  <meta name="description" content="What ReadIn collects, why, who processes it, how long we keep it and how to delete it. ما يجمعه ReadIn ولماذا وكيف تحذفه.">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121413" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://readin.online/privacy">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/logo.png">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #FAF8F4; --surface: #FFFFFF; --border: #E8E4DC;
+      --text: #1A1A1A; --muted: #6B6B6B;
+      --primary: #0F5E52; --on-primary: #FFFFFF; --primary-soft: #E3F1EE;
+      --accent: #F2A93B; --accent-soft: #FDF3E1;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121413; --surface: #1B1E1C; --border: #2E322F;
+        --text: #ECEAE6; --muted: #A3A39E;
+        --primary: #3FB8A3; --on-primary: #121413; --primary-soft: #16302A;
+        --accent: #F5B95A; --accent-soft: #3A2E17;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 17px/1.75 "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    a { color: var(--primary); text-underline-offset: 3px; }
+    a:hover { text-decoration-thickness: 2px; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+    .top { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font: 700 22px/1 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .brand img { width: 36px; height: 36px; border-radius: 9px; }
+    .brand b { color: var(--primary); }
+    .lang-btn { display: none; align-items: center; font: inherit; font-size: 15px; line-height: 1; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
+    .lang-btn:hover { border-color: var(--primary); }
+    html[data-lang] .lang-btn { display: inline-flex; }
+    html[data-lang="ar"] .l-en, html[data-lang="en"] .l-ar { display: none !important; }
+    html:not([data-lang]) span.l-ar + span.l-en::before { content: " · "; }
+    html[data-lang] .lang-sep { display: none; }
+    .lang-sep { border: 0; border-top: 1px dashed var(--border); margin: 8px 0 40px; }
+    main { padding: 32px 0 48px; }
+    h1 { font-size: 30px; line-height: 1.3; margin: 0 0 8px; }
+    h2 { font-size: 21px; line-height: 1.4; margin: 36px 0 10px; }
+    h3 { font-size: 17px; line-height: 1.5; margin: 0 0 4px; }
+    p, ul, ol { margin: 0 0 14px; }
+    ul, ol { padding-inline-start: 22px; }
+    li { margin-bottom: 6px; }
+    .meta { color: var(--muted); font-size: 15px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; margin: 12px 0; }
+    .card > :last-child { margin-bottom: 0; }
+    .note { background: var(--primary-soft); border-radius: 16px; padding: 14px 18px; margin: 12px 0; }
+    .note > :last-child { margin-bottom: 0; }
+    .why { color: var(--muted); }
+    footer { border-top: 1px solid var(--border); padding: 24px 0 40px; font-size: 15px; color: var(--muted); }
+    footer nav { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 8px; }
+    @media (min-width: 640px) { h1 { font-size: 36px; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/" data-page="/" aria-label="ReadIn"><img src="/logo.png" alt="" width="36" height="36"><span dir="ltr">Read<b>In</b></span></a>
+      <button id="lang-btn" class="lang-btn" type="button"><span class="l-ar" lang="en">English</span><span class="l-en" lang="ar">العربية</span></button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ===================== العربية ===================== -->
+    <article class="l-ar" lang="ar" dir="rtl">
+      <h1>سياسة الخصوصية</h1>
+      <p class="meta">آخر تحديث: 5 نوفمبر 2026</p>
+      <p>توضح هذه السياسة ما تجمعه تطبيقات <bdi>ReadIn</bdi> (أندرويد و<bdi>iOS</bdi> والويب)، ولماذا نجمعه، ومن يعالجه، ومدة الاحتفاظ به، وما الذي يمكنك فعله. كتبناها بلغة بسيطة. إذا لم يكن شيء واضحًا، راسلنا.</p>
+
+      <h2 id="ar-who">1. من نحن</h2>
+      <p>يدير <bdi>ReadIn</bdi> فريق <bdi>ReadIn</bdi>. لأي سؤال أو طلب يخص خصوصيتك، راسلنا على <a href="mailto:youssef.fcaih@gmail.com"><bdi>youssef.fcaih@gmail.com</bdi></a>.</p>
+
+      <h2 id="ar-data">2. البيانات التي نجمعها ولماذا</h2>
+      <p>نجمع فقط ما يحتاجه التطبيق ليعمل. بجانب كل نوع ستجد سبب جمعه.</p>
+
+      <div class="card">
+        <h3>عند التسجيل برقم الهاتف</h3>
+        <ul>
+          <li><strong>رقم الهاتف.</strong> <span class="why">هو اسم الدخول لحسابك ويميّزه عن غيره. لا يظهر أبدًا في ملفك الشخصي أو مقالاتك أو تعليقاتك.</span></li>
+          <li><strong>كلمة المرور.</strong> <span class="why">لتسجيل دخولك. نحفظ منها بصمة مشفّرة باتجاه واحد (<bdi>hash</bdi>) فقط، ولا نحفظ كلمة المرور نفسها أبدًا.</span></li>
+          <li><strong>رمز الاسترداد (<bdi>PIN</bdi>).</strong> <span class="why">لتعيين كلمة مرور جديدة إذا نسيتها. نحفظه أيضًا كبصمة مشفّرة باتجاه واحد، محمية بمفتاح سري لا يُحفظ في قاعدة البيانات.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>عند الدخول بحساب <bdi>Google</bdi></h3>
+        <ul>
+          <li><strong>اسمك وبريدك الإلكتروني ومعرّف حسابك لدى <bdi>Google</bdi>.</strong> <span class="why">لإنشاء حسابك في <bdi>ReadIn</bdi> أو العثور عليه. يصبح الاسم اسمك الظاهر في الحساب الجديد، ويمكنك تغييره. نستخدم البريد لربط دخولك بالحساب الصحيح، ولا يراه أحد غيرك. لا نرسل لك رسائل بريد إلكتروني حاليًا.</span></li>
+          <li><span class="why">لا نتلقى كلمة مرور <bdi>Google</bdi> أبدًا. نتحقق من رمز الدخول الذي يرسله <bdi>Google</bdi> مرة واحدة ولا نحفظه.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>عند الدخول بحساب <bdi>Apple</bdi></h3>
+        <ul>
+          <li><strong>اسمك وبريدك الإلكتروني ومعرّف حسابك لدى <bdi>Apple</bdi>.</strong> <span class="why">للأسباب نفسها المذكورة في <bdi>Google</bdi>. ترسل <bdi>Apple</bdi> الاسم في أول مرة فقط.</span></li>
+          <li><strong>إذا اخترت «إخفاء بريدي الإلكتروني» (<bdi>Hide My Email</bdi>)</strong> <span class="why">ترسل لنا <bdi>Apple</bdi> عنوانًا خاصًا ينتهي بـ <bdi>@privaterelay.appleid.com</bdi>. نحفظ هذا العنوان فقط، ولا نرى بريدك الحقيقي.</span></li>
+          <li><span class="why">لا نتلقى كلمة مرور <bdi>Apple</bdi> أبدًا. نتحقق من رمز الدخول مرة واحدة ولا نحفظه.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>ملفك الشخصي (عام)</h3>
+        <ul>
+          <li><strong>الاسم الظاهر، واسم المستخدم (<bdi>@username</bdi>)، والصورة (اختيارية)، والمسمّى (اختياري، السطر الذي يظهر تحت اسمك)، والنبذة، وروابط حساباتك (حتى 8 روابط، كل رابط على موقع منصته نفسها، مثل <bdi>LinkedIn</bdi> و<bdi>X</bdi> و<bdi>GitHub</bdi>، أو موقعك الخاص)، ومجالات خبرتك.</strong> <span class="why">تظهر في ملفك الشخصي العام وبجانب مقالاتك وتعليقاتك، ليعرف القرّاء من كتبها.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>ما تنشئه وتفعله في التطبيق</h3>
+        <ul>
+          <li><strong>المقالات والتعليقات والردود والتفاعلات وإعادات النشر والمتابعات والمقالات المحفوظة وقوائم الحفظ، وأقسام مقالاتك، والكتم واختيارات «قلّل من النوع ده».</strong> <span class="why">لتشغيل هذه الخصائص. المقالات والتعليقات والتفاعلات وإعادات النشر عامة (المقالات التي تعيد نشرها تظهر في ملفك الشخصي وعند متابعيك)، أما الكتم فخاص ولا نُبلغ به أحدًا.</span></li>
+          <li><strong>النصوص التي تميّزها في المقالات (<bdi>Highlights</bdi>).</strong> <span class="why">لتعرضها لك في المقال وفي قائمة المحفوظات. تمييزك خاص بك: عندما يميّز 3 قرّاء أو أكثر النص نفسه يظهر للآخرين كنص شائع مع عدد القرّاء فقط، بدون أسماء ولا أي شيء يدل على من ميّزه.</span></li>
+          <li><strong>الصور وملفات <bdi>PDF</bdi> التي ترفعها.</strong> <span class="why">لعرضها في منشوراتك وملفك الشخصي. نحذف البيانات الوصفية من الصور، ومنها الموقع الجغرافي (<bdi>GPS</bdi>)، قبل حفظها.</span></li>
+          <li><strong>البلاغات التي ترسلها، وطلبات توثيق الكُتّاب (المسمى الوظيفي وروابط أو مستندات الإثبات).</strong> <span class="why">لمراجعة المحتوى المُبلَّغ عنه وتوثيق الكُتّاب.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>نشاط القراءة والتفضيلات</h3>
+        <ul>
+          <li><strong>المقالات التي تقرؤها، ومدى تقدمك فيها، ووقت القراءة، وسلسلة أيامك المتتالية، وأيام القراءة، وتقدمك في المسارات.</strong> <span class="why">لاختيار مقال اليوم، والحفاظ على سلسلتك، ومتابعة القراءة من حيث توقفت، وعرض إحصائياتك. إحصائيات قراءتك خاصة إلا إذا اخترت إظهارها.</span></li>
+          <li><strong>اهتماماتك، ولغة التطبيق، ولغة المقالات، والمظهر، والمنطقة الزمنية، ووقت التذكير اليومي، وإعدادات الإشعارات.</strong> <span class="why">لتخصيص التطبيق لك، وإرسال التذكير في الوقت الصحيح حسب توقيتك.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>الإشعارات وبيانات الجهاز</h3>
+        <ul>
+          <li><strong>رمز الإشعارات (<bdi>Firebase Cloud Messaging</bdi>)، ونوع النظام (أندرويد أو <bdi>iOS</bdi> أو الويب)، واسم الجهاز، وإصدار التطبيق، ولغته، وآخر مرة استُخدم فيها.</strong> <span class="why">لإيصال الإشعارات إلى أجهزتك بلغتك. يُحذف رمز الجهاز عند تسجيل الخروج منه.</span></li>
+          <li><strong>الإشعارات التي نرسلها لك.</strong> <span class="why">تُحفظ أيضًا في قائمة الإشعارات داخل التطبيق لتعود إليها.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>بيانات الأمان</h3>
+        <ul>
+          <li><strong>عنوان <bdi>IP</bdi> واسم الجهاز عند تسجيل الدخول أو استرداد كلمة المرور، ومحاولات الدخول ورمز الاسترداد الفاشلة، وسجل بأحداث الأمان</strong> (مثل تغيير كلمة المرور أو الرمز أو رقم الهاتف، وتسجيل الخروج من كل الأجهزة، وحذف الحساب). <span class="why">لحماية حسابك، وإيقاف محاولات التخمين، والتحقيق في إساءة الاستخدام.</span></li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <p><strong>ما لا نفعله:</strong> لا نجمع موقعك ولا جهات اتصالك. لا توجد إعلانات، ولا أدوات تحليلات أو تتبّع، ولا أدوات لتقارير الأعطال. لا نبيع بياناتك.</p>
+        <p><strong>الكوكيز:</strong> في نسخة الويب من <bdi>ReadIn</bdi> نستخدم الكوكيز فقط لإبقائك مسجّلًا ولتذكّر تفضيلاتك على هذا الجهاز: المظهر (فاتح أو داكن)، ولغة الواجهة، ووضع القراءة. لا نستخدم كوكيز للإعلانات أو التتبّع. صفحات المعلومات هذه لا تستخدم أي كوكيز.</p>
+      </div>
+
+      <h2 id="ar-third">3. الجهات الخارجية التي تعالج البيانات</h2>
+      <ul>
+        <li><strong><bdi>Google Firebase</bdi>:</strong>
+          <ul>
+            <li><bdi>Firebase Cloud Messaging</bdi> يوصل الإشعارات، ويستخدم رمز الإشعارات ومعرّف تثبيت <bdi>Firebase</bdi> لمعرفة الجهاز المقصود.</li>
+            <li><bdi>Firebase Realtime Database</bdi> يوصل التحديثات الحية، مثل عدد التفاعلات والتعليقات الجديدة وعدد الإشعارات غير المقروءة. يحمل أرقامًا ومعرّفات فقط، ولا يحمل نص تعليقاتك أو ملفك الشخصي أو رقم هاتفك. قد يحتفظ <bdi>Firebase</bdi> بعنوان <bdi>IP</bdi> ونوع المتصفح أو التطبيق بضعة أيام.</li>
+            <li><bdi>Firebase Authentication</bdi> نستخدمه فقط ليقرأ جهازك تحديثاته الحية الخاصة به. يتلقى معرّف حسابك في <bdi>ReadIn</bdi>، وليس رقم هاتفك أو بريدك أو كلمة مرورك. ليس وسيلة لتسجيل الدخول.</li>
+          </ul>
+          <a href="https://firebase.google.com/support/privacy" rel="noopener">الخصوصية في <bdi>Firebase</bdi></a> · <a href="https://policies.google.com/privacy" rel="noopener">سياسة خصوصية <bdi>Google</bdi></a>
+        </li>
+        <li><strong><bdi>Google</bdi>:</strong> عند الدخول بحساب <bdi>Google</bdi>. <a href="https://policies.google.com/privacy" rel="noopener">سياسة خصوصية <bdi>Google</bdi></a></li>
+        <li><strong><bdi>Apple</bdi>:</strong> «تسجيل الدخول باستخدام <bdi>Apple</bdi>» عند استخدامه، وخدمة إشعارات <bdi>Apple</bdi> التي توصل الإشعارات إلى أجهزة <bdi>iPhone</bdi>. <a href="https://www.apple.com/legal/privacy/" rel="noopener">سياسة خصوصية <bdi>Apple</bdi></a></li>
+      </ul>
+      <p>على الويب، تمر الإشعارات عبر خدمة الإشعارات في متصفحك. تعالج هذه الشركات البيانات وفق سياساتها. لا نشارك بياناتك مع أي جهة أخرى إلا إذا ألزمنا القانون بذلك.</p>
+
+      <h2 id="ar-storage">4. أين نحفظ البيانات ومدة الاحتفاظ بها</h2>
+      <p>نحفظ حسابك ومحتواك في قاعدة بيانات <bdi>ReadIn</bdi> وملفاته على خوادم نديرها. تُحفظ إشارات التحديثات الحية في <bdi>Firebase Realtime Database</bdi> في بلجيكا. قد يعالج <bdi>Firebase Cloud Messaging</bdi> البيانات في أي مكان لدى <bdi>Google</bdi> فيه منشآت، ويعمل <bdi>Firebase Authentication</bdi> من الولايات المتحدة. كل الاتصالات مشفّرة عبر <bdi>HTTPS</bdi>.</p>
+      <ul>
+        <li><strong>بيانات الحساب والمحتوى:</strong> طوال وجود حسابك. المقالات والتعليقات المنشورة تبقى بعد حذف الحساب باسم «مستخدم محذوف» حتى تُحذف، بدون أي شيء يربطها بك (<a href="#ar-delete">القسم 6</a>).</li>
+        <li><strong>جلسات الدخول</strong> (تدوم حتى 30 يومًا) <strong>ورموز استرداد كلمة المرور:</strong> تُحذف بعد 7 أيام من انتهائها.</li>
+        <li><strong>محاولات رمز الاسترداد (مع عنوان <bdi>IP</bdi>):</strong> 30 يومًا.</li>
+        <li><strong>رمز الإشعارات:</strong> حتى تسجّل الخروج من الجهاز، أو يتوقف الرمز عن العمل، أو تحذف حسابك.</li>
+        <li><strong>أحداث التحديثات الحية في <bdi>Firebase</bdi>:</strong> 24 ساعة.</li>
+        <li><strong>مستندات إثبات توثيق الكُتّاب:</strong> تُحذف فور قبول الطلب أو رفضه أو سحبه. الطلب الذي تم البت فيه (المجال والمسمى الوظيفي والرابط والنتيجة) يبقى طوال وجود حسابك، والطلب المسحوب يُحذف كله.</li>
+        <li><strong>الحسابات المحذوفة:</strong> نحذف كل شيء فورًا، ما عدا سجلًا بأن الحساب حُذف (معرّفه الداخلي ووقت الحذف، بدون أي بيانات تدل عليك) والنسخ الاحتياطية لمدة أقصاها 14 يومًا (انظر <a href="#ar-delete">البند 6</a>).</li>
+        <li><strong>النسخ الاحتياطية:</strong> تُحذف بعد 14 يومًا.</li>
+        <li><strong>سجل أحداث الأمان:</strong> نحتفظ به ما دام ضروريًا لحماية الحسابات والتعامل مع بلاغات إساءة الاستخدام.</li>
+      </ul>
+
+      <h2 id="ar-rights">5. حقوقك</h2>
+      <ul>
+        <li><strong>الاطلاع:</strong> ترى معظم بياناتك داخل التطبيق (الملف الشخصي والإعدادات والمحفوظات والإحصائيات). راسلنا إذا أردت نسخة كاملة.</li>
+        <li><strong>التصحيح:</strong> عدّل ملفك الشخصي وإعداداتك من التطبيق، وغيّر رقم الهاتف وكلمة المرور ورمز الاسترداد من الإعدادات ← الحساب. راسلنا لتصحيح أي شيء لا تستطيع تغييره بنفسك.</li>
+        <li><strong>التصدير:</strong> راسلنا وسنرسل لك نسخة من بياناتك الشخصية في ملف <bdi>JSON</bdi>.</li>
+        <li><strong>الحذف:</strong> من التطبيق أو بالبريد الإلكتروني (انظر <a href="#ar-delete">البند 6</a>).</li>
+        <li><strong>الإشعارات:</strong> أوقف أي نوع من الإشعارات، أو كلها، من الإعدادات.</li>
+      </ul>
+      <p>نرد على كل طلب خلال <strong>30 يومًا</strong>، وقد نطلب منك ما يثبت أن الحساب حسابك قبل تنفيذه.</p>
+
+      <h2 id="ar-delete">6. كيف تطلب حذف حسابك</h2>
+      <ul>
+        <li><strong>من التطبيق:</strong> افتح «حسابي» ← أيقونة الإعدادات ← «حذف الحساب» في آخر الصفحة، ثم أكّد بكلمة المرور أو بحساب <bdi>Google</bdi> أو <bdi>Apple</bdi> المرتبط، وعلّم على «فاهم، احذف حسابي»، واضغط «احذف حسابي» ثم «احذف نهائيًا».</li>
+        <li><strong>بالبريد الإلكتروني:</strong> راسلنا على <a href="mailto:youssef.fcaih@gmail.com?subject=Delete%20my%20ReadIn%20account"><bdi>youssef.fcaih@gmail.com</bdi></a> واذكر رقم الهاتف أو اسم المستخدم أو البريد المرتبط بحساب <bdi>Google</bdi> أو <bdi>Apple</bdi>. ننفذ الطلب خلال 30 يومًا.</li>
+      </ul>
+      <p><strong>ماذا يحدث بعد الحذف:</strong> يُحذف حسابك فورًا ولا يمكن التراجع عن ذلك. نلغي صلاحية <bdi>ReadIn</bdi> لدى <bdi>Apple</bdi>، ونسجّل خروجك من كل الأجهزة، ونحذف ملفك الشخصي ورقم الهاتف والبريد وكلمة المرور ورمز الاسترداد، ومسوداتك ومقالاتك غير المنشورة مع ملفاتها، وصورك وملفاتك المرفوعة الأخرى، واهتماماتك وسجل قراءتك وتفاعلاتك وإعادات نشرك وتمييزك للنصوص ومحفوظاتك ومتابعاتك، وأجهزتك ورموز الإشعارات، وإشعاراتك، وطلبات توثيقك مع مستندات الإثبات، وسجل أحداث الأمان الخاص بحسابك. <strong>مقالاتك المنشورة وتعليقاتك تبقى منشورة باسم «مستخدم محذوف»</strong>، مع الصور وملفات <bdi>PDF</bdi> التي تعرضها، بدون اسمك أو صورتك وبدون أي شيء يربطها بك؛ احذفها قبل حذف حسابك إذا أردت إزالتها. لا نحتفظ عنك إلا بسجل بأن الحساب حُذف (معرّفه الداخلي ووقت الحذف) وبالنسخ الاحتياطية لمدة أقصاها 14 يومًا. تعديلاتك على مقالات كتّاب آخرين تبقى معها بدون اسمك.</p>
+      <p>التفاصيل الكاملة في <a href="/delete-account" data-page="/delete-account">صفحة حذف الحساب</a>.</p>
+
+      <h2 id="ar-children">7. الأطفال</h2>
+      <p><bdi>ReadIn</bdi> مخصص لمن عمرهم <strong>13 عامًا أو أكثر</strong>. لا تنشئ حسابًا إذا كان عمرك أقل من 13 عامًا. إذا علمنا أن حسابًا يخص طفلًا أقل من 13 عامًا، نحذف الحساب وبياناته الشخصية. يمكن لأولياء الأمور مراسلتنا للإبلاغ عن ذلك.</p>
+
+      <h2 id="ar-changes">8. التغييرات على هذه السياسة</h2>
+      <p>عندما نغيّر هذه السياسة نحدّث هذه الصفحة وتاريخ «آخر تحديث» في أعلاها. وعند التغييرات المهمة نعلن عنها أيضًا في ملاحظات إصدار التطبيق على <bdi>App Store</bdi> و<bdi>Google Play</bdi> قبل أن تسري.</p>
+
+      <h2 id="ar-contact">9. تواصل معنا</h2>
+      <p>فريق <bdi>ReadIn</bdi>: <a href="mailto:youssef.fcaih@gmail.com"><bdi>youssef.fcaih@gmail.com</bdi></a></p>
+      <p class="meta">آخر تحديث: 5 نوفمبر 2026</p>
+    </article>
+
+    <hr class="lang-sep">
+
+    <!-- ===================== English ===================== -->
+    <article class="l-en" lang="en" dir="ltr">
+      <h1>Privacy Policy</h1>
+      <p class="meta">Last updated: November 5, 2026</p>
+      <p>This policy explains what the ReadIn apps (Android, iOS and web) collect, why, who processes it, how long we keep it, and what you can do about it. We wrote it in plain language. If anything is unclear, email us.</p>
+
+      <h2 id="en-who">1. Who we are</h2>
+      <p>ReadIn is operated by the ReadIn team. For any privacy question or request, email <a href="mailto:youssef.fcaih@gmail.com">youssef.fcaih@gmail.com</a>.</p>
+
+      <h2 id="en-data">2. What we collect and why</h2>
+      <p>We only collect what the app needs to work. Next to each item you'll find why we need it.</p>
+
+      <div class="card">
+        <h3>If you sign up with a phone number</h3>
+        <ul>
+          <li><strong>Phone number.</strong> <span class="why">It's your sign-in name and identifies your account. It never appears on your profile, articles or comments.</span></li>
+          <li><strong>Password.</strong> <span class="why">To sign you in. We only store a one-way hash of it, never the password itself.</span></li>
+          <li><strong>Recovery PIN.</strong> <span class="why">So you can set a new password if you forget yours. It's also stored only as a one-way hash, protected by a secret key that isn't kept in the database.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>If you sign in with Google</h3>
+        <ul>
+          <li><strong>Your name, email address and Google account ID.</strong> <span class="why">To create or find your ReadIn account. The name becomes the display name of a new account, and you can change it. We use the email to link your sign-in to the right account, and only you can see it. We don't currently send you any email.</span></li>
+          <li><span class="why">We never receive your Google password. We check the sign-in token Google sends once, and don't store it.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>If you sign in with Apple</h3>
+        <ul>
+          <li><strong>Your name, email address and Apple account ID.</strong> <span class="why">For the same reasons as Google. Apple only shares your name the first time you sign in.</span></li>
+          <li><strong>If you choose Hide My Email,</strong> <span class="why">Apple gives us a private address ending in @privaterelay.appleid.com. That's the only address we store; we never see your real one.</span></li>
+          <li><span class="why">We never receive your Apple ID password. We check the sign-in token once, and don't store it.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Your profile (public)</h3>
+        <ul>
+          <li><strong>Display name, @username, photo (optional), title (optional, the line under your name), bio, links to your accounts (up to 8, each on its platform's own site, such as LinkedIn, X or GitHub, or your own website) and fields of expertise.</strong> <span class="why">Shown on your public profile and next to your articles and comments, so readers know who wrote them.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>What you create and do in the app</h3>
+        <ul>
+          <li><strong>Articles, comments, replies, reactions, reposts, follows, saved articles, collections, writer categories, mutes and "Show less like this" marks.</strong> <span class="why">To run these features. Articles, comments, reactions and reposts are public (the articles you repost show on your profile and to your followers); mutes are private and nobody is told.</span></li>
+          <li><strong>Text you highlight in articles.</strong> <span class="why">To show your highlights in the article and in your Saved list. Your highlights are private: when 3 or more readers highlight the same passage, others see it as a popular passage with only the number of readers, never names or anything that shows who highlighted it.</span></li>
+          <li><strong>Photos and PDFs you upload.</strong> <span class="why">To show them in your posts and on your profile. We remove photo metadata, including GPS location, before storing images.</span></li>
+          <li><strong>Reports you send, and writer verification requests (job title, proof links or documents).</strong> <span class="why">To review reported content and verify writers.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Reading activity and preferences</h3>
+        <ul>
+          <li><strong>Articles you read, how far you got, reading time, your streak, reading days and learning path progress.</strong> <span class="why">To pick today's article, keep your streak, let you continue where you stopped, and show your stats. Your reading stats are private unless you choose to make them public.</span></li>
+          <li><strong>Interests, app language, article language, theme, time zone, daily reminder time and notification settings.</strong> <span class="why">To personalize the app and send your reminder at the right local time.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Notifications and device data</h3>
+        <ul>
+          <li><strong>Push notification token (Firebase Cloud Messaging), platform (Android, iOS or web), device name, app version, app language and when the device was last used.</strong> <span class="why">To deliver notifications to your devices in your language. A device's token is deleted when you sign out on it.</span></li>
+          <li><strong>Notifications we send you.</strong> <span class="why">Also kept in the in-app notification list so you can go back to them.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Security data</h3>
+        <ul>
+          <li><strong>IP address and device name when you sign in or reset your password, failed sign-in and PIN attempts, and a log of security events</strong> (such as password, PIN or phone number changes, signing out of all devices, and account deletion). <span class="why">To protect your account, stop guessing attacks and investigate abuse.</span></li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <p><strong>What we don't do:</strong> we don't collect your location or contacts. There are no ads, no analytics or tracking tools, and no crash-reporting tools. We don't sell your data.</p>
+        <p><strong>Cookies:</strong> the ReadIn web app uses cookies only to keep you signed in and to remember your preferences on this device: theme (light or dark), interface language and reading mode. No advertising or tracking cookies. These information pages use no cookies at all.</p>
+      </div>
+
+      <h2 id="en-third">3. Third parties that process data</h2>
+      <ul>
+        <li><strong>Google Firebase:</strong>
+          <ul>
+            <li>Firebase Cloud Messaging delivers notifications. It uses your push token and a Firebase installation ID to know which device to deliver to.</li>
+            <li>Firebase Realtime Database delivers live updates, such as reaction counts, new comments and your unread notification count. It carries only counts and IDs, never your comment text, profile or phone number. Firebase may keep IP addresses and browser or app type for a few days.</li>
+            <li>Firebase Authentication is used only so your device can read its own live updates. It receives your ReadIn account ID, not your phone number, email or password. It is not a way to sign in.</li>
+          </ul>
+          <a href="https://firebase.google.com/support/privacy" rel="noopener">Privacy in Firebase</a> · <a href="https://policies.google.com/privacy" rel="noopener">Google Privacy Policy</a>
+        </li>
+        <li><strong>Google:</strong> when you sign in with Google. <a href="https://policies.google.com/privacy" rel="noopener">Google Privacy Policy</a></li>
+        <li><strong>Apple:</strong> Sign in with Apple, if you use it, and the Apple Push Notification service, which delivers notifications to iPhones. <a href="https://www.apple.com/legal/privacy/" rel="noopener">Apple Privacy Policy</a></li>
+      </ul>
+      <p>On the web, notifications pass through your browser's push service. These companies process data under their own policies. We don't share your data with anyone else unless the law requires it.</p>
+
+      <h2 id="en-storage">4. Where we store data and how long we keep it</h2>
+      <p>Your account and content are stored in ReadIn's database and file storage on servers we operate. Live-update signals are stored in the Firebase Realtime Database in Belgium. Firebase Cloud Messaging may process data wherever Google has facilities, and Firebase Authentication runs in the United States. All connections are encrypted with HTTPS.</p>
+      <ul>
+        <li><strong>Account data and content:</strong> for as long as your account exists. Published articles and comments stay after the account is deleted, under “Deleted user”, until they're removed, with nothing that links them to you (<a href="#en-delete">section 6</a>).</li>
+        <li><strong>Sign-in sessions</strong> (they last up to 30 days) <strong>and password reset tokens:</strong> deleted 7 days after they expire or end.</li>
+        <li><strong>Recovery PIN attempts (with IP address):</strong> 30 days.</li>
+        <li><strong>Push notification token:</strong> until you sign out on that device, the token stops working, or you delete your account.</li>
+        <li><strong>Live-update events in Firebase:</strong> 24 hours.</li>
+        <li><strong>Writer verification proof documents:</strong> deleted as soon as the request is approved, rejected or withdrawn. A decided request (field, job title, link and outcome) stays for as long as your account exists; a withdrawn one is deleted entirely.</li>
+        <li><strong>Deleted accounts:</strong> everything is deleted right away, except a record that the account was deleted (its internal ID and the time, nothing that identifies you) and backups for up to 14 days (see <a href="#en-delete">section 6</a>).</li>
+        <li><strong>Backups:</strong> deleted after 14 days.</li>
+        <li><strong>Security event log:</strong> kept for as long as needed to protect accounts and handle abuse reports.</li>
+      </ul>
+
+      <h2 id="en-rights">5. Your rights</h2>
+      <ul>
+        <li><strong>Access:</strong> you can see most of your data in the app (profile, settings, saved articles, stats). Email us for a full copy.</li>
+        <li><strong>Correction:</strong> edit your profile and settings in the app, and change your phone number, password and recovery PIN in Settings → Account. Email us to fix anything you can't change yourself.</li>
+        <li><strong>Export:</strong> email us and we'll send you a copy of your personal data as a JSON file.</li>
+        <li><strong>Deletion:</strong> in the app or by email (see <a href="#en-delete">section 6</a>).</li>
+        <li><strong>Notifications:</strong> turn off any type of notification, or all of them, in Settings.</li>
+      </ul>
+      <p>We answer every request <strong>within 30 days</strong>. We may ask you to confirm that the account is yours first.</p>
+
+      <h2 id="en-delete">6. How to delete your account</h2>
+      <ul>
+        <li><strong>In the app:</strong> open Profile → the settings icon → Delete account (at the bottom). Confirm with your password or your linked Google or Apple account, tick "I understand, delete my account", tap "Delete my account", then "Delete forever".</li>
+        <li><strong>By email:</strong> write to <a href="mailto:youssef.fcaih@gmail.com?subject=Delete%20my%20ReadIn%20account">youssef.fcaih@gmail.com</a> with your phone number, @username, or the email of your linked Google or Apple account. We'll do it within 30 days.</li>
+      </ul>
+      <p><strong>What happens next:</strong> your account is deleted right away, and it can't be undone. We revoke ReadIn's access with Apple, sign you out on every device, and delete your profile, phone number, email, password, recovery PIN, your drafts and unpublished articles with their files, your other uploaded images and files, your interests, reading history, reactions, reposts, highlights, saved articles and follows, your devices and push tokens, your notifications, your writer verification requests with their proof documents, and the security log about your account. <strong>Your published articles and comments stay up under “Deleted user”</strong>, with the images and PDFs they show, without your name or photo and with nothing that links them to you; delete them before you delete your account if you want them gone. About you, we keep only a record that the account was deleted (its internal ID and the time) and, for up to 14 days, backup copies. Edits you made on other writers' articles stay with them, without your name.</p>
+      <p>Full details are on the <a href="/delete-account" data-page="/delete-account">account deletion page</a>.</p>
+
+      <h2 id="en-children">7. Children</h2>
+      <p>ReadIn is for people aged <strong>13 and over</strong>. Don't create an account if you're under 13. If we learn that an account belongs to a child under 13, we delete the account and its personal data. Parents and guardians can email us to tell us.</p>
+
+      <h2 id="en-changes">8. Changes to this policy</h2>
+      <p>When we change this policy, we update this page and the "last updated" date at the top. For significant changes, we also announce them in the app's release notes on the App Store and Google Play before they take effect.</p>
+
+      <h2 id="en-contact">9. Contact</h2>
+      <p>The ReadIn team: <a href="mailto:youssef.fcaih@gmail.com">youssef.fcaih@gmail.com</a></p>
+      <p class="meta">Last updated: November 5, 2026</p>
+    </article>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <nav aria-label="Pages">
+        <a href="/" data-page="/"><span class="l-ar">الرئيسية</span><span class="l-en">Home</span></a>
+        <a href="/privacy" data-page="/privacy"><span class="l-ar">سياسة الخصوصية</span><span class="l-en">Privacy Policy</span></a>
+        <a href="/terms" data-page="/terms"><span class="l-ar">شروط الاستخدام</span><span class="l-en">Terms of Service</span></a>
+        <a href="/delete-account" data-page="/delete-account"><span class="l-ar">حذف الحساب</span><span class="l-en">Delete account</span></a>
+      </nav>
+      <p><a href="mailto:youssef.fcaih@gmail.com">youssef.fcaih@gmail.com</a> · © 2026 <span class="l-ar">فريق ReadIn</span><span class="l-en">The ReadIn team</span></p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var d = document.documentElement;
+      function sync() {
+        var l = d.getAttribute('data-lang');
+        document.title = d.getAttribute('data-title-' + l);
+        document.querySelectorAll('a[data-page]').forEach(function (a) { a.href = a.getAttribute('data-page') + '?lang=' + l; });
+      }
+      document.getElementById('lang-btn').addEventListener('click', function () {
+        var l = d.getAttribute('data-lang') === 'ar' ? 'en' : 'ar';
+        d.setAttribute('data-lang', l); d.lang = l; d.dir = l === 'ar' ? 'rtl' : 'ltr';
+        var u = new URL(location.href); u.searchParams.set('lang', l); history.replaceState(null, '', u);
+        sync();
+      });
+      sync();
+    })();
+  </script>
+</body>
+</html>

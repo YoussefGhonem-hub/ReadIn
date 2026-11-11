@@ -14,7 +14,6 @@ import { ARTICLE_FONT_SIZES, ArticleFontSize, ReaderPrefsService } from '../../c
 import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { MUTE_ICON } from '../../shared/mutes/mute-icons';
 import { BLOCK_ICON } from '../../shared/blocks/block-icons';
-import { environment } from '../../../environments/environment';
 import { SegmentOption, Segmented } from '../../shared/ui/segmented';
 import { Switch } from '../../shared/ui/switch';
 import { ToastService } from '../../shared/ui/toast/toast.service';
@@ -208,7 +207,7 @@ import { ProfileSettings } from './profile-settings';
           </a>
         </li>
         <li>
-          <a [href]="privacyUrl" target="_blank" rel="noopener" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-privacy>
+          <a [href]="privacyUrl()" target="_blank" rel="noopener" class="flex min-h-12 items-center gap-3 text-sm text-text-primary no-underline" data-settings-privacy>
             <span class="flex-1">{{ 'legal.privacy' | transloco }}</span>
             <svg lucideIcon="ExternalLink" [size]="16" class="shrink-0 text-text-secondary" aria-hidden="true"></svg>
           </a>
@@ -225,8 +224,8 @@ export class SettingsPage {
   protected readonly mutedIcon = MUTE_ICON.VolumeX;
   /** F36: Settings → Blocked accounts. */
   protected readonly blockedIcon = BLOCK_ICON.UserRoundX;
-  /** F37: the privacy policy is the public page next to the account deletion page (as the home footer links it). */
-  protected readonly privacyUrl = `${new URL(environment.accountDeletionUrl).origin}/privacy`;
+  /** F37: the privacy policy, served by this site (server/legal-pages.ts), in the UI language. */
+  protected readonly privacyUrl = computed(() => `/privacy?lang=${this.language.lang()}`);
   protected readonly theme = inject(ThemeService);
   protected readonly language = inject(LanguageService);
   protected readonly readerPrefs = inject(ReaderPrefsService);

@@ -8,7 +8,7 @@ import express from 'express';
 import { join } from 'node:path';
 import { environment } from './environments/environment';
 import { appLinksConfig, appleAppSiteAssociation, assetLinks } from './server/app-links';
-import { LEGAL_REDIRECTS, legalRedirectUrl } from './server/legal-redirects';
+import { LEGAL_STATIC_PAGES, legalStaticFile } from './server/legal-pages';
 import { SITEMAP_FILES, SitemapData, createSitemapSource, robotsTxt, sitemapIndexXml, sitemapXml } from './server/sitemap';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -56,12 +56,15 @@ app.get(SITEMAP_FILES.en, sitemap((data) => sitemapXml(environment.siteUrl, 'en'
 app.get(SITEMAP_FILES.pages, sitemap((data) => sitemapXml(environment.siteUrl, 'pages', data)));
 
 /**
- * The privacy policy and "Delete your account" live on Firebase Hosting (server/legal-redirects.ts); the apps open them
- * here. 302, so a page of our own can replace either later without browsers holding on to the redirect.
+ * The privacy policy and "Delete your account" (server/legal-pages.ts): the static pages from the repo's public/,
+ * served here as they are, so the apps and the stores open them on this domain. Short cache: the text changes with the
+ * policy.
  */
-const legalOrigin = new URL(environment.accountDeletionUrl).origin;
-for (const path of LEGAL_REDIRECTS) {
-  app.get(path, (req, res) => res.redirect(302, legalRedirectUrl(legalOrigin, path, req.originalUrl)));
+for (const path of LEGAL_STATIC_PAGES) {
+  app.get(path, (_req, res, next) => {
+    res.set('Cache-Control', 'public, max-age=600');
+    res.sendFile(legalStaticFile(path), { root: browserDistFolder }, (error) => error && next(error));
+  });
 }
 
 /**

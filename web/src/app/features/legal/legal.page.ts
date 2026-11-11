@@ -59,7 +59,7 @@ import { LEGAL_TEXTS, LegalPageId, SUPPORT_EMAIL_PLACEHOLDER } from './legal-con
       } @else {
         <a routerLink="/terms" queryParamsHandling="preserve" class="text-link">{{ 'legal.terms.title' | transloco }}</a>
       }
-      <a [href]="privacyUrl" target="_blank" rel="noopener" class="text-link">{{ 'legal.privacy' | transloco }}</a>
+      <a [href]="privacyUrl()" target="_blank" rel="noopener" class="text-link">{{ 'legal.privacy' | transloco }}</a>
       <a routerLink="/support" queryParamsHandling="preserve" class="text-link">{{ 'support.title' | transloco }}</a>
     </nav>
   `,
@@ -76,7 +76,8 @@ export class LegalPage {
   protected readonly shown = this.uiLang;
   protected readonly other = computed(() => (this.shown() === 'ar' ? 'en' : 'ar'));
   protected readonly text = computed(() => LEGAL_TEXTS[this.page()][this.shown()]);
-  protected readonly privacyUrl = `${new URL(environment.accountDeletionUrl).origin}/privacy`;
+  /** The privacy policy, served by this site (server/legal-pages.ts), in the language shown here. */
+  protected readonly privacyUrl = computed(() => `/privacy?lang=${this.shown()}`);
 
   constructor() {
     const title = inject(Title);

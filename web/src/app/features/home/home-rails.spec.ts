@@ -224,7 +224,8 @@ describe('Home columns', () => {
 
       const footer = [...root.querySelectorAll<HTMLAnchorElement>('[data-home-footer] a')];
       expect(footer.map((a) => a.textContent!.trim())).toEqual(['عن ReadIn', 'الخصوصية', 'الشروط', 'قواعد المجتمع', 'المساعدة والتواصل']);
-      expect(footer[1].getAttribute('href')).toMatch(/^https:\/\/.+\/privacy$/);
+      // The privacy policy is served by this site (server/legal-pages.ts).
+      expect(footer[1].getAttribute('href')).toBe('/privacy');
       // F37: the terms and the guidelines are the app's own SSR pages.
       expect(footer[2].getAttribute('href')).toBe('/terms');
       expect(footer[3].getAttribute('href')).toBe('/community-guidelines');
