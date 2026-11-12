@@ -28,6 +28,26 @@ public sealed class ContentRepository(IOptions<ContentOptions> options, IHostEnv
 
     public string Root => _root.Value;
 
+    /// <summary>
+    /// <see cref="Root"/>, or null when this deployment has no <c>content/</c> folder: production ships the API without it
+    /// (only the <c>seed</c> command, run from a machine with the repo, reads it). For the console's read-only views,
+    /// which must work either way; seeding and the content tools keep using <see cref="Root"/> and fail loudly.
+    /// </summary>
+    public string? RootOrNull
+    {
+        get
+        {
+            try
+            {
+                return Root;
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return null;
+            }
+        }
+    }
+
     public string TaxonomyPath => Path.Combine(Root, "taxonomy.yaml");
 
     public async Task<TaxonomyFile> ReadTaxonomyAsync(CancellationToken ct) =>
