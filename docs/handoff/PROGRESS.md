@@ -544,6 +544,12 @@ Later decisions (user, 2026-11-05):
   after Face ID with no request reaching the API (iOS returns "canceled"): it matches Apple's server-side registration
   issue (Developer Forums thread 837986); the user is asking Apple Developer Support. Google on iPhone works since
   54c84b36 (the iOS SDK's own nonce).
+- **Sign in with Apple key on the API server (2026-11-13, user request; App Review §32.1 #7):** the server's
+  `web.config` now has `ExternalAuth__Apple__KeyId` and `SIWA_KEY_BASE64` (the key from `C:\secrets`, outside git).
+  Only `web.config` was uploaded; the build `uat` deployed was not touched. Health, `auth/config` and search answered
+  200 after the restart. The deploy kit's `make-webconfig.cjs` now writes both, from `config.env` (`APPLE_KEY_ID`) and
+  `secrets.env` (`SIWA_KEY_BASE64`). Before this, deleting an Apple-linked account answered `503
+  account.deletion_unavailable`. Not yet tried on a device: Continue with Apple, then Delete account.
 - **SPEC §23 robots.txt + sitemap ✅ (user, 2026-11-07):** `GET /api/v1/sitemap` lists what a guest can open; the web's
   SSR server serves `/robots.txt` and `/sitemap.xml` (index of `/sitemap-ar.xml`, `/sitemap-en.xml`,
   `/sitemap-pages.xml`), built in `web/src/server/sitemap.ts`. The user verified `readin.online` in Google Search
