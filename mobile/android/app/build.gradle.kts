@@ -1,5 +1,7 @@
+import java.io.FileInputStream
 import java.net.URI
 import java.util.Base64
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -24,6 +26,13 @@ val appLinkHost: String = URI(webOrigin).let { uri ->
         "WEB_ORIGIN must be an https origin such as https://readin.app, without a path (got '$webOrigin')."
     }
     uri.host.lowercase()
+}
+
+// Google Play upload key (docs/google-play/README.md): android/key.properties (git-ignored) names the keystore and its
+// passwords. Without it, release builds are signed with the debug key, which is fine for local runs but Google Play refuses.
+val uploadKey = Properties().apply {
+    val file = rootProject.file("key.properties")
+    if (file.exists()) FileInputStream(file).use { load(it) }
 }
 
 android {
@@ -51,11 +60,20 @@ android {
         manifestPlaceholders["appLinkHost"] = appLinkHost
     }
 
+    signingConfigs {
+        if (uploadKey.isNotEmpty()) {
+            create("upload") {
+                storeFile = file(uploadKey.getProperty("storeFile"))
+                storePassword = uploadKey.getProperty("storePassword")
+                keyAlias = uploadKey.getProperty("keyAlias")
+                keyPassword = uploadKey.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (uploadKey.isNotEmpty()) "upload" else "debug")
         }
     }
 }
