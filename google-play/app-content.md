@@ -1,8 +1,8 @@
 # Play Console → App content: the answers
 
 Every declaration Google Play asks for before the first release, with the answer for ReadIn and why. The labels are
-Play Console's (English). Keep this in sync with the data map in [SPEC §9.6](../SPEC.md#96-account-deletion--data-map)
-and the privacy policy ([`web/public/legal/privacy.html`](../../web/public/legal/privacy.html)).
+Play Console's (English). Keep this in sync with the data map in [SPEC §9.6](../docs/SPEC.md#96-account-deletion--data-map)
+and the privacy policy ([`web/public/legal/privacy.html`](../web/public/legal/privacy.html)).
 
 ## Privacy policy
 - **Privacy policy URL:** `https://readin.online/privacy`

@@ -1,9 +1,9 @@
 // Renders the Google Play store graphics with the Playwright Chromium installed for web/ (as an image renderer only).
 //   node tools/google-play-assets/render.mjs
 // Inputs:
-//   docs/google-play/screenshots/raw/{ar,en}/NN-name.png   real 1080×2400 captures of the release app (Android emulator)
+//   google-play/screenshots/raw/{ar,en}/NN-name.png   real 1080×2400 captures of the release app (Android emulator)
 //   tools/app-store-assets/logo.html                       the app icon (the same source as the launcher icons)
-// Outputs (docs/google-play/graphics/):
+// Outputs (google-play/graphics/):
 //   icon-512.png                                           Play app icon: 512×512 PNG, full square (Play rounds it)
 //   feature-graphic-{ar,en}.jpg                            1024×500, no transparency
 //   phone-screenshots/{ar,en}/NN-name.jpg                  1080×1920 (9:16), no transparency
@@ -18,7 +18,7 @@ const root = resolve(here, "../..");
 const require = createRequire(join(root, "web/package.json"));
 const { chromium } = require("@playwright/test");
 
-const out = join(root, "docs/google-play/graphics");
+const out = join(root, "google-play/graphics");
 const SHOTS = ["01-home", "02-reader", "03-explore", "04-paths", "05-search", "06-dark"];
 const ready = async (p) => {
   await p.evaluate(() => document.fonts.ready);

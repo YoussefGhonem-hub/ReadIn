@@ -28,7 +28,7 @@ val appLinkHost: String = URI(webOrigin).let { uri ->
     uri.host.lowercase()
 }
 
-// Google Play upload key (docs/google-play/README.md): android/key.properties (git-ignored) names the keystore and its
+// Google Play upload key (google-play/README.md): android/key.properties (git-ignored) names the keystore and its
 // passwords. Without it, release builds are signed with the debug key, which is fine for local runs but Google Play refuses.
 val uploadKey = Properties().apply {
     val file = rootProject.file("key.properties")

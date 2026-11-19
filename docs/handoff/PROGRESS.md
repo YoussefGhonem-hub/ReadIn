@@ -504,7 +504,7 @@ Later decisions (user, 2026-11-05):
   `PersonalDuas`. **Release:** the mobile part ships in a TestFlight build after the first App Store approval
   (Guideline 2.3.1), so don't push it to `uat` until the user says. The API part is harmless to deploy earlier; after
   the deploy, run the production seed so the permission and the starter du'as land.
-- **Google Play kit, 2026-11-19 (user request).** [`docs/google-play/`](../google-play/README.md) holds the Play Console
+- **Google Play kit, 2026-11-19 (user request).** [`google-play/`](../../google-play/README.md) holds the Play Console
   guide, the store texts (ar, en-US), the icon, feature graphics and 12 framed phone screenshots of the real release
   app (rendered by `tools/google-play-assets/render.mjs` from captures on a Pixel 7 emulator against production), and the
   answers for every App content form. Release builds are now signed by the upload key that `mobile/android/key.properties`

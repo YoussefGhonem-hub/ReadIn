@@ -10,7 +10,7 @@
   Google Play phone screenshot: 1080×1920 (9:16), a real screen captured from the release app on an Android emulator
   framed with a headline. One screenshot per page load:
     frame.html?lang=ar|en&shot=1..6
-  The captures live in docs/google-play/screenshots/raw/{lang}/; render.mjs writes the framed PNGs.
+  The captures live in google-play/screenshots/raw/{lang}/; render.mjs writes the framed PNGs.
 -->
 <style>
   * { box-sizing: border-box; }
@@ -65,7 +65,7 @@
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   document.getElementById("headline").innerHTML = shot[lang];
-  document.getElementById("screen").src = `../../docs/google-play/screenshots/raw/${lang}/${shot.file}.png`;
+  document.getElementById("screen").src = `../../google-play/screenshots/raw/${lang}/${shot.file}.png`;
   if (shot.night) document.getElementById("shot").classList.add("night");
 </script>
 </body>

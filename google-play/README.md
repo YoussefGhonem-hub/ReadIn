@@ -14,7 +14,7 @@
 | [`metadata/ar/`](metadata/ar) و [`metadata/en-US/`](metadata/en-US) | الاسم، والوصف القصير، والوصف الكامل، و"What's new" |
 | [`app-content.md`](app-content.md) | إجابات كل نماذج App content: Data safety، والتصنيف العمري، والجمهور، والإعلانات، وحساب المراجعة |
 
-الصور بتتعمل تاني من [`tools/google-play-assets/`](../../tools/google-play-assets): `node tools/google-play-assets/render.mjs`.
+الصور بتتعمل تاني من [`tools/google-play-assets/`](../tools/google-play-assets): `node tools/google-play-assets/render.mjs`.
 
 ## معلومات سريعة
 
@@ -146,4 +146,4 @@ flutter build appbundle --release --dart-define-from-file=config/prod.json --bui
 
 - النسخ اللي بتتبني من `dev` فيها «الركن الخاص» (F38). بيظهر لحساب الـ SuperAdmin بس، ومحتاجش إجابة في أي
   نموذج.
-- قسم 32.5 في [SPEC](../SPEC.md#325-google-play) فيه متطلبات Google Play، والفولدر ده بيطبّقها.
+- قسم 32.5 في [SPEC](../docs/SPEC.md#325-google-play) فيه متطلبات Google Play، والفولدر ده بيطبّقها.
