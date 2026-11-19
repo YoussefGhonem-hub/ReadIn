@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ReadIn Google Play screenshot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;700&family=IBM+Plex+Sans:wght@500;700&display=swap" rel="stylesheet">
+<!--
+  Google Play phone screenshot: 1080×1920 (9:16), a real screen captured from the release app on an Android emulator
+  framed with a headline. One screenshot per page load:
+    frame.html?lang=ar|en&shot=1..6
+  The captures live in docs/google-play/screenshots/raw/{lang}/; render.mjs writes the framed PNGs.
+-->
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; }
+  body { font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif; -webkit-font-smoothing: antialiased; }
+  [lang="en"] body { font-family: "IBM Plex Sans", "IBM Plex Sans Arabic", sans-serif; }
+  .shot { position: relative; width: 1080px; height: 1920px; overflow: hidden; color: #fff;
+    background: radial-gradient(120% 70% at 50% 0%, #17745F 0%, #0F5E52 45%, #0A493F 100%); }
+  .shot.night { background: radial-gradient(120% 70% at 50% 0%, #22302A 0%, #151917 50%, #0D0F0E 100%); }
+  .ring { position: absolute; width: 1120px; height: 1120px; top: -660px; left: -420px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.12); box-shadow: 0 0 0 90px rgba(255,255,255,.035), 0 0 0 180px rgba(255,255,255,.02); }
+  .glow { position: absolute; width: 420px; height: 420px; top: 260px; right: -180px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(242,169,59,.35), rgba(242,169,59,0) 70%); }
+  .head { position: absolute; top: 92px; inset-inline: 60px; text-align: center; z-index: 2; }
+  .brand { display: inline-flex; align-items: center; gap: 16px; direction: ltr; margin-bottom: 30px; }
+  .brand img { width: 64px; height: 64px; border-radius: 18px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .brand .word { font: 700 46px "IBM Plex Sans", sans-serif; letter-spacing: -2px; }
+  .brand .word b { color: #F2A93B; font-weight: 700; }
+  h1 { margin: 0; font-weight: 700; font-size: 68px; line-height: 1.3; letter-spacing: -.01em; }
+  [lang="en"] h1 { font-size: 66px; line-height: 1.15; letter-spacing: -.03em; }
+  h1 em { font-style: normal; color: #F2A93B; }
+  .phone { position: absolute; left: 50%; top: 466px; transform: translateX(-50%); width: 640px; height: 1408px;
+    padding: 14px; border-radius: 64px; background: #1C1D1B; z-index: 1;
+    box-shadow: 0 40px 110px rgba(0,0,0,.38), 0 8px 24px rgba(0,0,0,.2), inset 0 0 0 2px #3A3B38; }
+  .phone img { display: block; width: 612px; height: 1360px; border-radius: 52px; }
+  .phone::after { content: ""; position: absolute; top: 34px; left: 50%; width: 26px; height: 26px; margin-left: -13px;
+    border-radius: 50%; background: #0B0B0B; }
+</style>
+</head>
+<body>
+<div class="shot" id="shot">
+  <div class="ring"></div><div class="glow"></div>
+  <div class="head">
+    <div class="brand"><img src="../../docs/design/app-store/logo/app-icon-1024.png" alt=""><span class="word">Read<b>In</b></span></div>
+    <h1 id="headline"></h1>
+  </div>
+  <div class="phone"><img id="screen" alt=""></div>
+</div>
+<script>
+  // Headlines: Arabic in MSA (the app's Arabic copy style), English plain. <em> is the amber accent.
+  const SHOTS = [
+    { file: "01-home",     ar: "مقال واحد <em>كل يوم</em><br>يُحدث فرقًا",            en: "One article <em>a day</em><br>that makes a difference" },
+    { file: "02-reader",   ar: "العربية والإنجليزية<br><em>كلٌّ في اتجاهه</em>",       en: "Arabic and English,<br><em>each the right way</em>" },
+    { file: "03-explore",  ar: "اختر المجالات<br><em>التي تهمك</em>",                 en: "Pick the fields<br><em>you care about</em>" },
+    { file: "04-paths",    ar: "مسارات تعلّم<br><em>خطوة بخطوة</em>",                 en: "Learning paths,<br><em>step by step</em>" },
+    { file: "05-search",   ar: "ابحث عن أي موضوع<br><em>أو كاتب أو وسم</em>",          en: "Find any topic,<br><em>writer or tag</em>" },
+    { file: "06-dark",     ar: "قراءة مريحة<br><em>في الوضع الداكن</em>",              en: "Easy reading<br><em>in dark mode</em>", night: true },
+  ];
+  const q = new URLSearchParams(location.search);
+  const lang = q.get("lang") === "en" ? "en" : "ar";
+  const shot = SHOTS[Math.min(Math.max(parseInt(q.get("shot") || "1", 10), 1), SHOTS.length) - 1];
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.getElementById("headline").innerHTML = shot[lang];
+  document.getElementById("screen").src = `../../docs/google-play/screenshots/raw/${lang}/${shot.file}.png`;
+  if (shot.night) document.getElementById("shot").classList.add("night");
+</script>
+</body>
+</html>

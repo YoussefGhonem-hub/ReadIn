@@ -2242,6 +2242,12 @@ None. The app has no regulated services or third-party protected content.
 ```
 
 ### 32.5 Google Play
+Everything for the Play Console lives in [`docs/google-play/`](google-play/README.md): the step-by-step guide, the store
+texts (ar, en-US), the icon, feature graphic and phone screenshots of the real app, and the answers for every App content
+form ([`app-content.md`](google-play/app-content.md)).
+- **Signing:** release builds use the upload key named by `mobile/android/key.properties` (git-ignored; the keystore and
+  its passwords are kept outside git). Without it they fall back to the debug key, which Play refuses. Play App Signing
+  holds the app signing key; its SHA-1 and the upload key's go into the Firebase Android app for Google sign-in.
 - **Data safety form** matching the §9.6 data map (phone number, email if linked, name, photos, user content, device push token; nothing sold or shared for ads).
 - **Account deletion:** the in-app flow and the public URL `/delete-account`.
 - **Content rating questionnaire:** user-generated content with reporting and blocking.

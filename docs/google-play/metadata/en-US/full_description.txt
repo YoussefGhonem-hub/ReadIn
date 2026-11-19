@@ -1,0 +1,27 @@
+ReadIn is a knowledge platform in Arabic and English: one hand-picked article every day in the fields you care about, and a place to write and share what you learn.
+
+Read every day
+• "Today's article" on Home, picked for you from your interests.
+• Fields you choose: AI, software engineering, mobile apps, web frontends, .NET and more.
+• A comfortable reader that shows Arabic and English each in its own direction, with dark mode and adjustable text size.
+• Learning paths that put articles in order, step by step.
+• A daily reading streak and stats that keep you going.
+
+Save and take part
+• Save articles into collections, highlight key sentences, and download any article as a PDF.
+• Read today's article and your saved articles offline.
+• React to articles, and comment and reply in a discussion that updates live.
+• Follow the writers and fields you like, explore topics and tags, and search everything.
+
+Write and publish
+• A rich editor: headings, lists, images, code and tables, with Arabic and English mixed correctly.
+• Publish your article to readers who follow its field, and repost what you like.
+• Get verified as an expert writer.
+
+A safe community
+• Everyone accepts the Terms of Use and Community Guidelines at sign-up, and offensive words are filtered out.
+• Report any article, comment or account, and block anyone. Our team reviews every report within 24 hours.
+• Control your notifications and quiet hours.
+• Delete your account from inside the app at any time.
+
+ReadIn: read daily, grow daily.

@@ -504,6 +504,14 @@ Later decisions (user, 2026-11-05):
   `PersonalDuas`. **Release:** the mobile part ships in a TestFlight build after the first App Store approval
   (Guideline 2.3.1), so don't push it to `uat` until the user says. The API part is harmless to deploy earlier; after
   the deploy, run the production seed so the permission and the starter du'as land.
+- **Google Play kit, 2026-11-19 (user request).** [`docs/google-play/`](../google-play/README.md) holds the Play Console
+  guide, the store texts (ar, en-US), the icon, feature graphics and 12 framed phone screenshots of the real release
+  app (rendered by `tools/google-play-assets/render.mjs` from captures on a Pixel 7 emulator against production), and the
+  answers for every App content form. Release builds are now signed by the upload key that `mobile/android/key.properties`
+  names (git-ignored; keystore and passwords in `D:\tmp\readin-deploy\android`), and fall back to the debug key without
+  it. The first AAB (versionCode 1) is `D:\tmp\readin-deploy\android\readin-1.aab`. **Left for the user:** the Play
+  developer account (a personal one needs 12 testers for 14 days of closed testing first), the Play app signing SHA-1 in
+  Firebase for Google sign-in, and `readin.online` over HTTPS, which reset every connection on 2026-11-19.
 - **Blocked, needs the user (2026-11-06):** GitHub Actions stopped starting jobs from 5fd40c08 (F24) on: "The job was
   not started because recent account payments have failed or your spending limit needs to be increased" (GitHub →
   Settings → Billing & plans). The last runs that did start (f6551dee) passed. Until billing is fixed, CI can't check
