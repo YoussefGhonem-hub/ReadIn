@@ -1,0 +1,45 @@
+{
+  "slug": "java-spring-boot-backend-roadmap",
+  "field": "education",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Java Backend Roadmap with Spring Boot: From Zero to Senior",
+      "subtitle": "Modern Java first, then Spring Boot, Spring Data JPA, Spring Security, testing and the JVM, in five stages with a project and the books for each, and why the framework's magic is a set of rules you can read."
+    },
+    "ar-EG": {
+      "title": "خريطة تعلم Java Backend بـ Spring Boot: من الصفر لـ Senior",
+      "subtitle": "الـ Java الحديثة الأول، وبعدها Spring Boot و Spring Data JPA و Spring Security والـ testing والـ JVM، في خمس مراحل لكل واحدة مشروع وكتبها، وليه السحر بتاع الـ framework مجرد قواعد تقدر تقراها."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "learning-roadmaps", "order": 9 },
+  "tags": ["roadmap", "Java", "Spring Boot", "JVM", "Backend"],
+  "sources": [
+    {
+      "title": "Learn Java — dev.java",
+      "url": "https://dev.java/learn/"
+    },
+    {
+      "title": "Auto-configuration — Spring Boot Reference",
+      "url": "https://docs.spring.io/spring-boot/reference/using/auto-configuration.html"
+    },
+    {
+      "title": "System Requirements — Spring Boot",
+      "url": "https://docs.spring.io/spring-boot/system-requirements.html"
+    },
+    {
+      "title": "Guides — spring.io",
+      "url": "https://spring.io/guides"
+    },
+    {
+      "title": "Oracle Java SE Support Roadmap — Oracle",
+      "url": "https://www.oracle.com/java/technologies/java-se-support-roadmap.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}

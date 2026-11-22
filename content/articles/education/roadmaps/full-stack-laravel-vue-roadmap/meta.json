@@ -1,0 +1,45 @@
+{
+  "slug": "full-stack-laravel-vue-roadmap",
+  "field": "education",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Full-Stack PHP Roadmap: Laravel and Vue from Zero to Senior",
+      "subtitle": "Modern PHP, Laravel with Eloquent, queues and tests, MySQL, and Vue through Inertia or Livewire, in five stages with a project and the right books for each, and how to avoid learning from decade-old tutorials."
+    },
+    "ar-EG": {
+      "title": "خريطة تعلم Full-Stack بـ PHP: الـ Laravel والـ Vue من الصفر لـ Senior",
+      "subtitle": "الـ PHP الحديثة، والـ Laravel بالـ Eloquent والـ queues والـ tests، والـ MySQL، والـ Vue عن طريق Inertia أو Livewire، في خمس مراحل لكل واحدة مشروع وكتبها، وإزاي تبعد عن tutorials عندها عشر سنين."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "learning-roadmaps", "order": 6 },
+  "tags": ["roadmap", "PHP", "Laravel", "Vue", "MySQL"],
+  "sources": [
+    {
+      "title": "PHP Manual — php.net",
+      "url": "https://www.php.net/manual/en/"
+    },
+    {
+      "title": "PHP 8.6 Release Announcement — php.net",
+      "url": "https://www.php.net/releases/8.6/en.php"
+    },
+    {
+      "title": "Release Notes — Laravel 13.x Documentation",
+      "url": "https://laravel.com/docs/releases"
+    },
+    {
+      "title": "Starter Kits — Laravel 13.x Documentation",
+      "url": "https://laravel.com/docs/starter-kits"
+    },
+    {
+      "title": "Introduction — Vue.js Guide",
+      "url": "https://vuejs.org/guide/introduction.html"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}

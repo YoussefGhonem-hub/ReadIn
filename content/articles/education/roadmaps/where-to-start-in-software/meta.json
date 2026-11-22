@@ -1,0 +1,41 @@
+{
+  "slug": "where-to-start-in-software",
+  "field": "education",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Where to Start in Software: The Basics Every Track Needs",
+      "subtitle": "How a computer runs a program, your tools and Git, data structures, operating systems and networking: the order to learn them in, what to build at each stage, and what can wait."
+    },
+    "ar-EG": {
+      "title": "تبدأ منين في البرمجة؟ الأساسيات اللي كل مسار محتاجها",
+      "subtitle": "الكمبيوتر بيشغّل البرنامج إزاي، أدواتك والـ Git، الـ data structures، الـ operating systems والـ networking: تتعلمهم بأنهي ترتيب، تبني إيه في كل مرحلة، وإيه اللي يقدر يستنى."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "learning-roadmaps", "order": 1 },
+  "tags": ["roadmap", "Computer Science", "Git", "Algorithms", "Operating Systems"],
+  "sources": [
+    {
+      "title": "The Missing Semester of Your CS Education (2026) — MIT CSAIL",
+      "url": "https://missing.csail.mit.edu/"
+    },
+    {
+      "title": "CS50x 2026: Introduction to Computer Science — Harvard University",
+      "url": "https://cs50.harvard.edu/x/"
+    },
+    {
+      "title": "gittutorial: A tutorial introduction to Git — Git documentation",
+      "url": "https://git-scm.com/docs/gittutorial"
+    },
+    {
+      "title": "How does the Internet work? — MDN Web Docs",
+      "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/How_does_the_Internet_work"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}

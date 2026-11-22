@@ -1,0 +1,45 @@
+{
+  "slug": "backend-fundamentals-roadmap",
+  "field": "software-architecture",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Backend Fundamentals Roadmap: What Stays When You Change Languages",
+      "subtitle": "HTTP and API design, SQL and data modeling, indexes and transactions, caching and queues, security, logging, testing and deployment: six stages, one project to grow through them, and the books for each."
+    },
+    "ar-EG": {
+      "title": "خريطة أساسيات الـ Backend: اللي بيفضل معاك لما تغيّر اللغة",
+      "subtitle": "الـ HTTP وتصميم الـ APIs، الـ SQL والـ data modeling، الـ indexes والـ transactions، الـ caching والـ queues، الأمان والـ logging والـ testing والـ deployment: ست مراحل، ومشروع واحد يكبر معاك فيهم، والكتب المناسبة لكل مرحلة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "learning-roadmaps", "order": 7 },
+  "tags": ["roadmap", "Backend", "HTTP", "SQL", "Transactions"],
+  "sources": [
+    {
+      "title": "RFC 9110: HTTP Semantics — IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110"
+    },
+    {
+      "title": "Transaction Isolation — PostgreSQL 19 Documentation",
+      "url": "https://www.postgresql.org/docs/current/transaction-iso.html"
+    },
+    {
+      "title": "Index Types — PostgreSQL 19 Documentation",
+      "url": "https://www.postgresql.org/docs/current/indexes-types.html"
+    },
+    {
+      "title": "Password Storage Cheat Sheet — OWASP",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+    },
+    {
+      "title": "The Twelve-Factor App",
+      "url": "https://12factor.net/"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}

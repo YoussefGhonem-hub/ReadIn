@@ -1,0 +1,45 @@
+{
+  "slug": "full-stack-typescript-roadmap",
+  "field": "education",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Full-Stack TypeScript Roadmap: Node.js, PostgreSQL and Next.js",
+      "subtitle": "One language from the database to the browser, five stages from zero to senior, and the books and free docs for each: what carries over between the two sides and what you have to learn twice."
+    },
+    "ar-EG": {
+      "title": "خريطة تعلم Full-Stack بـ TypeScript: الـ Node.js والـ PostgreSQL والـ Next.js",
+      "subtitle": "لغة واحدة من الـ database لحد الـ browser، وخمس مراحل من الصفر لـ Senior، ومعاهم الكتب والـ docs المجانية لكل مرحلة: إيه اللي بينتقل معاك بين الناحيتين، وإيه اللي لازم تتعلمه مرتين."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "learning-roadmaps", "order": 5 },
+  "tags": ["roadmap", "TypeScript", "Node.js", "Next.js", "PostgreSQL"],
+  "sources": [
+    {
+      "title": "Differences between Node.js and the Browser — Node.js Learn",
+      "url": "https://nodejs.org/en/learn/getting-started/differences-between-nodejs-and-the-browser"
+    },
+    {
+      "title": "Running TypeScript Natively — Node.js Learn",
+      "url": "https://nodejs.org/en/learn/typescript/run-natively"
+    },
+    {
+      "title": "The TypeScript Handbook — typescriptlang.org",
+      "url": "https://www.typescriptlang.org/docs/handbook/intro.html"
+    },
+    {
+      "title": "PostgreSQL Tutorial — PostgreSQL Documentation",
+      "url": "https://www.postgresql.org/docs/current/tutorial.html"
+    },
+    {
+      "title": "Server and Client Components — Next.js Docs",
+      "url": "https://nextjs.org/docs/app/getting-started/server-and-client-components"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}

@@ -82,6 +82,7 @@ fields:
       - { slug: minimal-apis, nameAr: Minimal APIs, nameEn: Minimal APIs }
       - { slug: dotnet-testing, nameAr: Testing في .NET, nameEn: Testing in .NET }
       - { slug: dotnet-performance, nameAr: Performance, nameEn: Performance }
+      - { slug: roadmaps, nameAr: "خريطة التعلم", nameEn: "Learning Roadmaps" }
 
   - slug: frontend
     nameAr: Frontend
@@ -98,6 +99,7 @@ fields:
       - { slug: accessibility, nameAr: Accessibility, nameEn: Accessibility }
       - { slug: web-performance, nameAr: Web Performance, nameEn: Web Performance }
       - { slug: javascript, nameAr: "JavaScript", nameEn: "JavaScript" }
+      - { slug: roadmaps, nameAr: "خريطة التعلم", nameEn: "Learning Roadmaps" }
 
   - slug: mobile
     nameAr: تطبيقات الموبايل
@@ -157,6 +159,7 @@ fields:
       - { slug: microservices, nameAr: Microservices, nameEn: Microservices }
       - { slug: system-design, nameAr: System Design, nameEn: System Design }
       - { slug: design-principles, nameAr: "مبادئ التصميم", nameEn: "Design Principles" }
+      - { slug: roadmaps, nameAr: "خريطة التعلم", nameEn: "Learning Roadmaps" }
 
   - slug: security
     nameAr: الأمان (Security)
@@ -227,7 +230,8 @@ fields:
     icon: graduation-cap
     color: accent
     requiresSources: false
-    topics: []
+    topics:
+      - { slug: roadmaps, nameAr: "خريطة التعلم", nameEn: "Learning Roadmaps" }
 
   - slug: self-growth
     nameAr: تطوير الذات
@@ -425,6 +429,13 @@ learningPaths:
     titleEn: Secure by Default
     descriptionAr: "الأفكار الغلط عن الأمان اللي ورا اختراقات حقيقية: من الـ hashing والـ encryption والـ JWT لحد الـ XSS والـ CSRF والـ CORS والـ access control والـ secrets والـ SSRF."
     descriptionEn: The security misconceptions behind real breaches, from hashing vs encryption and JWTs to XSS, CSRF, CORS, access control, secrets and SSRF.
+
+  - slug: learning-roadmaps
+    field: education
+    titleAr: خرائط التعلم
+    titleEn: Learning Roadmaps
+    descriptionAr: "من الصفر لـ Senior في مسار واحد: تتعلم إيه وبأنهي ترتيب، تأجّل إيه، تبني مشروع إيه في كل مرحلة، والكتب اللي تستاهل وقتك."
+    descriptionEn: "From zero to senior in one track: what to learn and in what order, what to postpone, which project to build at each stage, and the books worth your time."
 
 # The editorial plan: 300 seed articles by the official ReadIn account (SPEC §19.4). Each corrects a common
 # misconception. content/articles/{field}/{topic}/{slug}/ holds the written ones (ContentStudio plan-status).
@@ -4717,3 +4728,163 @@ plannedArticles:
       - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
       - https://community.owasp.org/attacks/Server_Side_Request_Forgery
       - https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/
+  # ── learning-roadmaps (10 of 40: docs/advanced-article-topics.md 1–10) ──
+  - slug: where-to-start-in-software
+    field: education
+    topic: roadmaps
+    titleEn: "Where to Start in Software: The Basics Every Track Needs"
+    titleAr: "تبدأ منين في البرمجة؟ الأساسيات اللي كل مسار محتاجها"
+    misconception: "You have to pick a language or framework first, and computer science basics can wait until you need them."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 1
+    versionBadge: null
+    plannedSources:
+      - https://missing.csail.mit.edu/
+      - https://cs50.harvard.edu/x/
+      - https://git-scm.com/docs/gittutorial
+      - https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/How_does_the_Internet_work
+  - slug: choosing-your-software-track
+    field: education
+    topic: roadmaps
+    titleEn: "Choosing Your Software Track: What Each Role Really Does"
+    titleAr: "تختار أنهي مسار في البرمجة؟ كل دور بيعمل إيه فعلًا طول اليوم"
+    misconception: "There is one best track to choose, and the choice you make at the start locks you in for your whole career."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 2
+    versionBadge: null
+    plannedSources:
+      - https://survey.stackoverflow.co/2025/developers
+      - https://www.onetonline.org/link/summary/15-1252.00
+      - https://www.onetonline.org/link/summary/15-1253.00
+      - https://www.onetonline.org/link/summary/15-1212.00
+      - https://learn.microsoft.com/devops/what-is-devops
+  - slug: full-stack-dotnet-angular-roadmap
+    field: dotnet
+    topic: roadmaps
+    titleEn: "Full-Stack .NET and Angular Roadmap: From Zero to Senior"
+    titleAr: "خريطة تعلم Full-Stack بـ .NET و Angular: من الصفر لـ Senior"
+    misconception: "Full-stack means learning the backend and the frontend frameworks; once you know both frameworks you are a full-stack developer."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 3
+    versionBadge: ".NET 10 · Angular 22"
+    plannedSources:
+      - https://learn.microsoft.com/aspnet/core/introduction-to-aspnet-core
+      - https://learn.microsoft.com/ef/core/
+      - https://angular.dev/overview
+      - https://angular.dev/reference/releases
+      - https://dotnet.microsoft.com/platform/support/policy/dotnet-core
+  - slug: full-stack-dotnet-react-roadmap
+    field: frontend
+    topic: roadmaps
+    titleEn: "ASP.NET Core with React: The Full-Stack Learning Path"
+    titleAr: "الـ ASP.NET Core مع React: مسار الـ Full-Stack خطوة بخطوة"
+    misconception: "React is a small library, so the frontend half of a .NET and React stack takes a few weeks once the backend is done."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 4
+    versionBadge: ".NET 10 · React 19"
+    plannedSources:
+      - https://learn.microsoft.com/aspnet/core/introduction-to-aspnet-core
+      - https://react.dev/learn
+      - https://react.dev/learn/creating-a-react-app
+      - https://nextjs.org/docs
+      - https://dotnet.microsoft.com/platform/support/policy/dotnet-core
+  - slug: full-stack-typescript-roadmap
+    field: education
+    topic: roadmaps
+    titleEn: "Full-Stack TypeScript Roadmap: Node.js, PostgreSQL and Next.js"
+    titleAr: "خريطة تعلم Full-Stack بـ TypeScript: الـ Node.js والـ PostgreSQL والـ Next.js"
+    misconception: "One language from end to end means the backend and the frontend are the same skill, so learning one side teaches you the other."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 5
+    versionBadge: null
+    plannedSources:
+      - https://nodejs.org/en/learn/getting-started/differences-between-nodejs-and-the-browser
+      - https://nodejs.org/en/learn/typescript/run-natively
+      - https://www.typescriptlang.org/docs/handbook/intro.html
+      - https://www.postgresql.org/docs/current/tutorial.html
+      - https://nextjs.org/docs/app/getting-started/server-and-client-components
+  - slug: full-stack-laravel-vue-roadmap
+    field: education
+    topic: roadmaps
+    titleEn: "Full-Stack PHP Roadmap: Laravel and Vue from Zero to Senior"
+    titleAr: "خريطة تعلم Full-Stack بـ PHP: الـ Laravel والـ Vue من الصفر لـ Senior"
+    misconception: "PHP is an old language for small sites, so learning Laravel today means learning outdated practices."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 6
+    versionBadge: null
+    plannedSources:
+      - https://www.php.net/manual/en/
+      - https://www.php.net/releases/8.6/en.php
+      - https://laravel.com/docs/releases
+      - https://laravel.com/docs/starter-kits
+      - https://vuejs.org/guide/introduction.html
+  - slug: backend-fundamentals-roadmap
+    field: software-architecture
+    topic: roadmaps
+    titleEn: "Backend Fundamentals Roadmap: What Stays When You Change Languages"
+    titleAr: "خريطة أساسيات الـ Backend: اللي بيفضل معاك لما تغيّر اللغة"
+    misconception: "Backend development is mostly knowing a framework well; HTTP, SQL, transactions and caching are details the framework handles for you."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 7
+    versionBadge: null
+    plannedSources:
+      - https://www.rfc-editor.org/rfc/rfc9110
+      - https://www.postgresql.org/docs/current/transaction-iso.html
+      - https://www.postgresql.org/docs/current/indexes-types.html
+      - https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+      - https://12factor.net/
+  - slug: dotnet-backend-roadmap
+    field: dotnet
+    topic: roadmaps
+    titleEn: ".NET Backend Roadmap: From Zero to Senior"
+    titleAr: "خريطة تعلم .NET Backend: من الصفر لـ Senior"
+    misconception: "A senior .NET developer is someone who knows more libraries and patterns, so the path to senior is collecting frameworks and architectures."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 8
+    versionBadge: ".NET 10"
+    plannedSources:
+      - https://learn.microsoft.com/dotnet/csharp/
+      - https://learn.microsoft.com/aspnet/core/fundamentals/
+      - https://learn.microsoft.com/aspnet/core/fundamentals/best-practices
+      - https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals
+      - https://dotnet.microsoft.com/platform/support/policy/dotnet-core
+  - slug: java-spring-boot-backend-roadmap
+    field: education
+    topic: roadmaps
+    titleEn: "Java Backend Roadmap with Spring Boot: From Zero to Senior"
+    titleAr: "خريطة تعلم Java Backend بـ Spring Boot: من الصفر لـ Senior"
+    misconception: "Spring Boot does everything automatically, so you can skip learning Java itself and the JVM and go straight to the framework."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 9
+    versionBadge: null
+    plannedSources:
+      - https://dev.java/learn/
+      - https://docs.spring.io/spring-boot/reference/using/auto-configuration.html
+      - https://docs.spring.io/spring-boot/system-requirements.html
+      - https://spring.io/guides
+      - https://www.oracle.com/java/technologies/java-se-support-roadmap.html
+  - slug: nodejs-backend-roadmap
+    field: education
+    topic: roadmaps
+    titleEn: "Becoming a Node.js Backend Engineer: From the Event Loop to Scale"
+    titleAr: "تبقى Node.js Backend Engineer إزاي: من الـ Event Loop للـ Scale"
+    misconception: "Node.js is single-threaded, so it can only handle small apps and any heavy work will freeze the whole server no matter what you do."
+    level: beginner
+    learningPath: learning-roadmaps
+    order: 10
+    versionBadge: null
+    plannedSources:
+      - https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick
+      - https://nodejs.org/en/learn/concurrency/comparing-nodejs-concurrency-models
+      - https://nodejs.org/api/worker_threads.html
+      - https://docs.nestjs.com/
+      - https://nodejs.org/en/about/previous-releases

@@ -1,0 +1,45 @@
+{
+  "slug": "full-stack-dotnet-angular-roadmap",
+  "field": "dotnet",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Full-Stack .NET and Angular Roadmap: From Zero to Senior",
+      "subtitle": "Eight stages from your first line of C# to owning a feature from the database table to the screen: what to learn, what to postpone, what to build and the books worth reading at each stage."
+    },
+    "ar-EG": {
+      "title": "خريطة تعلم Full-Stack بـ .NET و Angular: من الصفر لـ Senior",
+      "subtitle": "8 مراحل من أول سطر C# لحد ما تمسك feature من الـ table في الداتابيز لحد الشاشة: تتعلم إيه، وتأجّل إيه، وتبني إيه، والكتب اللي تستاهل تتقري في كل مرحلة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10 · Angular 22",
+  "learningPath": { "slug": "learning-roadmaps", "order": 3 },
+  "tags": ["roadmap", ".NET", "Angular", "Full-Stack", "Career"],
+  "sources": [
+    {
+      "title": "Overview of ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/introduction-to-aspnet-core"
+    },
+    {
+      "title": "Overview of Entity Framework Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/ef/core/"
+    },
+    {
+      "title": "What is Angular? — angular.dev",
+      "url": "https://angular.dev/overview"
+    },
+    {
+      "title": "Versioning and releases — angular.dev",
+      "url": "https://angular.dev/reference/releases"
+    },
+    {
+      "title": ".NET and .NET Core official support policy — Microsoft",
+      "url": "https://dotnet.microsoft.com/platform/support/policy/dotnet-core"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}

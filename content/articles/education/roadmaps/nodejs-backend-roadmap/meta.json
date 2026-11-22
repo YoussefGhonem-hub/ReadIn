@@ -1,0 +1,45 @@
+{
+  "slug": "nodejs-backend-roadmap",
+  "field": "education",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Becoming a Node.js Backend Engineer: From the Event Loop to Scale",
+      "subtitle": "The event loop, TypeScript, NestJS, SQL with and without an ORM, streams, worker threads and scaling, in five stages with a project and the books for each, and what single-threaded really means for your server."
+    },
+    "ar-EG": {
+      "title": "تبقى Node.js Backend Engineer إزاي: من الـ Event Loop للـ Scale",
+      "subtitle": "الـ event loop والـ TypeScript والـ NestJS والـ SQL بالـ ORM ومن غيره والـ streams والـ worker threads والـ scaling، في خمس مراحل لكل واحدة مشروع وكتبها، ويعني إيه بجد إن الـ Node.js single-threaded."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "learning-roadmaps", "order": 10 },
+  "tags": ["roadmap", "Node.js", "TypeScript", "NestJS", "Backend"],
+  "sources": [
+    {
+      "title": "The Node.js Event Loop — Node.js Learn",
+      "url": "https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick"
+    },
+    {
+      "title": "Comparing Node.js concurrency models — Node.js Learn",
+      "url": "https://nodejs.org/en/learn/concurrency/comparing-nodejs-concurrency-models"
+    },
+    {
+      "title": "Worker threads — Node.js API documentation",
+      "url": "https://nodejs.org/api/worker_threads.html"
+    },
+    {
+      "title": "Introduction — NestJS Documentation",
+      "url": "https://docs.nestjs.com/"
+    },
+    {
+      "title": "Node.js Releases — nodejs.org",
+      "url": "https://nodejs.org/en/about/previous-releases"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}

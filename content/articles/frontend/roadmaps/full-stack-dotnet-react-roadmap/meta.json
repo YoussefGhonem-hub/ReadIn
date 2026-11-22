@@ -1,0 +1,45 @@
+{
+  "slug": "full-stack-dotnet-react-roadmap",
+  "field": "frontend",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "ASP.NET Core with React: The Full-Stack Learning Path",
+      "subtitle": "Eight stages from C# to a deployed ASP.NET Core and React app, with honest time for the front half: routing, server data, forms, Next.js and the books worth reading at each stage."
+    },
+    "ar-EG": {
+      "title": "الـ ASP.NET Core مع React: مسار الـ Full-Stack خطوة بخطوة",
+      "subtitle": "8 مراحل من C# لحد تطبيق ASP.NET Core و React متنزّل أونلاين، ووقت حقيقي للنص بتاع الـ front: الـ routing، وداتا السيرفر، والـ forms، و Next.js، والكتب اللي تستاهل في كل مرحلة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10 · React 19",
+  "learningPath": { "slug": "learning-roadmaps", "order": 4 },
+  "tags": ["roadmap", "React", ".NET", "Full-Stack", "Next.js"],
+  "sources": [
+    {
+      "title": "Overview of ASP.NET Core — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/introduction-to-aspnet-core"
+    },
+    {
+      "title": "Quick Start — react.dev",
+      "url": "https://react.dev/learn"
+    },
+    {
+      "title": "Creating a React App — react.dev",
+      "url": "https://react.dev/learn/creating-a-react-app"
+    },
+    {
+      "title": "Next.js Docs — nextjs.org",
+      "url": "https://nextjs.org/docs"
+    },
+    {
+      "title": ".NET and .NET Core official support policy — Microsoft",
+      "url": "https://dotnet.microsoft.com/platform/support/policy/dotnet-core"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}

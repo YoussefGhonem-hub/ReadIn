@@ -1,0 +1,45 @@
+{
+  "slug": "dotnet-backend-roadmap",
+  "field": "dotnet",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": ".NET Backend Roadmap: From Zero to Senior",
+      "subtitle": "Eight stages from C# basics to senior judgment: ASP.NET Core, data, tests, async and the runtime, background work, observability and architecture you don't overdo, with the books for each stage."
+    },
+    "ar-EG": {
+      "title": "خريطة تعلم .NET Backend: من الصفر لـ Senior",
+      "subtitle": "8 مراحل من أساسيات C# لحد تفكير الـ senior: ASP.NET Core، والداتا، والـ tests، والـ async والـ runtime، والشغل في الخلفية، والـ observability، و architecture من غير مبالغة، ومعاهم الكتب اللي تنفع كل مرحلة."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": ".NET 10",
+  "learningPath": { "slug": "learning-roadmaps", "order": 8 },
+  "tags": ["roadmap", ".NET", "ASP.NET Core", "Backend", "Career"],
+  "sources": [
+    {
+      "title": "C# Guide — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/csharp/"
+    },
+    {
+      "title": "ASP.NET Core fundamentals overview — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/"
+    },
+    {
+      "title": "ASP.NET Core Best Practices — Microsoft Learn",
+      "url": "https://learn.microsoft.com/aspnet/core/fundamentals/best-practices"
+    },
+    {
+      "title": "Fundamentals of garbage collection — Microsoft Learn",
+      "url": "https://learn.microsoft.com/dotnet/standard/garbage-collection/fundamentals"
+    },
+    {
+      "title": ".NET and .NET Core official support policy — Microsoft",
+      "url": "https://dotnet.microsoft.com/platform/support/policy/dotnet-core"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}

@@ -1,0 +1,45 @@
+{
+  "slug": "choosing-your-software-track",
+  "field": "education",
+  "topic": "roadmaps",
+  "status": "published",
+  "sourceLanguage": "en",
+  "translations": {
+    "en": {
+      "title": "Choosing Your Software Track: What Each Role Really Does",
+      "subtitle": "What backend, frontend, full-stack, mobile, DevOps, security, data, AI, QA and embedded engineers do all day, how to try a few tracks before you commit, and when switching makes sense."
+    },
+    "ar-EG": {
+      "title": "تختار أنهي مسار في البرمجة؟ كل دور بيعمل إيه فعلًا طول اليوم",
+      "subtitle": "مهندس الـ backend والـ frontend والـ full-stack والـ mobile والـ DevOps والـ security والـ data والـ AI والـ QA والـ embedded بيعملوا إيه طول اليوم، تجرّب كذا مسار إزاي قبل ما تختار، وإمتى التغيير يبقى قرار صح."
+    }
+  },
+  "level": "beginner",
+  "versionBadge": null,
+  "learningPath": { "slug": "learning-roadmaps", "order": 2 },
+  "tags": ["roadmap", "Career", "Software Engineering"],
+  "sources": [
+    {
+      "title": "Stack Overflow Developer Survey 2025: Developers",
+      "url": "https://survey.stackoverflow.co/2025/developers"
+    },
+    {
+      "title": "Software Developers (15-1252.00) — O*NET OnLine",
+      "url": "https://www.onetonline.org/link/summary/15-1252.00"
+    },
+    {
+      "title": "Software Quality Assurance Analysts and Testers (15-1253.00) — O*NET OnLine",
+      "url": "https://www.onetonline.org/link/summary/15-1253.00"
+    },
+    {
+      "title": "Information Security Analysts (15-1212.00) — O*NET OnLine",
+      "url": "https://www.onetonline.org/link/summary/15-1212.00"
+    },
+    {
+      "title": "What is DevOps? — Microsoft Learn",
+      "url": "https://learn.microsoft.com/devops/what-is-devops"
+    }
+  ],
+  "isAiAssisted": true,
+  "lastReviewedAt": "2026-11-22T00:00:00Z"
+}
