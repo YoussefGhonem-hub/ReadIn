@@ -101,7 +101,7 @@ These rules apply to **every** feature, commit and code review.
 3. **Bilingual always:** every UI string exists in Arabic (`ar`) and English (`en`). No hard-coded text. Every layout works in RTL and LTR.
 4. **Clean Architecture + CQRS + Mapster** in the backend, no exceptions (see [§6](#6-backend-clean-architecture--cqrs--mapster)).
 5. **One content format (RDoc):** articles are stored as structured JSON blocks, never raw HTML (see [§13](#13-article-content-format-rdoc)).
-6. **Trust first:** no fake author personas, every AI-assisted article is labeled, and every technical article has sources.
+6. **Trust first:** no fake author personas, a writer's AI-assisted article is labeled, and every technical article has sources. The official ReadIn articles carry no AI-assisted label (owner's decision, 2026-11-22).
 7. **Security by default:** every endpoint is authorized by permission, every input is validated, and all user content is sanitized.
 
 ---
@@ -1831,7 +1831,7 @@ Demo users get realistic profiles (bios mixing Arabic and English, interests, av
 
 **App Review account (production only, §32; built 2026-11-08):** one Member account for Apple and Google reviewers, from `Seed:ReviewerPhone`, `Seed:ReviewerPassword` and optionally `Seed:ReviewerPin` (secrets; never committed; skipped when unset). An existing account with that phone is adopted (production: "ReadIn Demo", `@readin_demo`, made through the API at the user's request); otherwise it is created as "ReadIn Demo", `@readin_demo`, with software interests so Home isn't empty. `IsReviewAccount = true`: hidden from search, suggestions, follower counts and the dashboard's counts. Its profile, interests and content are never changed by the seed, and its terms are accepted at seeding. It is a real, usable account, not a persona. Rotate its password after each review.
 
-> **No fake personas in production.** All seeded articles are published under the official **ReadIn** account with the "AI-assisted" label. There is no review ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
+> **No fake personas in production.** All seeded articles are published under the official **ReadIn** account, without the "AI-assisted" label (owner's decision, 2026-11-22: `"isAiAssisted": false` in every meta.json, enforced by `validate`). There is no review ([ADR 0015](adr/0015-open-publishing-and-the-editor.md)).
 
 ---
 
@@ -1893,10 +1893,10 @@ dotnet run --project src/ReadIn.ContentStudio -- import
 | Trust & freshness | Matches the plan (field, topic, level, path, version badge, titles), `status: published`, `isAiAssisted: true`, `lastReviewedAt` (the pipeline check date), 2–5 sources, a 1200×630 `cover.webp` |
 
 ### 19.4 Publishing Strategy
-- **Seed set: 300 articles** by the official **ReadIn** account, planned in `content/taxonomy.yaml` (23 learning paths across AI, ML, Claude & AI tools, .NET, React, Angular, frontend, mobile, databases, architecture, DevOps and security). Each one corrects a misconception developers commonly hold. They are published with the AI-assisted label, with staggered publish dates over the last ~120 days, and like any published article they can be Today's article (F07, ADR 0015).
+- **Seed set: 300 articles** by the official **ReadIn** account, planned in `content/taxonomy.yaml` (23 learning paths across AI, ML, Claude & AI tools, .NET, React, Angular, frontend, mobile, databases, architecture, DevOps and security). Each one corrects a misconception developers commonly hold. They are published without the AI-assisted label. The first import into an environment with no published official article staggers the publish dates over the last ~120 days; articles added after that go out with the date they are imported. Like any published article they can be Today's article (F07, ADR 0015). On production, all 310 official articles were re-dated to 2026-11-22 at the owner's request (their order kept).
 - **Launch with all 300**, organized into learning paths.
 - **Growth after launch** comes from members publishing in any field, plus more ReadIn articles when wanted (`ContentStudio generate`). There is no fixed article target.
-- Quality gates (§19.3) and the AI-assisted label keep seeded content from being thin, unlabeled mass content, which search engines penalize.
+- Quality gates (§19.3) keep seeded content from being thin mass content, which search engines penalize.
 - Fast-moving topics (Claude, AI tools, framework versions) get a **re-verification job** every 90 days: sources re-checked, `AutoCheckedAt` updated or the article flagged "may be outdated".
 
 ### 19.5 Content Files in Git
@@ -1911,7 +1911,7 @@ Seed content lives in `content/articles/{field}/{topic}/{slug}/` so it is versio
 | Verified writers | Identity/expertise verification with a badge |
 | Sources | Required in fields with `RequiresSources` on (software, Medicine, Public Health, Engineering), optional elsewhere, shown at the end of the article |
 | Version badge | e.g. `.NET 10`, `Angular 21`, `Flutter 3.x` |
-| AI-assisted label | Shown on every AI-assisted article. Never hidden. |
+| AI-assisted label | Shown on an article whose writer switched it on in the editor. The official ReadIn articles carry none (owner's decision, 2026-11-22). |
 | Tested code | Code snippets compiled in the content pipeline |
 | Community signals | Reports for misinformation, quality score from engagement, read completion and freshness (ranks Today's article, ADR 0015) |
 | Health content | Medicine/Public Health articles publish without approval, show a disclaimer ("لا يغني عن استشارة الطبيب") and require sources. Misinformation is handled through reports and moderation (F22) |
@@ -2231,7 +2231,7 @@ Sign in with phone number: [Seed:ReviewerPhone]  Password: [Seed:ReviewerPasswor
 - Our own backend API (ASP.NET Core) at [domain]: accounts, articles, comments, moderation.
 - Firebase Cloud Messaging (push notifications) and Firebase Realtime Database (live counters and new-comment updates).
 - Sign in with Apple and Google Sign-In.
-- The official @readin articles were written with AI assistance (Anthropic Claude) and are labeled "AI-assisted". No AI runs inside the app.
+- The official @readin articles were written with AI assistance (Anthropic Claude). No AI runs inside the app.
 - No payments or in-app purchases.
 
 5. Regional differences

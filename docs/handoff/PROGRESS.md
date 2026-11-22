@@ -922,3 +922,19 @@ features). The differences they found are recorded here and **not fixed** (user 
     word.
   - A pre-existing plan link fails: `containers-are-not-virtual-machines` → docs.docker.com get-started/docker-overview
     (404).
+
+### Official articles: no AI label, dated today ✅ (user request, 2026-11-22)
+- The user doesn't want readers to see the "AI-assisted" label on the ReadIn articles, and wants the older articles
+  dated today.
+- Content: `"isAiAssisted": false` in all 310 meta.json files. `validate` now requires false for the official articles
+  (AUTHORING, SPEC §20). Writers still switch the label on in the editor, and it still shows on their articles.
+- Seeder: only the first import into an environment with no published official article staggers the dates over
+  ~120 days. Later articles go out with the day they are imported (before this, the roadmaps got dates from July to
+  October).
+- Production, by SQL from the deploy kit: the 310 official articles were re-dated to 2026-11-22 (00:00–11:01 UTC, in
+  their old order; CreatedAt = PublishedAt), with IsAiAssisted = 0. The old values are in
+  `D:\tmp\readin-deploy\backup-article-dates-2026-11-22.txt`. The 5 user drafts were not touched.
+- `validate --no-links` has 11–12 Dart compile errors in mobile articles (Flutter types the checker doesn't resolve,
+  e.g. `TextEditingController.dispose`). They are unrelated to this change, and the cause isn't checked yet.
+- The App Review note (SPEC §32) no longer says the articles are labeled. If it was already sent, change it in App
+  Store Connect too.
