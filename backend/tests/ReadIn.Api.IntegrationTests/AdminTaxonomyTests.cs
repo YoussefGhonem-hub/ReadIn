@@ -216,6 +216,9 @@ public sealed class AdminTaxonomyTests(ApiFactory api) : IAsyncLifetime
             .Select(f => f!["id"]!.GetValue<Guid>()).ToList();
         ids[^2..].Should().Equal(first["id"]!.GetValue<Guid>(), second["id"]!.GetValue<Guid>());
 
+        // Other tests (moves, re-seeding) can leave gaps or ties in the stored order: one save of the listed order closes them.
+        await admin.Client.PutAsJsonAsync("/api/v1/admin/fields/order", new { ids }, Ct).NoContentAsync();
+
         // The same order: nothing moves, nothing is written.
         var before = await api.InDbAsync(db => db.AuditLogs.CountAsync(a => a.Action == AuditActions.FieldsReordered, Ct));
         await admin.Client.PutAsJsonAsync("/api/v1/admin/fields/order", new { ids }, Ct).NoContentAsync();

@@ -300,6 +300,7 @@ public sealed class ModerationTests(ApiFactory api)
         (await author.Client.PutAsJsonAsync("/api/v1/me/notification-settings",
             new { quietHours = new { enabled = false, start = "23:00", end = "07:00" } }, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var moderator = await ModeratorAsync();
+        var started = DateTime.UtcNow;
 
         await ActOkAsync(moderator, new { action = "warn", targetType = "user", targetId = author.Id, note = "No self-promotion in comments." });
         await ActOkAsync(moderator, new { action = "hide", targetType = "article", targetId = articleId, note = "Sources are missing." });
@@ -328,6 +329,10 @@ public sealed class ModerationTests(ApiFactory api)
         entries.Should().HaveCount(2).And.OnlyContain(n => n.PushStatus == NotificationPushStatus.Pending);
         var hiddenEntry = entries.Single(n => n.ArticleId == articleId);
         var warningEntry = entries.Single(n => n.ArticleId == null);
+
+        // Other tests leave due entries in the shared queue, and a failed send ends the run after its first batch of
+        // 200: send what was due before this test acted, so the failing run below reaches the author's two entries.
+        await PushAsync(new RecordingPushSender(), started);
 
         // FCM unreachable: the push job only logs it, and tries again later.
         var now = DateTime.UtcNow;
