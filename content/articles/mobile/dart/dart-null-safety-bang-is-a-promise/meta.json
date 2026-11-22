@@ -25,7 +25,7 @@
     { "title": "Variables — Dart", "url": "https://dart.dev/language/variables" },
     { "title": "Fixing type promotion failures — Dart", "url": "https://dart.dev/tools/non-promotion-reasons" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

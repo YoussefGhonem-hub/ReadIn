@@ -26,6 +26,6 @@
     { "title": "What's new in containers for .NET 8 — Microsoft Learn", "url": "https://learn.microsoft.com/dotnet/core/whats-new/dotnet-8/containers" },
     { "title": "Role Based Access Control Good Practices — Kubernetes", "url": "https://kubernetes.io/docs/concepts/security/rbac-good-practices/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

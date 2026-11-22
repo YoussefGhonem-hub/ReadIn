@@ -26,7 +26,7 @@
     { "title": "SQL Injection — OWASP Community", "url": "https://community.owasp.org/attacks/SQL_Injection" },
     { "title": "SQL Queries — EF Core, Microsoft Learn", "url": "https://learn.microsoft.com/ef/core/querying/sql-queries" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

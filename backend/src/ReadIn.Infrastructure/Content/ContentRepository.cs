@@ -192,7 +192,8 @@ public sealed record ArticleMeta
     public Dictionary<string, TranslationMeta> Translations { get; init; } = [];
 
     public string? VersionBadge { get; init; }
-    public bool IsAiAssisted { get; init; } = true;
+    /// <summary>The official articles carry no AI-assisted label (owner's decision, 2026-11-22), so a missing value means false.</summary>
+    public bool IsAiAssisted { get; init; }
     public string Level { get; init; } = "beginner";
     public List<string> Tags { get; init; } = [];
     public List<SourceEntry> Sources { get; init; } = [];

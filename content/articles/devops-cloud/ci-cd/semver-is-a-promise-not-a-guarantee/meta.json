@@ -26,6 +26,6 @@
     { "title": "npm ci — npm Docs", "url": "https://docs.npmjs.com/cli/v11/commands/npm-ci/" },
     { "title": "Package versioning — Dart", "url": "https://dart.dev/tools/pub/versioning" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

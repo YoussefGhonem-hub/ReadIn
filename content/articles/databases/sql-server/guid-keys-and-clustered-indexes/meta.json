@@ -49,6 +49,6 @@
       "url": "https://learn.microsoft.com/ef/core/providers/sql-server/value-generation"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

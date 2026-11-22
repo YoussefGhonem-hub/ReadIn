@@ -26,6 +26,6 @@
     { "title": "Consumer APIs overview for ASP.NET Core Data Protection — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/data-protection/consumer-apis/overview" },
     { "title": "Data Protection key management and lifetime in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/data-protection/configuration/default-settings" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

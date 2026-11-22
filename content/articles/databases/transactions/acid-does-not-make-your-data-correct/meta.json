@@ -49,7 +49,7 @@
       "url": "https://learn.microsoft.com/ef/core/saving/execute-insert-update-delete"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

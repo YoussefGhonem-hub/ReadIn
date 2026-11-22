@@ -26,6 +26,6 @@
     { "title": "StrictMode — React API Reference", "url": "https://react.dev/reference/react/StrictMode" },
     { "title": "useMemo — React API Reference", "url": "https://react.dev/reference/react/useMemo" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

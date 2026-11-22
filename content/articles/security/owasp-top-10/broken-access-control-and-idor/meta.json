@@ -26,7 +26,7 @@
     { "title": "Resource-based authorization in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/authorization/resourcebased" },
     { "title": "Global Query Filters — EF Core, Microsoft Learn", "url": "https://learn.microsoft.com/ef/core/querying/filters" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

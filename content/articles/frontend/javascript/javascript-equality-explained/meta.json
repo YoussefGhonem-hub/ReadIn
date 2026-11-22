@@ -26,6 +26,6 @@
     { "title": "Object.is() — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is" },
     { "title": "IsLooselyEqual (x, y) — ECMAScript Language Specification", "url": "https://tc39.es/ecma262/multipage/abstract-operations.html#sec-islooselyequal" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

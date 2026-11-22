@@ -26,7 +26,7 @@
     { "title": "A05:2025 Injection — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/A05_2025-Injection/" },
     { "title": "Prevent Cross-Site Scripting (XSS) in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/cross-site-scripting" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

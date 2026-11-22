@@ -26,7 +26,7 @@
     { "title": "Reactive data fetching with httpResource — Angular", "url": "https://angular.dev/guide/http/http-resource" },
     { "title": "shareReplay — RxJS", "url": "https://rxjs.dev/api/operators/shareReplay" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

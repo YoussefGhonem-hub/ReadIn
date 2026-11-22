@@ -25,7 +25,7 @@
     { "title": "Enable Cross-Origin Requests (CORS) in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/cors" },
     { "title": "A01:2025 Broken Access Control — OWASP Top 10:2025", "url": "https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

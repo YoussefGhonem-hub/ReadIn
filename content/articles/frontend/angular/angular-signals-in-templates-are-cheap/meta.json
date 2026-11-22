@@ -26,7 +26,7 @@
     { "title": "Skipping component subtrees — Angular", "url": "https://angular.dev/best-practices/skipping-subtrees" },
     { "title": "NG8109: Signals must be invoked in template interpolations — Angular", "url": "https://angular.dev/extended-diagnostics/NG8109" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

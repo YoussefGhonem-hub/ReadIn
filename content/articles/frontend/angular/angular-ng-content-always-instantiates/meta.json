@@ -25,6 +25,6 @@
     { "title": "Referencing component children with queries — Angular", "url": "https://angular.dev/guide/components/queries" },
     { "title": "NgTemplateOutlet — Angular API", "url": "https://angular.dev/api/common/NgTemplateOutlet" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

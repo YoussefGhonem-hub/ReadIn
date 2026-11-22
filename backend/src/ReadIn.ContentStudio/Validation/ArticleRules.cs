@@ -87,7 +87,8 @@ public static partial class ArticleRules
             yield return (Severity.Error, "trust", "There is no review (ADR 0015): leave reviewStatus out (older files may keep \"pending\").");
         if (m.Reviewer is not null || m.ReviewedAt is not null)
             yield return (Severity.Error, "trust", "There is no review (ADR 0015): an article never names a reviewer or a review date, it is never faked.");
-        if (!m.IsAiAssisted) yield return (Severity.Error, "trust", "isAiAssisted must be true.");
+        // The official ReadIn articles carry no AI-assisted label (owner's decision, 2026-11-22); writers still choose it in the editor.
+        if (m.IsAiAssisted) yield return (Severity.Error, "trust", "isAiAssisted must be false: the official articles carry no AI-assisted label.");
         if (m.LastReviewedAt is null) yield return (Severity.Error, "trust", "lastReviewedAt (generation date) is required.");
         if (!Levels.Contains(m.Level)) yield return (Severity.Error, "meta", $"level must be beginner, intermediate or advanced.");
         if (m.SourceLanguage != "en") yield return (Severity.Error, "meta", "sourceLanguage must be \"en\" (English is the source of truth).");

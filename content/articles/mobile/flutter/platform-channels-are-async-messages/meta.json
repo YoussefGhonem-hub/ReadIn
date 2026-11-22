@@ -26,7 +26,7 @@
     { "title": "StandardMessageCodec class — Flutter API", "url": "https://api.flutter.dev/flutter/services/StandardMessageCodec-class.html" },
     { "title": "pigeon — pub.dev", "url": "https://pub.dev/packages/pigeon" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

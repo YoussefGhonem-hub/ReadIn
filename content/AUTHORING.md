@@ -132,7 +132,8 @@ tags as inline code (`` `<bdi>` ``).
 - No invented statistics, benchmarks or quotes; a number appears only if a cited source has it. Original explanations,
   no text copied from the sources.
 - Claude / AI-tools articles match the current official docs; community tools are labeled "community, not official".
-- `meta.json`: `"status": "published"`, `"isAiAssisted": true`, `lastReviewedAt` = the generation date. There is no
+- `meta.json`: `"status": "published"`, `"isAiAssisted": false` (the official articles carry no AI-assisted label,
+  owner's decision 2026-11-22), `lastReviewedAt` = the generation date. There is no
   review (ADR 0015): no `reviewStatus`, `reviewer` or `reviewedAt` (older files keep `"reviewStatus": "pending"`, which
   is ignored).
 
@@ -156,7 +157,7 @@ tags as inline code (`` `<bdi>` ``).
   "sources": [
     { "title": "Asynchronous programming with async and await — Microsoft Learn", "url": "https://learn.microsoft.com/dotnet/csharp/asynchronous-programming/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": { "csharp": "public record Order(int Id, decimal Total);" },

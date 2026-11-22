@@ -26,6 +26,6 @@
     { "title": "ECMAScript Language Specification: Exports, Runtime Semantics: Evaluation — TC39", "url": "https://tc39.es/ecma262/multipage/ecmascript-language-scripts-and-modules.html#sec-exports-runtime-semantics-evaluation" },
     { "title": "HTML Standard: Module map — WHATWG", "url": "https://html.spec.whatwg.org/multipage/webappapis.html#module-map" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

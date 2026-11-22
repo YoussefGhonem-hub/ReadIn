@@ -26,7 +26,7 @@
     { "title": "RFC 8725: JSON Web Token Best Current Practices", "url": "https://www.rfc-editor.org/rfc/rfc8725" },
     { "title": "JSON Web Token Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet.html" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

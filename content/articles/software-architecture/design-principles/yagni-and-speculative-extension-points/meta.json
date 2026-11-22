@@ -45,7 +45,7 @@
       "url": "https://martinfowler.com/bliki/DesignStaminaHypothesis.html"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

@@ -41,7 +41,7 @@
       "url": "https://arxiv.org/abs/2005.11401"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

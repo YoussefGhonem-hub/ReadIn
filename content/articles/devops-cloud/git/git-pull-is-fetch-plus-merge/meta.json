@@ -24,6 +24,6 @@
     { "title": "git-fetch — Git reference", "url": "https://git-scm.com/docs/git-fetch" },
     { "title": "Git Branching: Remote Branches — Pro Git", "url": "https://git-scm.com/book/en/v2/Git-Branching-Remote-Branches" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

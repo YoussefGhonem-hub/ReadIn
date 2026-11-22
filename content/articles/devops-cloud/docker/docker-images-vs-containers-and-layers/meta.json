@@ -25,6 +25,6 @@
     { "title": "Storage drivers — Docker Docs", "url": "https://docs.docker.com/engine/storage/drivers/" },
     { "title": "Volumes — Docker Docs", "url": "https://docs.docker.com/engine/storage/volumes/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

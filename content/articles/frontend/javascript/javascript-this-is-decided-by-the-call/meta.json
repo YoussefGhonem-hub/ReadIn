@@ -26,6 +26,6 @@
     { "title": "Strict mode — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode" },
     { "title": "EventTarget: removeEventListener() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

@@ -26,7 +26,7 @@
     { "title": "NG0100: Expression changed after it was checked — Angular", "url": "https://angular.dev/errors/NG0100" },
     { "title": "Resolving zone pollution — Angular", "url": "https://angular.dev/best-practices/zone-pollution" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

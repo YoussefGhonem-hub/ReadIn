@@ -45,6 +45,6 @@
       "url": "https://platform.claude.com/docs/en/build-with-claude/effort"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

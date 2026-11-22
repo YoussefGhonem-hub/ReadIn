@@ -26,6 +26,6 @@
     { "title": "Building best practices — Docker Docs", "url": "https://docs.docker.com/build/building/best-practices/" },
     { "title": "Images — Kubernetes", "url": "https://kubernetes.io/docs/concepts/containers/images/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

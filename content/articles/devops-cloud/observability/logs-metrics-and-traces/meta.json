@@ -26,7 +26,7 @@
     { "title": "Instrumentation (.NET) — OpenTelemetry", "url": "https://opentelemetry.io/docs/languages/dotnet/instrumentation/" },
     { "title": "Monitoring Distributed Systems — Google SRE book", "url": "https://sre.google/sre-book/monitoring-distributed-systems/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

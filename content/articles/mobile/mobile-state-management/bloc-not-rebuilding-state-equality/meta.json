@@ -26,7 +26,7 @@
     { "title": "Object.operator == — Dart API", "url": "https://api.dart.dev/dart-core/Object/operator_equals.html" },
     { "title": "Effective Dart: Design — Equality", "url": "https://dart.dev/effective-dart/design" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

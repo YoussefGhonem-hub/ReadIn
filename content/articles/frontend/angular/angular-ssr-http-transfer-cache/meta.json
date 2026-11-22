@@ -26,7 +26,7 @@
     { "title": "HTTP_TRANSFER_CACHE_ORIGIN_MAP — Angular", "url": "https://angular.dev/api/common/http/HTTP_TRANSFER_CACHE_ORIGIN_MAP" },
     { "title": "Caching resource data with SSR — Angular", "url": "https://angular.dev/guide/signals/resource#caching-resource-data-with-ssr" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

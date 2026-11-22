@@ -26,6 +26,6 @@
     { "title": "Lighthouse performance scoring — Chrome for Developers", "url": "https://developer.chrome.com/docs/lighthouse/performance/performance-scoring" },
     { "title": "About PageSpeed Insights — Google for Developers", "url": "https://developers.google.com/speed/docs/insights/v5/about" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

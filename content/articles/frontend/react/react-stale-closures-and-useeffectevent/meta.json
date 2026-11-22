@@ -45,7 +45,7 @@
       "url": "https://react.dev/blog/2025/10/01/react-19-2"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

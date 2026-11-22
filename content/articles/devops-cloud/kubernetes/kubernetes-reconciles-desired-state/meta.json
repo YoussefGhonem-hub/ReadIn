@@ -26,6 +26,6 @@
     { "title": "Deployments — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/" },
     { "title": "ReplicaSet — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

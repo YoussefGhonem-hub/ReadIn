@@ -26,6 +26,6 @@
     { "title": "Configuration in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/fundamentals/configuration/" },
     { "title": "Build environments — Angular", "url": "https://angular.dev/tools/cli/environments" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

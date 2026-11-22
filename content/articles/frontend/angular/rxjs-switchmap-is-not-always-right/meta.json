@@ -26,7 +26,7 @@
     { "title": "exhaustMap — RxJS", "url": "https://rxjs.dev/api/operators/exhaustMap" },
     { "title": "Making HTTP requests — Angular", "url": "https://angular.dev/guide/http/making-requests" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

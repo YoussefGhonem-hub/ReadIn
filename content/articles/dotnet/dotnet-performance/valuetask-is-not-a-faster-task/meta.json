@@ -37,7 +37,7 @@
       "url": "https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

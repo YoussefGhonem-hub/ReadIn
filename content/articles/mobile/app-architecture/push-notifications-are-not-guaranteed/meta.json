@@ -26,7 +26,7 @@
     { "title": "Pushing background updates to your App — Apple Developer Documentation", "url": "https://developer.apple.com/documentation/usernotifications/pushing-background-updates-to-your-app" },
     { "title": "Sending notification requests to APNs — Apple Developer Documentation", "url": "https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

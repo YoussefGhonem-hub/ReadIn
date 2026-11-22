@@ -25,7 +25,7 @@
     { "title": "useState — React API Reference", "url": "https://react.dev/reference/react/useState" },
     { "title": "React v18.0: Automatic Batching — React Blog", "url": "https://react.dev/blog/2022/03/29/react-v18" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

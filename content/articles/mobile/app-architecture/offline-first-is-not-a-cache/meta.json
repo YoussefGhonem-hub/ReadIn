@@ -24,7 +24,7 @@
     { "title": "Build an offline-first app — Android Developers", "url": "https://developer.android.com/topic/architecture/data-layer/offline-first" },
     { "title": "Data layer — Android Developers", "url": "https://developer.android.com/topic/architecture/data-layer" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

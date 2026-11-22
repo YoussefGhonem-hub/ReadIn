@@ -29,6 +29,6 @@
     },
     { "title": "Inheritance — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascade/Inheritance" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

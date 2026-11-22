@@ -26,7 +26,7 @@
     { "title": "Route loading strategies — Angular", "url": "https://angular.dev/guide/routing/loading-strategies" },
     { "title": "bootstrapApplication — Angular API", "url": "https://angular.dev/api/platform-browser/bootstrapApplication" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

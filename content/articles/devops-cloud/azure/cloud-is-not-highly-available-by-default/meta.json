@@ -26,6 +26,6 @@
     { "title": "Service Level Agreements (SLA) for Online Services — Microsoft Licensing", "url": "https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services" },
     { "title": "Architecture strategies for defining reliability targets — Azure Well-Architected Framework", "url": "https://learn.microsoft.com/azure/well-architected/reliability/metrics" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

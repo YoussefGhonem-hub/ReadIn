@@ -45,7 +45,7 @@
       "url": "https://learn.microsoft.com/dotnet/api/system.collections.generic.icollection-1.isreadonly"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

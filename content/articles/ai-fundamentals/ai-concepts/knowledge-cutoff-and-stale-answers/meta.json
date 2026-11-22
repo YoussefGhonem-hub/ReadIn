@@ -41,7 +41,7 @@
       "url": "https://pandas.pydata.org/docs/whatsnew/v2.0.0.html"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "skip": {

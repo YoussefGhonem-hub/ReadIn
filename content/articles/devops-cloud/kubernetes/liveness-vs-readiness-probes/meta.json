@@ -25,6 +25,6 @@
     { "title": "EndpointSlices — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/" },
     { "title": "Health Endpoint Monitoring pattern — Azure Architecture Center", "url": "https://learn.microsoft.com/azure/architecture/patterns/health-endpoint-monitoring" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

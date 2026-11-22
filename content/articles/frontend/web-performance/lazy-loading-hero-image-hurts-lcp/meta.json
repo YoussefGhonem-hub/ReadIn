@@ -26,6 +26,6 @@
     { "title": "Optimize resource loading with the Fetch Priority API — web.dev", "url": "https://web.dev/articles/fetch-priority" },
     { "title": "HTML Standard: Lazy loading attributes — WHATWG", "url": "https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attributes" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

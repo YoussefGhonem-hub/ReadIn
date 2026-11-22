@@ -26,7 +26,7 @@
     { "title": "Dependent state with linkedSignal — Angular", "url": "https://angular.dev/guide/signals/linked-signal" },
     { "title": "Migration to signal inputs — Angular", "url": "https://angular.dev/reference/migrations/signal-inputs" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "skip": {

@@ -25,6 +25,6 @@
     { "title": "Understand feature management using Azure App Configuration — Microsoft Learn", "url": "https://learn.microsoft.com/azure/azure-app-configuration/concept-feature-management" },
     { "title": "String.GetHashCode Method — .NET API reference, Microsoft Learn", "url": "https://learn.microsoft.com/dotnet/api/system.string.gethashcode" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

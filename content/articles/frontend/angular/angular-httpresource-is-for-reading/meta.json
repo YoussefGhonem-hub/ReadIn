@@ -25,7 +25,7 @@
     { "title": "Making HTTP requests — Angular", "url": "https://angular.dev/guide/http/making-requests" },
     { "title": "HttpResourceRef — Angular", "url": "https://angular.dev/api/common/http/HttpResourceRef" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

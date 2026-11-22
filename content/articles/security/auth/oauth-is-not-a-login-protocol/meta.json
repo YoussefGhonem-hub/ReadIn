@@ -26,7 +26,7 @@
     { "title": "OpenID Connect on the Microsoft identity platform — Microsoft Learn", "url": "https://learn.microsoft.com/entra/identity-platform/v2-protocols-oidc" },
     { "title": "Authentication Cheat Sheet — OWASP Cheat Sheet Series", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

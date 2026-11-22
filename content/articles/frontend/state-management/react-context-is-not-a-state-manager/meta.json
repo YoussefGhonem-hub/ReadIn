@@ -49,7 +49,7 @@
       "url": "https://redux.js.org/react-redux/api/hooks"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

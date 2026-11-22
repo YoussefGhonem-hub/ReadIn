@@ -24,6 +24,6 @@
     { "title": "Preserving and Resetting State — React", "url": "https://react.dev/learn/preserving-and-resetting-state" },
     { "title": "Crypto: randomUUID() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

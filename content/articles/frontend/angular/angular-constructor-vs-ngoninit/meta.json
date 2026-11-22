@@ -26,7 +26,7 @@
     { "title": "Async reactivity with resources — Angular", "url": "https://angular.dev/guide/signals/resource" },
     { "title": "Injection context — Angular", "url": "https://angular.dev/guide/di/dependency-injection-context" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

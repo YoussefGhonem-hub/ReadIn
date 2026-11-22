@@ -26,6 +26,6 @@
     { "title": "Concurrency and isolates — Flutter docs", "url": "https://docs.flutter.dev/perf/isolates" },
     { "title": "Isolate.run — Dart API", "url": "https://api.dart.dev/dart-isolate/Isolate/run.html" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

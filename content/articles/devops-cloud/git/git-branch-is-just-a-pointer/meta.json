@@ -26,6 +26,6 @@
     { "title": "git-branch — Git reference", "url": "https://git-scm.com/docs/git-branch" },
     { "title": "git-switch — Git reference", "url": "https://git-scm.com/docs/git-switch" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

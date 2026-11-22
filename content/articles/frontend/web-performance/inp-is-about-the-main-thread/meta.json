@@ -26,6 +26,6 @@
     { "title": "Scheduler: yield() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/yield" },
     { "title": "Find slow interactions in the field — web.dev", "url": "https://web.dev/articles/find-slow-interactions-in-the-field" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

@@ -26,6 +26,6 @@
     { "title": "HTML: A good basis for accessibility — MDN", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML" },
     { "title": "ARIA — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

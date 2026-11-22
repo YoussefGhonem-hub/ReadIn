@@ -25,7 +25,7 @@
     { "title": "PasswordHasherOptions.IterationCount Property — Microsoft Learn", "url": "https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions.iterationcount" },
     { "title": "PasswordHasher.cs (ASP.NET Core 10) — dotnet/aspnetcore on GitHub", "url": "https://github.com/dotnet/aspnetcore/blob/release/10.0/src/Identity/Extensions.Core/src/PasswordHasher.cs" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

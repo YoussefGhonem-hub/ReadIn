@@ -26,6 +26,6 @@
     { "title": "Capabilities: Continuous integration — DORA", "url": "https://dora.dev/capabilities/continuous-integration/" },
     { "title": "Capabilities: Continuous delivery — DORA", "url": "https://dora.dev/capabilities/continuous-delivery/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

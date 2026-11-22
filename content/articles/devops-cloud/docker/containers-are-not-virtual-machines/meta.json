@@ -26,6 +26,6 @@
     { "title": "Comparing WSL versions — Microsoft Learn", "url": "https://learn.microsoft.com/windows/wsl/compare-versions" },
     { "title": "Isolation modes (Windows containers) — Microsoft Learn", "url": "https://learn.microsoft.com/virtualization/windowscontainers/manage-containers/hyperv-container" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

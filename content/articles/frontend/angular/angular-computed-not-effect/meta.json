@@ -26,7 +26,7 @@
     { "title": "Async reactivity with resources — Angular", "url": "https://angular.dev/guide/signals/resource" },
     { "title": "CreateEffectOptions — Angular API", "url": "https://angular.dev/api/core/CreateEffectOptions" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

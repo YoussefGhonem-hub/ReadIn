@@ -24,6 +24,6 @@
     { "title": "Use Play App Signing — Play Console Help", "url": "https://support.google.com/googleplay/android-developer/answer/9842756" },
     { "title": "Build and release an Android app — Flutter docs", "url": "https://docs.flutter.dev/deployment/android" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

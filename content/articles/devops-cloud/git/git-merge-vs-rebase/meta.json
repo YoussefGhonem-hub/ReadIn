@@ -25,6 +25,6 @@
     { "title": "git-merge — Git reference", "url": "https://git-scm.com/docs/git-merge" },
     { "title": "git-push — Git reference", "url": "https://git-scm.com/docs/git-push" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

@@ -26,6 +26,6 @@
     { "title": "Window: structuredClone() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone" },
     { "title": "The structured clone algorithm — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

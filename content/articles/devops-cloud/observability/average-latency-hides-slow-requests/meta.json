@@ -24,6 +24,6 @@
     { "title": "Monitoring Distributed Systems — Google SRE book", "url": "https://sre.google/sre-book/monitoring-distributed-systems/" },
     { "title": "Histograms and summaries — Prometheus", "url": "https://prometheus.io/docs/practices/histograms/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

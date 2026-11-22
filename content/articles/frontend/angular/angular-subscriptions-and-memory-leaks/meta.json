@@ -26,7 +26,7 @@
     { "title": "toSignal — Angular API", "url": "https://angular.dev/api/core/rxjs-interop/toSignal" },
     { "title": "Record heap snapshots — Chrome DevTools", "url": "https://developer.chrome.com/docs/devtools/memory-problems/heap-snapshots" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

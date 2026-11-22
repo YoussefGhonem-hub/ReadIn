@@ -25,6 +25,6 @@
     { "title": "Mastering margin collapsing — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Box_model/Margin_collapsing" },
     { "title": "CSS Box Sizing Module Level 3: the box-sizing property — W3C", "url": "https://www.w3.org/TR/css-sizing-3/#box-sizing" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

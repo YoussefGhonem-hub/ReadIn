@@ -41,7 +41,7 @@
       "url": "https://react.dev/reference/rsc/server-components"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

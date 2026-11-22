@@ -26,6 +26,6 @@
     { "title": "createContext — React API Reference", "url": "https://react.dev/reference/react/createContext" },
     { "title": "useSyncExternalStore — React API Reference", "url": "https://react.dev/reference/react/useSyncExternalStore" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

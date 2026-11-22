@@ -37,7 +37,7 @@
       "url": "https://www.rfc-editor.org/rfc/rfc9111.html"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

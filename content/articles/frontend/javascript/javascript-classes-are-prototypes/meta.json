@@ -26,6 +26,6 @@
     { "title": "Using classes — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_classes" },
     { "title": "Object.getPrototypeOf() — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

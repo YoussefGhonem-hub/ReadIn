@@ -25,7 +25,7 @@
     { "title": "State.didUpdateWidget — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/didUpdateWidget.html" },
     { "title": "State.dispose — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/dispose.html" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

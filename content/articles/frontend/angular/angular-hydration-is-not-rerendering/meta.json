@@ -25,6 +25,6 @@
     { "title": "NG0500: Hydration Node Mismatch — Angular", "url": "https://angular.dev/errors/NG0500" },
     { "title": "provideClientHydration — Angular", "url": "https://angular.dev/api/platform-browser/provideClientHydration" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

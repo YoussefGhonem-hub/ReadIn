@@ -26,7 +26,7 @@
     { "title": "Opacity class — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/Opacity-class.html" },
     { "title": "Impeller rendering engine — Flutter docs", "url": "https://docs.flutter.dev/perf/impeller" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

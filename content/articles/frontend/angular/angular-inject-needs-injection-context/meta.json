@@ -25,7 +25,7 @@
     { "title": "runInInjectionContext — Angular API", "url": "https://angular.dev/api/core/runInInjectionContext" },
     { "title": "takeUntilDestroyed — Angular API", "url": "https://angular.dev/api/core/rxjs-interop/takeUntilDestroyed" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

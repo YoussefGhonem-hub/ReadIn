@@ -37,7 +37,7 @@
       "url": "https://learn.microsoft.com/dotnet/core/compatibility/core-libraries/6.0/hosting-exception-handling"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

@@ -25,6 +25,6 @@
     { "title": "Assign CPU Resources to Containers and Pods — Kubernetes Documentation", "url": "https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-resource/" },
     { "title": "Node-pressure Eviction — Kubernetes Documentation", "url": "https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

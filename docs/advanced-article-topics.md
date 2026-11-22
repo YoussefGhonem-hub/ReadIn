@@ -31,7 +31,7 @@ Two versions of every article:
    - If a sentence sounds translated, rewrite it. This is the most important quality rule for the Arabic version.
 
 Article rules:
-- Follow content/AUTHORING.md: author @readin, "isAiAssisted": true, "level": "advanced".
+- Follow content/AUTHORING.md: author @readin, "isAiAssisted": false, "level": "advanced".
 - Add each article to plannedArticles in content/taxonomy.yaml first. If no topic fits, add a new one, such as operating-systems or data-analysis, and record which field you put it under.
 - Write for experienced readers. Skip the basics, go into the internals, use a real example, and say when the approach is the wrong choice.
 - Use 2 to 5 official or primary sources per article. Don't state a number or behavior that isn't in a source. Name the version the article applies to.

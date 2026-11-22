@@ -26,6 +26,6 @@
     { "title": "Long Animation Frames API — Chrome for Developers", "url": "https://developer.chrome.com/docs/web-platform/long-animation-frames" },
     { "title": "PerformanceScriptTiming: forcedStyleAndLayoutDuration property — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/PerformanceScriptTiming/forcedStyleAndLayoutDuration" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

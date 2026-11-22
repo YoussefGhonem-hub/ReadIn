@@ -26,6 +26,6 @@
     { "title": "Use the Instance Metadata Service to access instance metadata — Amazon EC2", "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html" },
     { "title": "SocketsHttpHandler.ConnectCallback — .NET API, Microsoft Learn", "url": "https://learn.microsoft.com/dotnet/api/system.net.http.socketshttphandler.connectcallback" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

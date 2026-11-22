@@ -40,6 +40,6 @@
       "url": "https://nextjs.org/docs/app/getting-started/server-and-client-components"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-22T00:00:00Z"
 }

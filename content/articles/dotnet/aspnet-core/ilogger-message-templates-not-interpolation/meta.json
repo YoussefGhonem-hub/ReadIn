@@ -37,7 +37,7 @@
       "url": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1848"
     }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

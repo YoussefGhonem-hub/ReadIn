@@ -26,6 +26,6 @@
     { "title": "What is Kotlin Multiplatform — Kotlin docs", "url": "https://kotlinlang.org/docs/multiplatform/kmp-overview.html" },
     { "title": "Slow rendering — Android Developers", "url": "https://developer.android.com/topic/performance/vitals/render" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

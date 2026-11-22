@@ -25,6 +25,6 @@
     { "title": "Window: setTimeout() method — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout" },
     { "title": "HTML Standard: Event loops — WHATWG", "url": "https://html.spec.whatwg.org/multipage/webappapis.html#event-loops" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

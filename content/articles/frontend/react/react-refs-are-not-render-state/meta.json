@@ -26,6 +26,6 @@
     { "title": "refs — eslint-plugin-react-hooks", "url": "https://react.dev/reference/eslint-plugin-react-hooks/lints/refs" },
     { "title": "React v19 — React Blog", "url": "https://react.dev/blog/2024/12/05/react-19" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

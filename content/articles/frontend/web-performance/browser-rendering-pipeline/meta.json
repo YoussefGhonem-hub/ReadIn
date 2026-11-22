@@ -26,6 +26,6 @@
     { "title": "Populating the page: how browsers work — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/How_browsers_work" },
     { "title": "Discover issues with rendering performance — Chrome DevTools", "url": "https://developer.chrome.com/docs/devtools/rendering/performance" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

@@ -26,7 +26,7 @@
     { "title": "Manage API keys: add restrictions — Google Cloud", "url": "https://docs.cloud.google.com/docs/authentication/api-keys" },
     { "title": "Learn about using and managing API keys for Firebase — Firebase", "url": "https://firebase.google.com/docs/projects/api-keys" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

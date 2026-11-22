@@ -26,6 +26,6 @@
     { "title": "RenderObject class — Flutter API", "url": "https://api.flutter.dev/flutter/rendering/RenderObject-class.html" },
     { "title": "Introduction to widgets — Flutter docs", "url": "https://docs.flutter.dev/ui" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

@@ -26,7 +26,7 @@
     { "title": "Signals: reading signals in OnPush components — Angular", "url": "https://angular.dev/guide/signals#reading-signals-in-onpush-components" },
     { "title": "Angular without ZoneJS (Zoneless) — Angular", "url": "https://angular.dev/guide/zoneless" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

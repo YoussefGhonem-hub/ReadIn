@@ -25,7 +25,7 @@
     { "title": "State.setState — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/State/setState.html" },
     { "title": "Flutter Bloc Concepts — Bloc library", "url": "https://bloclibrary.dev/flutter-bloc-concepts/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

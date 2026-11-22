@@ -26,6 +26,6 @@
     { "title": "git-reflog — Git reference", "url": "https://git-scm.com/docs/git-reflog" },
     { "title": "git — Git reference (Reset, restore and revert)", "url": "https://git-scm.com/docs/git" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

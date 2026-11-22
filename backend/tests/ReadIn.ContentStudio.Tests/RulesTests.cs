@@ -79,7 +79,7 @@ public sealed class RulesTests
         var meta = new ArticleMeta
         {
             Slug = "sample", Field = "dotnet", Topic = "csharp", Status = "published", ReviewStatus = "approved",
-            Reviewer = "someone@readin.test", IsAiAssisted = false,
+            Reviewer = "someone@readin.test", IsAiAssisted = true,
         };
 
         var trust = Messages(Article(En, En.Replace("Summary.", "ملخص.").Replace("Hook.", "مقدمة."), meta), "trust");

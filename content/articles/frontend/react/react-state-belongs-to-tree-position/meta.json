@@ -25,7 +25,7 @@
     { "title": "You Might Not Need an Effect — React", "url": "https://react.dev/learn/you-might-not-need-an-effect" },
     { "title": "<Activity> — React API Reference", "url": "https://react.dev/reference/react/Activity" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

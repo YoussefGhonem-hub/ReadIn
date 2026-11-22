@@ -26,7 +26,7 @@
     { "title": "Prevent Cross-Site Request Forgery (XSRF/CSRF) attacks in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/anti-request-forgery" },
     { "title": "Work with SameSite cookies in ASP.NET Core — Microsoft Learn", "url": "https://learn.microsoft.com/aspnet/core/security/samesite" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

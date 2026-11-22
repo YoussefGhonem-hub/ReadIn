@@ -25,6 +25,6 @@
     { "title": "Hosting native Android views in your Flutter app with platform views — Flutter docs", "url": "https://docs.flutter.dev/platform-integration/android/platform-views" },
     { "title": "Automatic platform adaptations — Flutter docs", "url": "https://docs.flutter.dev/ui/adaptive-responsive/platform-adaptations" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

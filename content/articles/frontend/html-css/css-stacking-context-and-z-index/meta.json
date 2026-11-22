@@ -25,6 +25,6 @@
     { "title": "Top layer — MDN", "url": "https://developer.mozilla.org/en-US/docs/Glossary/Top_layer" },
     { "title": "CSS 2.2, Appendix E: Elaborate description of Stacking Contexts — W3C", "url": "https://www.w3.org/TR/CSS22/zindex.html" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

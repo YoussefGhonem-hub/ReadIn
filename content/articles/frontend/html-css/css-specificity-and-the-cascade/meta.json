@@ -25,6 +25,6 @@
     { "title": "@layer — MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@layer" },
     { "title": "CSS Cascading and Inheritance Level 5 — W3C", "url": "https://www.w3.org/TR/css-cascade-5/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z"
 }

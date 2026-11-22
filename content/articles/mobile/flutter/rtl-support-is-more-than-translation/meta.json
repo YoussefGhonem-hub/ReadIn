@@ -26,7 +26,7 @@
     { "title": "IconData.matchTextDirection — Flutter API", "url": "https://api.flutter.dev/flutter/widgets/IconData/matchTextDirection.html" },
     { "title": "Right to left — Apple Human Interface Guidelines", "url": "https://developer.apple.com/design/human-interface-guidelines/right-to-left" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {

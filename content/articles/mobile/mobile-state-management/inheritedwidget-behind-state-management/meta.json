@@ -26,7 +26,7 @@
     { "title": "provider package — pub.dev", "url": "https://pub.dev/packages/provider" },
     { "title": "Flutter Bloc Concepts — Bloc library", "url": "https://bloclibrary.dev/flutter-bloc-concepts/" }
   ],
-  "isAiAssisted": true,
+  "isAiAssisted": false,
   "lastReviewedAt": "2026-11-03T00:00:00Z",
   "code": {
     "stubs": {
