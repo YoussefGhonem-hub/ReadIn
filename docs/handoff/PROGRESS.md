@@ -902,3 +902,23 @@ features). The differences they found are recorded here and **not fixed** (user 
   F07's relax order, "Archived" (no endpoint archives an article), and Egyptian quotes left in the SPEC and the
   contract where the apps now say Modern Standard Arabic.
 - Not reviewed: F22–F34 and the cross-cutting sections (stopped).
+
+### Advanced article topics: batch 1 ✅ (user request, 2026-11-22: "publish 10 articles on the deploy")
+- The first 10 of the 422 topics in `docs/advanced-article-topics.md`: Learning Roadmaps 1–10, written in English and
+  Egyptian Arabic, all passing `ContentStudio validate` with the link check. Commit bf483462. 310 articles in total.
+- Plan: the topic `roadmaps` in dotnet, frontend, software-architecture and education; the learning path
+  `learning-roadmaps` (field education, order = the topic's number in the doc). Two titles changed because the
+  validator flagged overlap: #4 "ASP.NET Core with React: The Full-Stack Learning Path" and #10 "Becoming a Node.js
+  Backend Engineer: From the Event Loop to Scale".
+- Published on production with the deploy kit: `deploy.sh seed` (publish built from 945030a8), then
+  `deploy.sh uploads` (30 cover files). All 10 articles answer 200 in both languages, with their covers, and the path
+  lists 10 articles.
+- **Not done:** Part 1 of the doc (automatic seeding on startup, content/ in the publish); production still seeds
+  from this machine. Roadmaps 11–40 and the other sections are next, in the doc's order.
+- **Notes for the next batches:**
+  - O'Reilly, Packt and No Starch return 403 to curl, so books link to the author's page or to the publisher's own
+    GitHub repository.
+  - The Arabic versions sit near the 9-minute limit (about 1,620 words), because the validator counts "الـ" as a
+    word.
+  - A pre-existing plan link fails: `containers-are-not-virtual-machines` → docs.docker.com get-started/docker-overview
+    (404).
