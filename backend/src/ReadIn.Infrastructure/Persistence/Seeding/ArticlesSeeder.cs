@@ -15,14 +15,16 @@ namespace ReadIn.Infrastructure.Persistence.Seeding;
 
 /// <summary>
 /// Seeder #6 (all environments, Production included): imports git-versioned articles (SPEC §19.2 step 6) under the
-/// official "ReadIn" account. Status-aware: <c>approved</c>/<c>published</c> → published with the AI-assisted label;
+/// official "ReadIn" account. Status-aware: <c>approved</c>/<c>published</c> → published, with the AI-assisted label
+/// only when meta.json's <c>isAiAssisted</c> says so (the official articles carry none, owner's decision 2026-11-22);
 /// <c>auto-checked</c> → kept as a draft of the official account; <c>generated</c>/<c>failed</c> → skipped.
 /// <list type="bullet">
 /// <item>Upsert by slug, and versioned per article: a <see cref="SeedHistory"/> row (<c>article:{slug}</c>) holds the
 /// checksum of its files, so only changed articles are re-imported.</item>
 /// <item><c>cover.webp</c> goes through the image pipeline (400/800/1200 + BlurHash, ADR 0011).</item>
-/// <item>New articles get staggered publish dates over the last ~120 days (plan order, interleaved across learning
-/// paths), so the feed isn't 300 articles published in the same second.</item>
+/// <item>The first import into an environment with no published official article staggers the publish dates over the
+/// last ~120 days (plan order, interleaved across learning paths), so the feed isn't 300 articles published in the
+/// same second. Articles added after that go out with the date they are imported.</item>
 /// <item><c>reviewStatus</c>, <c>reviewer</c> and <c>reviewedAt</c> in meta.json are ignored: there is no review (ADR 0015).</item>
 /// <item>An article of the official account whose folder was removed is archived.</item>
 /// </list>
@@ -174,10 +176,15 @@ internal sealed partial class ArticlesSeeder(
     /// <summary>
     /// First-publish dates for planned articles: the plan is interleaved across learning paths (every path's 1st
     /// article, then every 2nd…), spread evenly over the last <see cref="StaggerDays"/> days, oldest first, with a
-    /// stable per-slug time of day. Only used the first time an article is published in an environment.
+    /// stable per-slug time of day. Only for the first import into an environment: once an official article is
+    /// published, the schedule is empty and a new article is published now (the owner wants new articles dated the
+    /// day they go out, 2026-11-22).
     /// </summary>
     private async Task<IReadOnlyDictionary<string, DateTime>> PublishScheduleAsync(CancellationToken ct)
     {
+        if (await db.Articles.AnyAsync(a => a.AuthorId == SystemUsers.EditorialId && a.PublishedAt != null, ct))
+            return new Dictionary<string, DateTime>();
+
         var plan = (await content.ReadTaxonomyAsync(ct)).PlannedArticles;
         var ordered = plan
             .GroupBy(p => p.LearningPath)

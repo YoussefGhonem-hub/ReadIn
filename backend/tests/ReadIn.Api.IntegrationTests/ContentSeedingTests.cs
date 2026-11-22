@@ -89,6 +89,35 @@ public sealed class ContentSeedingTests(ApiFactory api)
     }
 
     [Fact]
+    public async Task An_article_added_after_the_first_import_goes_out_with_the_date_it_is_imported()
+    {
+        using var scope = api.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var original = await db.Articles.Where(a => a.Slug == Slug).Select(a => a.PublishedAt).SingleAsync(Ct);
+        try
+        {
+            // The environment already has the other published official articles: this one arrives as new content.
+            await db.Articles.Where(a => a.Slug == Slug)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.Status, ArticleStatus.Draft).SetProperty(a => a.PublishedAt, (DateTime?)null), Ct);
+            await db.SeedHistory.Where(h => h.Name == "article:" + Slug).ExecuteDeleteAsync(Ct);
+            var before = DateTime.UtcNow;
+
+            // The articles seeder alone: the other seeders' re-runs (fields, accounts) aren't part of this.
+            var articles = scope.ServiceProvider.GetServices<ISeeder>().Single(s => s.Name == "articles");
+            (await articles.SeedAsync(Ct)).Should().BeTrue();
+
+            var publishedAt = await db.Articles.Where(a => a.Slug == Slug).Select(a => a.PublishedAt).SingleAsync(Ct);
+            publishedAt.Should().NotBeNull().And.BeOnOrAfter(before.AddSeconds(-1),
+                "only the first import into an empty environment staggers the dates over the last ~120 days");
+        }
+        finally
+        {
+            await db.Articles.Where(a => a.Slug == Slug)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.Status, ArticleStatus.Published).SetProperty(a => a.PublishedAt, original), Ct);
+        }
+    }
+
+    [Fact]
     public async Task Today_picks_a_published_article_in_the_readers_interests()
     {
         var client = (await api.SignUpAsync()).Client;
